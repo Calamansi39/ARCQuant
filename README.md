@@ -72,6 +72,11 @@ ARCQuant supports multiple formats, including NVFP4, MXFP4, HiF4, and INT4. You 
 ```bash
 bash evaluate.sh /PATH/TO/YOUR/MODEL/
 ```
+You can optionally enable static post-reorder activation sparsity by passing a keep ratio:
+```bash
+bash evaluate.sh /PATH/TO/YOUR/MODEL/ 0.25
+```
+This keeps the last 25% channels after ARC reordering and zeros the rest before quantization.
 
 ## 3. Efficiency Evaluation
 
@@ -99,4 +104,3 @@ Our code is built on the following repos, thank you for your contributions to co
 - [FlashInfer](https://github.com/flashinfer-ai/flashinfer/tree/main)
 - [CUTLASS](https://github.com/NVIDIA/cutlass)
 - [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness)
-

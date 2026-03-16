@@ -1,6 +1,7 @@
 #!/bin/bash
 # path to your model 
 MODEL=${1}
+KEEP_RATIO=${2:-1.0}
 
 dir=$(pwd)
 export CUDA_VISIBLE_DEVICE="0"
@@ -12,6 +13,7 @@ python ${dir}/model/main.py ${MODEL}\
         --lm_eval_limit -1\
         --eval_ppl\
         --quant_type NVFP4\
+        --keep_ratio ${KEEP_RATIO}\
 
 
 # zero-shot
@@ -22,6 +24,7 @@ python ${dir}/model/main.py ${MODEL} \
         --lm_eval_num_fewshot 0 \
         --lm_eval_limit -1\
         --quant_type NVFP4\
+        --keep_ratio ${KEEP_RATIO}\
 
 
 #5-shot mmlu
@@ -32,6 +35,6 @@ python ${dir}/model/main.py ${MODEL}\
         --lm_eval_num_fewshot 5\
         --lm_eval_limit -1\
         --quant_type NVFP4\
-
+        --keep_ratio ${KEEP_RATIO}\
 
 

@@ -6,10 +6,8 @@ from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer, Qwen2RMS
 from qLinearLayer import QLinearLayer
 from quantize import *
 from visualize import *
+from optional_agemm import HAS_AGEMM, require_agemm
 import os
-import sys
-sys.path.append('kernels/build/')
-import agemm 
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -71,17 +69,13 @@ def get_hadamard(n):
 
 def NVFP4_reorder_quantize_x(x, reorder_index, select_num):
     scale = torch.max(x.abs()).float() / (448.0*6.0)
-    qx, scale_x = agemm.reorder_quantize_x(x/scale, reorder_index, select_num)
+    qx, scale_x = require_agemm().reorder_quantize_x(x / scale, reorder_index, select_num)
     return qx, scale_x, scale
 
 def reorder_quantize_x(x, reorder_index, select_num, quant_type='NVFP4'):
-    if quant_type == 'NVFP4':
-        # return NVFP4_reorder_quantize_x(x, torch.arange(reorder_index.shape[0]).to(torch.int16).cuda(), 0)
+    if quant_type == 'NVFP4' and HAS_AGEMM:
         return NVFP4_reorder_quantize_x(x, reorder_index, select_num)
-    else:
-        index = reorder_index.to(torch.int32)
-        # return fake_reorder_quantize_x((x), torch.arange(x.shape[-1]), 0, dtype=quant_type)
-        return fake_reorder_quantize_x(torch.index_select(x, 1, index), torch.arange(x.shape[-1]), select_num, dtype=quant_type)
+    return fake_reorder_quantize_x(x, reorder_index, select_num, dtype=quant_type)
 
         
 class QQwen2RMSNorm(nn.Module):
@@ -110,6 +104,7 @@ class QQwen2DecoderLayer(nn.Module):
         originalLayer: Qwen2DecoderLayer,
         kv_cache,
         select_nums,
+        keep_nums,
         reorder_index,
         layer_idx,
         quant_type
@@ -120,6 +115,7 @@ class QQwen2DecoderLayer(nn.Module):
             originalLayer.self_attn,
             kv_cache,
             select_nums=select_nums,
+            keep_nums=keep_nums,
             reorder_index=reorder_index,
             i=layer_idx,
             quant_type=quant_type
@@ -128,6 +124,7 @@ class QQwen2DecoderLayer(nn.Module):
         self.mlp = QQwen2MLP(
             originalLayer.mlp,
             select_nums=select_nums,
+            keep_nums=keep_nums,
             reorder_index=reorder_index,
             i=layer_idx,
             quant_type=quant_type
@@ -201,6 +198,7 @@ class QQwen2Attention(nn.Module):
         originalAttn: Qwen2Attention,
         kv_cache,
         select_nums,
+        keep_nums,
         reorder_index,
         i,
         quant_type
@@ -249,6 +247,8 @@ class QQwen2Attention(nn.Module):
             reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
             quant_type=quant_type
         )
+        self.q_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')]
+        self.o_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')]
         self.rotary_emb = originalAttn.rotary_emb
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
@@ -279,8 +279,9 @@ class QQwen2Attention(nn.Module):
         bsz, q_len, _ = hidden_states.size()
 
         hidden_states = hidden_states.reshape(bsz*q_len, -1).contiguous().detach()
-        # print(self.q_proj.select_num)
-        qx, scale_x, scale = reorder_quantize_x(hidden_states, self.q_reorder_index, self.q_proj.select_num, self.quant_type)
+        hidden_states = reorder_and_sparsify(hidden_states, self.q_reorder_index, self.q_keep_num)
+        identity_index = torch.arange(hidden_states.shape[-1], dtype=torch.int16, device=hidden_states.device)
+        qx, scale_x, scale = reorder_quantize_x(hidden_states, identity_index, self.q_proj.select_num, self.quant_type)
         torch.cuda.synchronize()
         
         hidden_states = (qx, scale_x, scale, bsz, q_len)
@@ -348,8 +349,9 @@ class QQwen2Attention(nn.Module):
           
        
         attn_output = attn_output.reshape(bsz*q_len, -1).contiguous().detach()
-
-        qx, scale_x, scale = reorder_quantize_x(attn_output, self.o_reorder_index, self.o_proj.select_num, self.quant_type)
+        attn_output = reorder_and_sparsify(attn_output, self.o_reorder_index, self.o_keep_num)
+        identity_index = torch.arange(attn_output.shape[-1], dtype=torch.int16, device=attn_output.device)
+        qx, scale_x, scale = reorder_quantize_x(attn_output, identity_index, self.o_proj.select_num, self.quant_type)
         torch.cuda.synchronize()
         attn_output = (qx, scale_x, scale, bsz, q_len)
         attn_output = self.o_proj(attn_output)
@@ -365,6 +367,7 @@ class QQwen2MLP(nn.Module):
         self,
         originalMLP: Qwen2MLP,
         select_nums,
+        keep_nums,
         reorder_index,
         i,
         quant_type
@@ -393,6 +396,8 @@ class QQwen2MLP(nn.Module):
             out_reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
             quant_type=quant_type
         )
+        self.up_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'up_proj', 'input')]
+        self.down_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'down_proj', 'input')]
         self.act_fn = originalMLP.act_fn
 
     def to(self, *args, **kwargs):
@@ -411,8 +416,9 @@ class QQwen2MLP(nn.Module):
 #         if self.quant_type == 'fp':
         bsz, q_len, _ = x.shape
         x = x.reshape(bsz*q_len, -1).contiguous().detach()
-
-        qx, scale_x, scale = reorder_quantize_x(x, self.up_reorder_index, self.up_proj.select_num, self.quant_type)
+        x = reorder_and_sparsify(x, self.up_reorder_index, self.up_keep_num)
+        identity_index = torch.arange(x.shape[-1], dtype=torch.int16, device=x.device)
+        qx, scale_x, scale = reorder_quantize_x(x, identity_index, self.up_proj.select_num, self.quant_type)
         torch.cuda.synchronize()
         x = (qx, scale_x, scale, bsz, q_len)
         tmpResult = self.act_fn(self.gate_proj(x)) * self.up_proj(x)
@@ -420,8 +426,9 @@ class QQwen2MLP(nn.Module):
 
         bsz, q_len, _ = tmpResult.shape
         tmpResult = tmpResult.reshape(bsz*q_len, -1).contiguous().detach()
-        
-        qx, scale_x, scale = reorder_quantize_x(tmpResult, self.down_reorder_index, self.down_proj.select_num, self.quant_type)
+        tmpResult = reorder_and_sparsify(tmpResult, self.down_reorder_index, self.down_keep_num)
+        identity_index = torch.arange(tmpResult.shape[-1], dtype=torch.int16, device=tmpResult.device)
+        qx, scale_x, scale = reorder_quantize_x(tmpResult, identity_index, self.down_proj.select_num, self.quant_type)
         
         tmpResult = (qx, scale_x, scale, bsz, q_len)
        

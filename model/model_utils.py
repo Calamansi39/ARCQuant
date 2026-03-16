@@ -17,7 +17,7 @@ from functools import partial
 import math
 
 
-def reorder_model_llama(model, device, kv_cache, reorder_index, select_nums, quant_type):
+def reorder_model_llama(model, device, kv_cache, reorder_index, select_nums, keep_nums, quant_type, sparse_config=None):
     model.config.use_cache = False
     layers = model.model.layers
     assert reorder_index is not None, "Reorder index is None"
@@ -29,17 +29,22 @@ def reorder_model_llama(model, device, kv_cache, reorder_index, select_nums, qua
                 originalLayer=layers[i],
                 kv_cache=kv_cache,
                 select_nums=select_nums,
+                keep_nums=keep_nums,
                 reorder_index=reorder_index,
                 layer_idx=i,
-                quant_type=quant_type
+                quant_type=quant_type,
+                sparse_config=sparse_config,
             )
         elif isinstance(layers[i], QLlamaDecoderLayer):
             m = layers[i]
             
         nameTemplate = 'layers.{}.{}.{}.{}'
+        m.mlp.register_buffer('gate_reorder_index', reorder_index[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')].to(torch.int16))
         m.mlp.register_buffer('up_reorder_index', reorder_index[nameTemplate.format(i, 'mlp', 'up_proj', 'input')].to(torch.int16))
         m.mlp.register_buffer('down_reorder_index', reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')].to(torch.int16))
         m.self_attn.register_buffer('q_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')].to(torch.int16))
+        m.self_attn.register_buffer('k_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')].to(torch.int16))
+        m.self_attn.register_buffer('v_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')].to(torch.int16))
         m.self_attn.register_buffer('o_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')].to(torch.int16))
         layers[i] = layers[i].cpu()
         layers[i] = m.cpu()
@@ -47,7 +52,7 @@ def reorder_model_llama(model, device, kv_cache, reorder_index, select_nums, qua
         torch.cuda.empty_cache()
     return model
 
-def reorder_model_qwen(model, device, kv_cache, reorder_index, select_nums, quant_type):
+def reorder_model_qwen(model, device, kv_cache, reorder_index, select_nums, keep_nums, quant_type, sparse_config=None):
     model.config.use_cache = False
     layers = model.model.layers
     assert reorder_index is not None, "Reorder index is None"
@@ -59,6 +64,7 @@ def reorder_model_qwen(model, device, kv_cache, reorder_index, select_nums, quan
                 originalLayer=layers[i],
                 kv_cache=kv_cache,
                 select_nums=select_nums,
+                keep_nums=keep_nums,
                 reorder_index=reorder_index,
                 layer_idx=i,
                 quant_type=quant_type
@@ -75,7 +81,7 @@ def reorder_model_qwen(model, device, kv_cache, reorder_index, select_nums, quan
         torch.cuda.empty_cache()
     return model
 
-def reorder_model_mixtral(model, device, kv_cache, reorder_index, select_nums, quant_type):
+def reorder_model_mixtral(model, device, kv_cache, reorder_index, select_nums, keep_nums, quant_type, sparse_config=None):
     model.config.use_cache = False
     layers = model.model.layers
     assert reorder_index is not None, "Reorder index is None"
@@ -87,6 +93,7 @@ def reorder_model_mixtral(model, device, kv_cache, reorder_index, select_nums, q
                 originalLayer=layers[i],
                 kv_cache=kv_cache,
                 select_nums=select_nums,
+                keep_nums=keep_nums,
                 reorder_index=reorder_index,
                 layer_idx=i,
                 quant_type=quant_type

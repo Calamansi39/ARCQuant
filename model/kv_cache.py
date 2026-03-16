@@ -6,7 +6,10 @@ import functools
 
 import sys
 sys.path.append('./kernels/build/')
-import agemm
+try:
+    import agemm
+except ImportError:
+    agemm = None
 
 def get_minq_maxq(bits: int, sym: bool):
     if sym:
@@ -47,6 +50,8 @@ def init_kv_i4(kv_data, kv_param,
                last_page_offset, k,
                v, k_param, v_param,
                seqlen_indptr, layer_idx):
+    if agemm is None:
+        raise ImportError("agemm is required for quantized KV cache but is not available")
     return agemm.init_kv_i4(
         kv_data, kv_param,
         kv_indptr, kv_indices,
@@ -60,6 +65,8 @@ def append_kv_i4(kv_data, kv_param,
                last_page_offset, k,
                v, k_param, v_param,
                layer_idx):
+    if agemm is None:
+        raise ImportError("agemm is required for quantized KV cache but is not available")
     return agemm.append_kv_i4(
         kv_data, kv_param,
         kv_indptr, kv_indices,
@@ -70,6 +77,8 @@ def append_kv_i4(kv_data, kv_param,
 def batch_decode_i4(o, q, kv_data, kv_param,
                kv_indptr, kv_indices,
                last_page_offset, layer_idx):
+    if agemm is None:
+        raise ImportError("agemm is required for quantized KV cache but is not available")
     return agemm.batch_decode_i4(
         o, q, kv_data, kv_param,
         kv_indptr, kv_indices,
@@ -81,6 +90,8 @@ def init_kv_f16(kv_data, kv_param,
                last_page_offset, k,
                v, k_param, v_param,
                seqlen_indptr, layer_idx):
+    if agemm is None:
+        raise ImportError("agemm is required for quantized KV cache but is not available")
     return agemm.init_kv_f16(
         kv_data, kv_param,
         kv_indptr, kv_indices,
@@ -94,6 +105,8 @@ def append_kv_f16(kv_data, kv_param,
                last_page_offset, k,
                v, k_param, v_param,
                layer_idx):
+    if agemm is None:
+        raise ImportError("agemm is required for quantized KV cache but is not available")
     return agemm.append_kv_f16(
         kv_data, kv_param,
         kv_indptr, kv_indices,
@@ -104,6 +117,8 @@ def append_kv_f16(kv_data, kv_param,
 def batch_decode_f16(o, q, kv_data, kv_param,
                kv_indptr, kv_indices,
                last_page_offset, layer_idx):
+    if agemm is None:
+        raise ImportError("agemm is required for quantized KV cache but is not available")
     return agemm.batch_decode_f16(
         o, q, kv_data, kv_param,
         kv_indptr, kv_indices,

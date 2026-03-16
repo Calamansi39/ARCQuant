@@ -7,7 +7,10 @@ from quantize import *
 import os
 import sys
 sys.path.append('kernels/build/')
-import agemm 
+try:
+    import agemm
+except ImportError:
+    agemm = None
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches

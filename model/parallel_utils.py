@@ -133,13 +133,20 @@ def assign_layers_to_gpus(layers: List[nn.Module]):
 
 # forward hook
 def forward_hook_wrapper(gpu_id):
+    def move_to_device(obj):
+        if isinstance(obj, torch.Tensor):
+            return obj.to(f"cuda:{gpu_id}")
+        if isinstance(obj, tuple):
+            return tuple(move_to_device(item) for item in obj)
+        if isinstance(obj, list):
+            return [move_to_device(item) for item in obj]
+        if isinstance(obj, dict):
+            return {k: move_to_device(v) for k, v in obj.items()}
+        return obj
+
     def forward_hook(module, input, kwargs):
-        # breakpoint()
-        input = tuple(_.to(f"cuda:{gpu_id}") for _ in input)
-        kwargs = {
-            k: v.to(f"cuda:{gpu_id}") if isinstance(v, torch.Tensor) else v
-            for k, v in kwargs.items()
-        }
+        input = tuple(move_to_device(item) for item in input)
+        kwargs = {k: move_to_device(v) for k, v in kwargs.items()}
         return input, kwargs
 
     return forward_hook
@@ -159,6 +166,74 @@ def add_forward_hooks(layer_gpu_map):
 def map_layers_to_multi_gpus(layers):
 
     layer_gpu_map = assign_layers_to_gpus(layers)
+
+    add_forward_hooks(layer_gpu_map)
+
+
+def map_layers_to_devices(layers, devices):
+    layer_gpu_map = {}
+    normalized_devices = [str(torch.device(device)) for device in devices]
+    for idx, layer in enumerate(layers):
+        device = normalized_devices[idx % len(normalized_devices)]
+        layer.to(device)
+        layer.device = device
+        layer_gpu_map[layer] = int(device.split(":")[1])
+        print(f"map layer {idx} to {device}")
+    add_forward_hooks(layer_gpu_map)
+
+
+def map_layers_to_two_devices_balanced(layers, devices):
+    if len(devices) != 2:
+        raise ValueError("map_layers_to_two_devices_balanced expects exactly two devices.")
+
+    normalized_devices = [str(torch.device(device)) for device in devices]
+    primary_device, secondary_device = normalized_devices
+    layer_gpu_map = {}
+    layer_count = len(layers)
+    edge_span = max(1, layer_count // 4)
+
+    for idx, layer in enumerate(layers):
+        if idx < edge_span or idx >= (layer_count - edge_span):
+            device = primary_device
+        else:
+            device = secondary_device
+        layer.to(device)
+        layer.device = device
+        layer_gpu_map[layer] = int(device.split(":")[1])
+        print(f"map layer {idx} to {device}")
+
+    add_forward_hooks(layer_gpu_map)
+
+
+def map_layers_to_balanced_devices(layers, devices):
+    if len(devices) < 2:
+        raise ValueError("map_layers_to_balanced_devices expects at least two devices.")
+
+    normalized_devices = [str(torch.device(device)) for device in devices]
+    primary_device = normalized_devices[0]
+    middle_devices = normalized_devices[1:]
+    layer_gpu_map = {}
+    layer_count = len(layers)
+    edge_span = max(1, layer_count // (2 * len(normalized_devices)))
+    middle_start = edge_span
+    middle_end = layer_count - edge_span
+    middle_layers = max(0, middle_end - middle_start)
+
+    if middle_layers == 0:
+        return map_layers_to_devices(layers, devices)
+
+    middle_chunk = max(1, (middle_layers + len(middle_devices) - 1) // len(middle_devices))
+
+    for idx, layer in enumerate(layers):
+        if idx < middle_start or idx >= middle_end:
+            device = primary_device
+        else:
+            middle_idx = idx - middle_start
+            device = middle_devices[min(len(middle_devices) - 1, middle_idx // middle_chunk)]
+        layer.to(device)
+        layer.device = device
+        layer_gpu_map[layer] = int(device.split(":")[1])
+        print(f"map layer {idx} to {device}")
 
     add_forward_hooks(layer_gpu_map)
 

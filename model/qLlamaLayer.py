@@ -6,10 +6,9 @@ from transformers.models.llama.modeling_llama import LlamaDecoderLayer, LlamaRMS
 from qLinearLayer import QLinearLayer
 from quantize import *
 from visualize import *
+from optional_agemm import HAS_AGEMM, require_agemm
+from sparse_utils import build_llama_teal_sparsifiers
 import os
-import sys
-sys.path.append('kernels/build/')
-import agemm 
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -72,18 +71,31 @@ def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
 
 def NVFP4_reorder_quantize_x(x, reorder_index, select_num):
     scale = torch.max(x.abs()).float() / (448.0*6.0)
-    # scale = 1.0
-    qx, scale_x = agemm.reorder_quantize_x(x/scale, reorder_index, select_num)
+    qx, scale_x = require_agemm().reorder_quantize_x(x / scale, reorder_index, select_num)
     return qx, scale_x, scale
 
 def reorder_quantize_x(x, reorder_index, select_num, quant_type='NVFP4'):
-    if quant_type == 'NVFP4':
-        return NVFP4_reorder_quantize_x(x, torch.arange(reorder_index.shape[0]).to(torch.int16).cuda(), 0)
-        # return NVFP4_reorder_quantize_x(x, reorder_index, select_num)
-    else:
-        index = reorder_index.to(torch.int32)
-        # return fake_reorder_quantize_x((x), torch.arange(x.shape[-1]), 0, dtype=quant_type)
-        return fake_reorder_quantize_x(torch.index_select(x, 1, index), torch.arange(x.shape[-1]), select_num, dtype=quant_type)
+    if quant_type == 'NVFP4' and HAS_AGEMM:
+        return NVFP4_reorder_quantize_x(x, reorder_index, select_num)
+    return fake_reorder_quantize_x(x, reorder_index, select_num, dtype=quant_type)
+
+
+def quantize_branch_input(x, reorder_index, select_num, quant_type):
+    bsz, q_len, _ = x.shape
+    x = x.reshape(bsz * q_len, -1).contiguous().detach()
+    qx, scale_x, scale = reorder_quantize_x(x, reorder_index, select_num, quant_type)
+    torch.cuda.synchronize()
+    return qx, scale_x, scale, bsz, q_len
+
+
+def quantize_static_branch_input(x, reorder_index, keep_num, select_num, quant_type):
+    bsz, q_len, _ = x.shape
+    x = x.reshape(bsz * q_len, -1).contiguous().detach()
+    x = reorder_and_sparsify(x, reorder_index, keep_num)
+    identity_index = torch.arange(x.shape[-1], dtype=torch.int16, device=x.device)
+    qx, scale_x, scale = reorder_quantize_x(x, identity_index, select_num, quant_type)
+    torch.cuda.synchronize()
+    return qx, scale_x, scale, bsz, q_len
 
 class QLlamaDecoderLayer(nn.Module):
     def __init__(
@@ -91,9 +103,11 @@ class QLlamaDecoderLayer(nn.Module):
         originalLayer: LlamaDecoderLayer,
         kv_cache,
         select_nums,
+        keep_nums,
         reorder_index,
         layer_idx,
         quant_type,
+        sparse_config=None,
     ):
         super().__init__()
        
@@ -102,17 +116,21 @@ class QLlamaDecoderLayer(nn.Module):
             originalLayer.self_attn,
             kv_cache,
             select_nums=select_nums,
+            keep_nums=keep_nums,
             reorder_index=reorder_index,
             i=layer_idx,
-            quant_type=quant_type
+            quant_type=quant_type,
+            sparse_config=sparse_config,
         )
         # self.self_attn = originalLayer.self_attn
         self.mlp = QLlamaMLP(
             originalLayer.mlp,
             select_nums=select_nums,
+            keep_nums=keep_nums,
             reorder_index=reorder_index,
             i=layer_idx,
-            quant_type=quant_type
+            quant_type=quant_type,
+            sparse_config=sparse_config,
         )
         # self.mlp = originalLayer.mlp
         self.input_layernorm = QLlamaRMSNorm(
@@ -212,9 +230,11 @@ class QLlamaAttention(nn.Module):
         originalAttn: LlamaAttention,
         kv_cache,
         select_nums,
+        keep_nums,
         reorder_index,
         i,
-        quant_type
+        quant_type,
+        sparse_config=None,
     ):
         super().__init__()
         self.q_kv_cache = kv_cache
@@ -228,6 +248,7 @@ class QLlamaAttention(nn.Module):
         self.rope_theta = originalAttn.rope_theta
         self.layer_idx = i
         self.quant_type = quant_type
+        self.sparse_method = sparse_config["method"] if sparse_config is not None else "none"
         if (self.head_dim * self.num_heads) != self.hidden_size:
             raise ValueError(
                 f"hidden_size must be divisible by num_heads (got `hidden_size`: {self.hidden_size}"
@@ -259,7 +280,18 @@ class QLlamaAttention(nn.Module):
             reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
             quant_type=quant_type
         )
+        self.q_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')]
+        self.o_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')]
+        self.k_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')]
+        self.v_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')]
         self.rotary_emb = originalAttn.rotary_emb
+        if self.sparse_method == "teal":
+            self.sparse_fns = build_llama_teal_sparsifiers(
+                i,
+                sparse_config["histogram_path"],
+                sparse_config["sparsity"],
+                apply_prefill=sparse_config.get("apply_prefill", True),
+            )
 
 
         self.attention_dropout=originalAttn.attention_dropout
@@ -292,15 +324,40 @@ class QLlamaAttention(nn.Module):
         
 
         bsz, q_len, _ = hidden_states.size()
-        
-        hidden_states = hidden_states.reshape(bsz*q_len, -1).contiguous().detach()
-        qx, scale_x, scale = reorder_quantize_x(hidden_states, self.q_reorder_index, self.q_proj.select_num, self.quant_type)
-        torch.cuda.synchronize()
-        
-        hidden_states = (qx, scale_x, scale, bsz, q_len)
-        query_states = self.q_proj(hidden_states).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
-        key_states = self.k_proj(hidden_states).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
-        value_states = self.v_proj(hidden_states).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
+        if self.sparse_method == "teal":
+            q_input = quantize_branch_input(
+                self.sparse_fns["q"](hidden_states),
+                self.q_reorder_index,
+                self.q_proj.select_num,
+                self.quant_type,
+            )
+            k_input = quantize_branch_input(
+                self.sparse_fns["k"](hidden_states),
+                self.k_reorder_index,
+                self.k_proj.select_num,
+                self.quant_type,
+            )
+            v_input = quantize_branch_input(
+                self.sparse_fns["v"](hidden_states),
+                self.v_reorder_index,
+                self.v_proj.select_num,
+                self.quant_type,
+            )
+        else:
+            shared_input = quantize_static_branch_input(
+                hidden_states,
+                self.q_reorder_index,
+                self.q_keep_num,
+                self.q_proj.select_num,
+                self.quant_type,
+            )
+            q_input = shared_input
+            k_input = shared_input
+            v_input = shared_input
+
+        query_states = self.q_proj(q_input).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
+        key_states = self.k_proj(k_input).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
+        value_states = self.v_proj(v_input).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
 
         # kv_seq_len = key_states.shape[-2]
         # if past_key_value is not None:
@@ -358,13 +415,22 @@ class QLlamaAttention(nn.Module):
         
         # Quantize the attention output
       
-        attn_output = attn_output.reshape(bsz*q_len, -1).contiguous().detach()
-
-
-        qx, scale_x, scale = reorder_quantize_x(attn_output, self.o_reorder_index, self.o_proj.select_num, self.quant_type)
-        torch.cuda.synchronize()
-        attn_output = (qx, scale_x, scale, bsz, q_len)
-        attn_output = self.o_proj(attn_output)
+        if self.sparse_method == "teal":
+            o_input = quantize_branch_input(
+                self.sparse_fns["o"](attn_output),
+                self.o_reorder_index,
+                self.o_proj.select_num,
+                self.quant_type,
+            )
+        else:
+            o_input = quantize_static_branch_input(
+                attn_output,
+                self.o_reorder_index,
+                self.o_keep_num,
+                self.o_proj.select_num,
+                self.quant_type,
+            )
+        attn_output = self.o_proj(o_input)
 
         if not output_attentions:
             attn_weights = None
@@ -377,14 +443,17 @@ class QLlamaMLP(nn.Module):
         self,
         originalMLP: LlamaMLP,
         select_nums,
+        keep_nums,
         reorder_index,
         i,
-        quant_type
+        quant_type,
+        sparse_config=None,
     ):
         super().__init__()
         nameTemplate = 'layers.{}.{}.{}.{}'
 
         self.quant_type = quant_type
+        self.sparse_method = sparse_config["method"] if sparse_config is not None else "none"
         
         self.gate_proj = QLinearLayer(
             originalMLP.gate_proj,
@@ -393,6 +462,7 @@ class QLlamaMLP(nn.Module):
             out_reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
             quant_type=self.quant_type
         )
+        self.gate_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')]
         self.down_proj = QLinearLayer(
             originalMLP.down_proj,
             select_num=select_nums[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
@@ -406,8 +476,17 @@ class QLlamaMLP(nn.Module):
             out_reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
             quant_type=self.quant_type
         )
+        self.up_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'up_proj', 'input')]
+        self.down_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'down_proj', 'input')]
         self.act_fn = originalMLP.act_fn
         self.layer_idx = i
+        if self.sparse_method == "teal":
+            self.sparse_fns = build_llama_teal_sparsifiers(
+                i,
+                sparse_config["histogram_path"],
+                sparse_config["sparsity"],
+                apply_prefill=sparse_config.get("apply_prefill", True),
+            )
         
         
     def to(self, *args, **kwargs):
@@ -423,21 +502,41 @@ class QLlamaMLP(nn.Module):
     def forward(self, x):
         # input X: [b, seq, dim]: quantized
 
-        bsz, q_len, _ = x.shape
-        x = x.reshape(bsz*q_len, -1).contiguous().detach()
-
-        qx, scale_x, scale = reorder_quantize_x(x, self.up_reorder_index, self.up_proj.select_num, self.quant_type)
-        torch.cuda.synchronize()
-        x = (qx, scale_x, scale, bsz, q_len)
-        tmpResult = self.act_fn(self.gate_proj(x)) * self.up_proj(x)
+        if self.sparse_method == "teal":
+            gate_input = quantize_branch_input(
+                self.sparse_fns["gate"](x),
+                self.gate_reorder_index,
+                self.gate_proj.select_num,
+                self.quant_type,
+            )
+            up_input = quantize_branch_input(
+                self.sparse_fns["up"](x),
+                self.up_reorder_index,
+                self.up_proj.select_num,
+                self.quant_type,
+            )
+            tmpResult = self.act_fn(self.gate_proj(gate_input)) * self.up_proj(up_input)
+            down_input = quantize_branch_input(
+                self.sparse_fns["down"](tmpResult),
+                self.down_reorder_index,
+                self.down_proj.select_num,
+                self.quant_type,
+            )
+        else:
+            shared_input = quantize_static_branch_input(
+                x,
+                self.up_reorder_index,
+                self.up_keep_num,
+                self.up_proj.select_num,
+                self.quant_type,
+            )
+            tmpResult = self.act_fn(self.gate_proj(shared_input)) * self.up_proj(shared_input)
+            down_input = quantize_static_branch_input(
+                tmpResult,
+                self.down_reorder_index,
+                self.down_keep_num,
+                self.down_proj.select_num,
+                self.quant_type,
+            )
         # Quantize the activations and feed into down_proj
-
-        bsz, q_len, _ = tmpResult.shape
-        tmpResult = tmpResult.reshape(bsz*q_len, -1).contiguous().detach()
-        
-
-        qx, scale_x, scale = reorder_quantize_x(tmpResult, self.down_reorder_index, self.down_proj.select_num, self.quant_type)
-        torch.cuda.synchronize()
-        tmpResult = (qx, scale_x, scale, bsz, q_len)
-       
-        return self.down_proj(tmpResult)
+        return self.down_proj(down_input)
