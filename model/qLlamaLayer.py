@@ -7,6 +7,7 @@ from qLinearLayer import QLinearLayer
 from quantize import *
 from visualize import *
 from optional_agemm import HAS_AGEMM, require_agemm
+from cats_utils import CATSActivationSparsifier
 from sparse_utils import build_llama_teal_sparsifiers
 import os
 
@@ -487,6 +488,8 @@ class QLlamaMLP(nn.Module):
                 sparse_config["sparsity"],
                 apply_prefill=sparse_config.get("apply_prefill", True),
             )
+        elif self.sparse_method == "cats":
+            self.cats_gate_sparsifier = CATSActivationSparsifier()
         
         
     def to(self, *args, **kwargs):
@@ -518,6 +521,28 @@ class QLlamaMLP(nn.Module):
             tmpResult = self.act_fn(self.gate_proj(gate_input)) * self.up_proj(up_input)
             down_input = quantize_branch_input(
                 self.sparse_fns["down"](tmpResult),
+                self.down_reorder_index,
+                self.down_proj.select_num,
+                self.quant_type,
+            )
+        elif self.sparse_method == "cats":
+            gate_input = quantize_branch_input(
+                x,
+                self.gate_reorder_index,
+                self.gate_proj.select_num,
+                self.quant_type,
+            )
+            up_input = quantize_branch_input(
+                x,
+                self.up_reorder_index,
+                self.up_proj.select_num,
+                self.quant_type,
+            )
+            gate_output = self.gate_proj(gate_input)
+            sparse_gate = self.cats_gate_sparsifier(self.act_fn(gate_output))
+            tmpResult = sparse_gate * self.up_proj(up_input)
+            down_input = quantize_branch_input(
+                tmpResult,
                 self.down_reorder_index,
                 self.down_proj.select_num,
                 self.quant_type,

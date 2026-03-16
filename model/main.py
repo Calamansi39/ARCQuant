@@ -2,6 +2,12 @@ import torch
 from collections import defaultdict
 import json
 
+from cats_utils import (
+    begin_cats_calibration,
+    disable_cats_sparsity,
+    enable_cats_sparsity,
+    finish_cats_calibration,
+)
 from model_utils import reorder_model_llama, reorder_model_qwen, reorder_model_mixtral
 from parallel_utils import (
     map_layers_to_balanced_devices,
@@ -34,6 +40,8 @@ def reset_sparse_stats(model):
         if hasattr(layer, "mlp") and hasattr(layer.mlp, "sparse_fns"):
             for proj in SPARSE_PROJECTIONS["mlp"]:
                 layer.mlp.sparse_fns[proj].reset_stats()
+        if hasattr(layer, "mlp") and hasattr(layer.mlp, "cats_gate_sparsifier"):
+            layer.mlp.cats_gate_sparsifier.reset_stats()
 
 
 def collect_sparse_stats(model):
@@ -49,9 +57,26 @@ def collect_sparse_stats(model):
         if hasattr(layer, "mlp") and hasattr(layer.mlp, "sparse_fns"):
             for proj in SPARSE_PROJECTIONS["mlp"]:
                 layer_stats[proj] = layer.mlp.sparse_fns[proj].get_zero_ratio()
+        if hasattr(layer, "mlp") and hasattr(layer.mlp, "cats_gate_sparsifier"):
+            layer_stats["gate"] = layer.mlp.cats_gate_sparsifier.get_zero_ratio()
         if layer_stats:
             stats[f"layer_{idx}"] = layer_stats
     return stats
+
+
+@torch.no_grad()
+def calibrate_cats_thresholds(model, trainloader, device, sparsity):
+    begin_cats_calibration(model)
+    disable_cats_sparsity(model)
+    model = model.to(device)
+    model.eval()
+    for inp, _ in trainloader:
+        model(inp.to(device))
+    finish_cats_calibration(model, sparsity)
+    model.cpu()
+    torch.cuda.empty_cache()
+    enable_cats_sparsity(model)
+    reset_sparse_stats(model)
 
 
 def summarize_requested_metrics(eval_results, requested_tasks):
@@ -177,8 +202,8 @@ if __name__ == '__main__':
         help="Static post-reorder keep ratio for activation sparsity. 1.0 disables sparsity."
     )
     parser.add_argument(
-        "--sparse_method", type=str, default="none", choices=["none", "static", "teal"],
-        help="Activation sparsity method. 'static' uses keep_ratio, 'teal' uses histogram thresholds."
+        "--sparse_method", type=str, default="none", choices=["none", "static", "teal", "cats"],
+        help="Activation sparsity method. 'static' uses keep_ratio, 'teal' uses histogram thresholds, 'cats' uses sparse SiLU inside Llama MLP."
     )
     parser.add_argument(
         "--sparsity", type=float, default=0.0,
@@ -187,6 +212,10 @@ if __name__ == '__main__':
     parser.add_argument(
         "--teal_histogram_path", type=str, default=None,
         help="Path to TEAL histogram root, e.g. .../histograms."
+    )
+    parser.add_argument(
+        "--cats_calibration_samples", type=int, default=128,
+        help="Number of calibration samples used to set CATS thresholds."
     )
     parser.add_argument(
         "--disable_prefill_sparsity", action="store_true",
@@ -253,6 +282,11 @@ if __name__ == '__main__':
             "sparsity": args.sparsity,
             "apply_prefill": not args.disable_prefill_sparsity,
         }
+    elif args.sparse_method == "cats":
+        sparse_config = {
+            "method": "cats",
+            "sparsity": args.sparsity,
+        }
 
     
     torch.cuda.reset_max_memory_allocated()
@@ -279,6 +313,17 @@ if __name__ == '__main__':
     print(f"Sparsity is: {args.sparsity:.4f}")
     print(f"Keep Ratio is: {args.keep_ratio:.4f}")
     print(f"Total time taken: {end_time - start_time:.2f} seconds")
+
+    if args.sparse_method == "cats":
+        calibration_loader, _ = get_loaders(
+            args.dataset,
+            nsamples=args.cats_calibration_samples,
+            seed=args.seed,
+            model=args.model,
+            seqlen=2048,
+        )
+        calibrate_cats_thresholds(model, calibration_loader, DEV, args.sparsity)
+
     bsz = args.lm_eval_batch_size
     if bsz != "auto":
         bsz = int(bsz)
