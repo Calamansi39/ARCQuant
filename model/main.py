@@ -1,12 +1,26 @@
 import torch
 from collections import defaultdict
 import json
+import os
+import random
 
 from cats_utils import (
     begin_cats_calibration,
     disable_cats_sparsity,
     enable_cats_sparsity,
     finish_cats_calibration,
+)
+from input_sparsity_log import (
+    InputSparsityLogger,
+    clear_input_sparsity_logger,
+    dump_input_sparsity_logger,
+    set_input_sparsity_logger,
+)
+from rsparse_utils import (
+    QRSparseLinear,
+    begin_rsparse_calibration,
+    build_rsparse_module_configs,
+    finish_rsparse_calibration,
 )
 from model_utils import reorder_model_llama, reorder_model_qwen, reorder_model_mixtral
 from parallel_utils import (
@@ -42,6 +56,14 @@ def reset_sparse_stats(model):
                 layer.mlp.sparse_fns[proj].reset_stats()
         if hasattr(layer, "mlp") and hasattr(layer.mlp, "cats_gate_sparsifier"):
             layer.mlp.cats_gate_sparsifier.reset_stats()
+        if hasattr(layer, "self_attn"):
+            for proj in ("q_proj", "k_proj", "v_proj", "o_proj"):
+                if hasattr(layer.self_attn, proj) and isinstance(getattr(layer.self_attn, proj), QRSparseLinear):
+                    getattr(layer.self_attn, proj).reset_stats()
+        if hasattr(layer, "mlp"):
+            for proj in ("gate_proj", "up_proj", "down_proj"):
+                if hasattr(layer.mlp, proj) and isinstance(getattr(layer.mlp, proj), QRSparseLinear):
+                    getattr(layer.mlp, proj).reset_stats()
 
 
 def collect_sparse_stats(model):
@@ -59,6 +81,16 @@ def collect_sparse_stats(model):
                 layer_stats[proj] = layer.mlp.sparse_fns[proj].get_zero_ratio()
         if hasattr(layer, "mlp") and hasattr(layer.mlp, "cats_gate_sparsifier"):
             layer_stats["gate"] = layer.mlp.cats_gate_sparsifier.get_zero_ratio()
+        if hasattr(layer, "self_attn"):
+            proj_map = {"q_proj": "q", "k_proj": "k", "v_proj": "v", "o_proj": "o"}
+            for proj_name, short_name in proj_map.items():
+                if hasattr(layer.self_attn, proj_name) and isinstance(getattr(layer.self_attn, proj_name), QRSparseLinear):
+                    layer_stats[short_name] = getattr(layer.self_attn, proj_name).get_zero_ratio()
+        if hasattr(layer, "mlp"):
+            proj_map = {"gate_proj": "gate", "up_proj": "up", "down_proj": "down"}
+            for proj_name, short_name in proj_map.items():
+                if hasattr(layer.mlp, proj_name) and isinstance(getattr(layer.mlp, proj_name), QRSparseLinear):
+                    layer_stats[short_name] = getattr(layer.mlp, proj_name).get_zero_ratio()
         if layer_stats:
             stats[f"layer_{idx}"] = layer_stats
     return stats
@@ -77,6 +109,70 @@ def calibrate_cats_thresholds(model, trainloader, device, sparsity):
     torch.cuda.empty_cache()
     enable_cats_sparsity(model)
     reset_sparse_stats(model)
+
+
+@torch.no_grad()
+def calibrate_rsparse_thresholds(model, trainloader, device):
+    begin_rsparse_calibration(model)
+    model = model.to(device)
+    model.eval()
+    for inp, _ in trainloader:
+        model(inp.to(device))
+    finish_rsparse_calibration(model)
+    model.cpu()
+    torch.cuda.empty_cache()
+    reset_sparse_stats(model)
+
+
+def get_fast_rsparse_calibration_loader(dataset_name, model_name, nsamples, seed, seqlen):
+    if dataset_name != "wikitext2":
+        return get_loaders(
+            dataset_name,
+            nsamples=nsamples,
+            seed=seed,
+            model=model_name,
+            seqlen=seqlen,
+        )[0]
+
+    from datasets import load_dataset
+    from transformers import AutoTokenizer
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if tokenizer.bos_token_id != 1 or tokenizer.eos_token_id != 2:
+        try:
+            tokenizer.bos_token_id = 1
+            tokenizer.eos_token_id = 2
+        except AttributeError:
+            pass
+
+    traindata = load_dataset("wikitext", "wikitext-2-raw-v1", split="train")
+    required_tokens = max(nsamples * seqlen + 1, seqlen + 1)
+    segments = []
+    encoded = None
+
+    # Only tokenize as much prefix text as needed for calibration.
+    for text in traindata["text"]:
+        if not text or not text.strip():
+            continue
+        segments.append(text)
+        encoded = tokenizer("\n\n".join(segments), return_tensors="pt")
+        if encoded.input_ids.shape[1] >= required_tokens:
+            break
+
+    if encoded is None or encoded.input_ids.shape[1] < required_tokens:
+        encoded = tokenizer("\n\n".join(segments), return_tensors="pt")
+
+    random.seed(seed)
+    trainloader = []
+    token_count = encoded.input_ids.shape[1]
+    for _ in range(nsamples):
+        start = random.randint(0, token_count - seqlen - 1)
+        end = start + seqlen
+        inp = encoded.input_ids[:, start:end]
+        tar = inp.clone()
+        tar[:, :-1] = -100
+        trainloader.append((inp, tar))
+    return trainloader
 
 
 def summarize_requested_metrics(eval_results, requested_tasks):
@@ -202,8 +298,8 @@ if __name__ == '__main__':
         help="Static post-reorder keep ratio for activation sparsity. 1.0 disables sparsity."
     )
     parser.add_argument(
-        "--sparse_method", type=str, default="none", choices=["none", "static", "teal", "cats"],
-        help="Activation sparsity method. 'static' uses keep_ratio, 'teal' uses histogram thresholds, 'cats' uses sparse SiLU inside Llama MLP."
+        "--sparse_method", type=str, default="none", choices=["none", "static", "teal", "cats", "rsparse"],
+        help="Activation sparsity method. 'static' uses keep_ratio, 'teal' uses histogram thresholds, 'cats' uses sparse SiLU inside Llama MLP, 'rsparse' uses quantized sparse matmul plus bf16 low-rank compensation."
     )
     parser.add_argument(
         "--sparsity", type=float, default=0.0,
@@ -218,6 +314,34 @@ if __name__ == '__main__':
         help="Number of calibration samples used to set CATS thresholds."
     )
     parser.add_argument(
+        "--rsparse_config_file", type=str, default="/gemini/code/NMSparsity/R-Sparse/config/llama-3.1-8b_default.json",
+        help="Path to the R-Sparse JSON config containing SVD paths and default per-layer metadata."
+    )
+    parser.add_argument(
+        "--rsparse_search_file", type=str, default="/gemini/code/NMSparsity/R-Sparse/config/llama3_sparsity_50_evolutionary_search.npy",
+        help="Path to the R-Sparse search allocation file. If omitted, a global sparsity/sparse_ratio budget is used."
+    )
+    parser.add_argument(
+        "--rsparse_low_rank_root", type=str, default=None,
+        help="Optional override root for low-rank factor files. By default this resolves relative to --rsparse_config_file."
+    )
+    parser.add_argument(
+        "--rsparse_sparse_ratio", type=float, default=1.0,
+        help="Sparse-route allocation ratio used when --rsparse_search_file is not provided."
+    )
+    parser.add_argument(
+        "--rsparse_prefill_ratio", type=float, default=0.1,
+        help="Fraction of tokens kept dense during prefill for R-Sparse."
+    )
+    parser.add_argument(
+        "--rsparse_calibration_samples", type=int, default=1,
+        help="Number of samples used to estimate R-Sparse thresholds."
+    )
+    parser.add_argument(
+        "--rsparse_calibration_seqlen", type=int, default=512,
+        help="Sequence length used during R-Sparse threshold calibration."
+    )
+    parser.add_argument(
         "--disable_prefill_sparsity", action="store_true",
         help="Disable TEAL prefill sparsification semantics."
     )
@@ -228,6 +352,14 @@ if __name__ == '__main__':
     parser.add_argument(
         "--output_json", type=str, default=None,
         help="Path to save consolidated evaluation results."
+    )
+    parser.add_argument(
+        "--log_input_sparsity", action="store_true",
+        help="Log per-layer q/k/v/o/gate/up/down linear-input zero_ratio and two_zeros_ratio."
+    )
+    parser.add_argument(
+        "--input_sparsity_log_path", type=str, default=None,
+        help="Text log path for input sparsity statistics. A JSON summary with the same prefix is also saved."
     )
   
     
@@ -287,6 +419,19 @@ if __name__ == '__main__':
             "method": "cats",
             "sparsity": args.sparsity,
         }
+    elif args.sparse_method == "rsparse":
+        sparse_config = {
+            "method": "rsparse",
+            "modules": build_rsparse_module_configs(
+                model.config,
+                config_file=args.rsparse_config_file,
+                search_file=args.rsparse_search_file,
+                low_rank_root=args.rsparse_low_rank_root,
+                target_sparsity=args.sparsity,
+                sparse_ratio=args.rsparse_sparse_ratio,
+                prefill_ratio=args.rsparse_prefill_ratio,
+            ),
+        }
 
     
     torch.cuda.reset_max_memory_allocated()
@@ -323,6 +468,26 @@ if __name__ == '__main__':
             seqlen=2048,
         )
         calibrate_cats_thresholds(model, calibration_loader, DEV, args.sparsity)
+    elif args.sparse_method == "rsparse":
+        calibration_loader = get_fast_rsparse_calibration_loader(
+            args.dataset,
+            model_name=args.model,
+            nsamples=args.rsparse_calibration_samples,
+            seed=args.seed,
+            seqlen=args.rsparse_calibration_seqlen,
+        )
+        calibrate_rsparse_thresholds(model, calibration_loader, DEV)
+
+    if args.log_input_sparsity:
+        logs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "logs"))
+        os.makedirs(logs_dir, exist_ok=True)
+        if args.input_sparsity_log_path is None:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            args.input_sparsity_log_path = os.path.join(
+                logs_dir,
+                f"log_input_{model_name.lower()}_{args.quant_type}_{args.sparse_method}_{timestamp}.log",
+            )
+        set_input_sparsity_logger(InputSparsityLogger(args.input_sparsity_log_path))
 
     bsz = args.lm_eval_batch_size
     if bsz != "auto":
@@ -424,4 +589,11 @@ if __name__ == '__main__':
         with open(output_json, "w") as f:
             json.dump(result_payload, f, indent=2, ensure_ascii=False)
         print(f"Saved consolidated results to {output_json}")
+
+    if args.log_input_sparsity:
+        saved_paths = dump_input_sparsity_logger()
+        clear_input_sparsity_logger()
+        if saved_paths is not None:
+            print(f"Saved input sparsity log to {saved_paths[0]}")
+            print(f"Saved input sparsity summary to {saved_paths[1]}")
   

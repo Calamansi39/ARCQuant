@@ -8,6 +8,8 @@ from quantize import *
 from visualize import *
 from optional_agemm import HAS_AGEMM, require_agemm
 from cats_utils import CATSActivationSparsifier
+from input_sparsity_log import record_input_sparsity
+from rsparse_utils import QRSparseLinear
 from sparse_utils import build_llama_teal_sparsifiers
 import os
 
@@ -257,30 +259,64 @@ class QLlamaAttention(nn.Module):
             )
             
         nameTemplate = 'layers.{}.{}.{}.{}'
-        self.q_proj = QLinearLayer(
-            originalAttn.q_proj,
-            select_num=select_nums[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')],
-            reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')],
-            quant_type=quant_type
-        )
-        self.k_proj = QLinearLayer(
-            originalAttn.k_proj,
-            select_num=select_nums[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')],
-            reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')],
-            quant_type=quant_type
-        )
-        self.v_proj = QLinearLayer(
-            originalAttn.v_proj,
-            select_num=select_nums[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')],
-            reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')],
-            quant_type=quant_type
-        )
-        self.o_proj = QLinearLayer(
-            originalAttn.o_proj,
-            select_num=select_nums[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
-            reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
-            quant_type=quant_type
-        )
+        if self.sparse_method == "rsparse":
+            self.q_proj = QRSparseLinear(
+                originalAttn.q_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')],
+                quant_type=quant_type,
+                rsparse_config=sparse_config["modules"][f"layers.{i}.self_attn.q_proj"],
+                log_tag=f"layer_{i:02d}.q",
+            )
+            self.k_proj = QRSparseLinear(
+                originalAttn.k_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')],
+                quant_type=quant_type,
+                rsparse_config=sparse_config["modules"][f"layers.{i}.self_attn.k_proj"],
+                log_tag=f"layer_{i:02d}.k",
+            )
+            self.v_proj = QRSparseLinear(
+                originalAttn.v_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')],
+                quant_type=quant_type,
+                rsparse_config=sparse_config["modules"][f"layers.{i}.self_attn.v_proj"],
+                log_tag=f"layer_{i:02d}.v",
+            )
+            self.o_proj = QRSparseLinear(
+                originalAttn.o_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
+                quant_type=quant_type,
+                rsparse_config=sparse_config["modules"][f"layers.{i}.self_attn.o_proj"],
+                log_tag=f"layer_{i:02d}.o",
+            )
+        else:
+            self.q_proj = QLinearLayer(
+                originalAttn.q_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')],
+                quant_type=quant_type
+            )
+            self.k_proj = QLinearLayer(
+                originalAttn.k_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')],
+                quant_type=quant_type
+            )
+            self.v_proj = QLinearLayer(
+                originalAttn.v_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')],
+                quant_type=quant_type
+            )
+            self.o_proj = QLinearLayer(
+                originalAttn.o_proj,
+                select_num=select_nums[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')],
+                quant_type=quant_type
+            )
         self.q_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')]
         self.o_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')]
         self.k_keep_num = keep_nums[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')]
@@ -326,25 +362,39 @@ class QLlamaAttention(nn.Module):
 
         bsz, q_len, _ = hidden_states.size()
         if self.sparse_method == "teal":
+            q_tensor = self.sparse_fns["q"](hidden_states)
+            k_tensor = self.sparse_fns["k"](hidden_states)
+            v_tensor = self.sparse_fns["v"](hidden_states)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.q", q_tensor)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.k", k_tensor)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.v", v_tensor)
             q_input = quantize_branch_input(
-                self.sparse_fns["q"](hidden_states),
+                q_tensor,
                 self.q_reorder_index,
                 self.q_proj.select_num,
                 self.quant_type,
             )
             k_input = quantize_branch_input(
-                self.sparse_fns["k"](hidden_states),
+                k_tensor,
                 self.k_reorder_index,
                 self.k_proj.select_num,
                 self.quant_type,
             )
             v_input = quantize_branch_input(
-                self.sparse_fns["v"](hidden_states),
+                v_tensor,
                 self.v_reorder_index,
                 self.v_proj.select_num,
                 self.quant_type,
             )
+        elif self.sparse_method == "rsparse":
+            query_states = self.q_proj(hidden_states).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
+            key_states = self.k_proj(hidden_states).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
+            value_states = self.v_proj(hidden_states).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
         else:
+            if self.sparse_method == "cats":
+                record_input_sparsity(f"layer_{self.layer_idx:02d}.q", hidden_states)
+                record_input_sparsity(f"layer_{self.layer_idx:02d}.k", hidden_states)
+                record_input_sparsity(f"layer_{self.layer_idx:02d}.v", hidden_states)
             shared_input = quantize_static_branch_input(
                 hidden_states,
                 self.q_reorder_index,
@@ -356,9 +406,10 @@ class QLlamaAttention(nn.Module):
             k_input = shared_input
             v_input = shared_input
 
-        query_states = self.q_proj(q_input).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
-        key_states = self.k_proj(k_input).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
-        value_states = self.v_proj(v_input).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
+        if self.sparse_method != "rsparse":
+            query_states = self.q_proj(q_input).view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
+            key_states = self.k_proj(k_input).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
+            value_states = self.v_proj(v_input).view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
 
         # kv_seq_len = key_states.shape[-2]
         # if past_key_value is not None:
@@ -417,13 +468,22 @@ class QLlamaAttention(nn.Module):
         # Quantize the attention output
       
         if self.sparse_method == "teal":
+            o_tensor = self.sparse_fns["o"](attn_output)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.o", o_tensor)
             o_input = quantize_branch_input(
-                self.sparse_fns["o"](attn_output),
+                o_tensor,
                 self.o_reorder_index,
                 self.o_proj.select_num,
                 self.quant_type,
             )
+        elif self.sparse_method == "rsparse":
+            attn_output = self.o_proj(attn_output)
+            if not output_attentions:
+                attn_weights = None
+            return attn_output, attn_weights, past_key_value
         else:
+            if self.sparse_method == "cats":
+                record_input_sparsity(f"layer_{self.layer_idx:02d}.o", attn_output)
             o_input = quantize_static_branch_input(
                 attn_output,
                 self.o_reorder_index,
@@ -456,27 +516,55 @@ class QLlamaMLP(nn.Module):
         self.quant_type = quant_type
         self.sparse_method = sparse_config["method"] if sparse_config is not None else "none"
         
-        self.gate_proj = QLinearLayer(
-            originalMLP.gate_proj,
-            select_num=select_nums[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')],
-            reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')],
-            out_reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
-            quant_type=self.quant_type
-        )
+        if self.sparse_method == "rsparse":
+            self.gate_proj = QRSparseLinear(
+                originalMLP.gate_proj,
+                select_num=select_nums[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')],
+                quant_type=self.quant_type,
+                rsparse_config=sparse_config["modules"][f"layers.{i}.mlp.gate_proj"],
+                log_tag=f"layer_{i:02d}.gate",
+            )
+        else:
+            self.gate_proj = QLinearLayer(
+                originalMLP.gate_proj,
+                select_num=select_nums[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')],
+                out_reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
+                quant_type=self.quant_type
+            )
         self.gate_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')]
-        self.down_proj = QLinearLayer(
-            originalMLP.down_proj,
-            select_num=select_nums[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
-            reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
-            quant_type=self.quant_type
-        )
-        self.up_proj = QLinearLayer(
-            originalMLP.up_proj,
-            select_num=select_nums[nameTemplate.format(i, 'mlp', 'up_proj', 'input')],
-            reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'up_proj', 'input')],
-            out_reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
-            quant_type=self.quant_type
-        )
+        if self.sparse_method == "rsparse":
+            self.down_proj = QRSparseLinear(
+                originalMLP.down_proj,
+                select_num=select_nums[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
+                quant_type=self.quant_type,
+                rsparse_config=sparse_config["modules"][f"layers.{i}.mlp.down_proj"],
+                log_tag=f"layer_{i:02d}.down",
+            )
+            self.up_proj = QRSparseLinear(
+                originalMLP.up_proj,
+                select_num=select_nums[nameTemplate.format(i, 'mlp', 'up_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'up_proj', 'input')],
+                quant_type=self.quant_type,
+                rsparse_config=sparse_config["modules"][f"layers.{i}.mlp.up_proj"],
+                log_tag=f"layer_{i:02d}.up",
+            )
+        else:
+            self.down_proj = QLinearLayer(
+                originalMLP.down_proj,
+                select_num=select_nums[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
+                quant_type=self.quant_type
+            )
+            self.up_proj = QLinearLayer(
+                originalMLP.up_proj,
+                select_num=select_nums[nameTemplate.format(i, 'mlp', 'up_proj', 'input')],
+                reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'up_proj', 'input')],
+                out_reorder_index=reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')],
+                quant_type=self.quant_type
+            )
         self.up_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'up_proj', 'input')]
         self.down_keep_num = keep_nums[nameTemplate.format(i, 'mlp', 'down_proj', 'input')]
         self.act_fn = originalMLP.act_fn
@@ -506,26 +594,34 @@ class QLlamaMLP(nn.Module):
         # input X: [b, seq, dim]: quantized
 
         if self.sparse_method == "teal":
+            gate_tensor = self.sparse_fns["gate"](x)
+            up_tensor = self.sparse_fns["up"](x)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.gate", gate_tensor)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.up", up_tensor)
             gate_input = quantize_branch_input(
-                self.sparse_fns["gate"](x),
+                gate_tensor,
                 self.gate_reorder_index,
                 self.gate_proj.select_num,
                 self.quant_type,
             )
             up_input = quantize_branch_input(
-                self.sparse_fns["up"](x),
+                up_tensor,
                 self.up_reorder_index,
                 self.up_proj.select_num,
                 self.quant_type,
             )
             tmpResult = self.act_fn(self.gate_proj(gate_input)) * self.up_proj(up_input)
+            down_tensor = self.sparse_fns["down"](tmpResult)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.down", down_tensor)
             down_input = quantize_branch_input(
-                self.sparse_fns["down"](tmpResult),
+                down_tensor,
                 self.down_reorder_index,
                 self.down_proj.select_num,
                 self.quant_type,
             )
         elif self.sparse_method == "cats":
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.gate", x)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.up", x)
             gate_input = quantize_branch_input(
                 x,
                 self.gate_reorder_index,
@@ -541,12 +637,16 @@ class QLlamaMLP(nn.Module):
             gate_output = self.gate_proj(gate_input)
             sparse_gate = self.cats_gate_sparsifier(self.act_fn(gate_output))
             tmpResult = sparse_gate * self.up_proj(up_input)
+            record_input_sparsity(f"layer_{self.layer_idx:02d}.down", tmpResult)
             down_input = quantize_branch_input(
                 tmpResult,
                 self.down_reorder_index,
                 self.down_proj.select_num,
                 self.quant_type,
             )
+        elif self.sparse_method == "rsparse":
+            tmpResult = self.act_fn(self.gate_proj(x)) * self.up_proj(x)
+            return self.down_proj(tmpResult)
         else:
             shared_input = quantize_static_branch_input(
                 x,
