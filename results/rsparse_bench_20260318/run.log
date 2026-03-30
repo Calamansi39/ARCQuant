@@ -1,0 +1,428 @@
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:00,  8.07it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00, 11.89it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:00<00:00, 12.21it/s]
+/gemini/code/envs/smoothquant/lib/python3.10/site-packages/torch/cuda/memory.py:365: FutureWarning: torch.cuda.reset_max_memory_allocated now calls torch.cuda.reset_peak_memory_stats, which resets /all/ peak memory stats.
+  warnings.warn(
+Loading cached reording index from disk...
+Reordering model...
+  0%|          | 0/32 [00:00<?, ?it/s]/gemini/code/NMSparsity/ARC_lbc/model/qLinearLayer.py:68: RuntimeWarning: agemm is unavailable/disabled (import failed: No module named 'agemm'); falling back to fake NVFP4 quantization + PyTorch ops. Set ARC_LBC_DISABLE_AGEMM=0 and run on SM120+ to enable kernels.
+  warn_agemm_fallback_once(reason)
+/gemini/code/NMSparsity/ARC_lbc/model/rsparse_utils.py:202: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  u, s, v, scale = torch.load(path, map_location="cpu")
+  3%|▎         | 1/32 [00:00<00:25,  1.20it/s]  6%|▋         | 2/32 [00:01<00:15,  1.97it/s]  9%|▉         | 3/32 [00:01<00:11,  2.43it/s] 12%|█▎        | 4/32 [00:01<00:11,  2.33it/s] 16%|█▌        | 5/32 [00:02<00:10,  2.67it/s] 19%|█▉        | 6/32 [00:02<00:09,  2.81it/s] 22%|██▏       | 7/32 [00:03<00:10,  2.34it/s] 25%|██▌       | 8/32 [00:03<00:09,  2.47it/s] 28%|██▊       | 9/32 [00:03<00:09,  2.49it/s] 31%|███▏      | 10/32 [00:04<00:07,  2.76it/s] 34%|███▍      | 11/32 [00:04<00:07,  3.00it/s] 38%|███▊      | 12/32 [00:04<00:06,  3.19it/s] 41%|████      | 13/32 [00:04<00:05,  3.30it/s] 44%|████▍     | 14/32 [00:05<00:05,  3.35it/s] 47%|████▋     | 15/32 [00:05<00:05,  3.40it/s] 50%|█████     | 16/32 [00:05<00:05,  3.07it/s] 53%|█████▎    | 17/32 [00:06<00:04,  3.22it/s] 56%|█████▋    | 18/32 [00:06<00:04,  3.35it/s] 59%|█████▉    | 19/32 [00:06<00:03,  3.41it/s] 62%|██████▎   | 20/32 [00:06<00:03,  3.49it/s] 66%|██████▌   | 21/32 [00:07<00:03,  3.17it/s] 69%|██████▉   | 22/32 [00:07<00:03,  3.15it/s] 72%|███████▏  | 23/32 [00:07<00:02,  3.18it/s] 75%|███████▌  | 24/32 [00:08<00:02,  2.96it/s] 78%|███████▊  | 25/32 [00:08<00:02,  3.01it/s] 81%|████████▏ | 26/32 [00:08<00:01,  3.16it/s] 84%|████████▍ | 27/32 [00:09<00:01,  3.06it/s] 88%|████████▊ | 28/32 [00:09<00:01,  2.96it/s] 91%|█████████ | 29/32 [00:09<00:00,  3.03it/s] 94%|█████████▍| 30/32 [00:10<00:00,  3.10it/s] 97%|█████████▋| 31/32 [00:10<00:00,  3.19it/s]100%|██████████| 32/32 [00:10<00:00,  3.03it/s]100%|██████████| 32/32 [00:10<00:00,  2.92it/s]
+Using the latest cached version of the dataset since wikitext couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'wikitext-2-raw-v1' at /root/.cache/huggingface/datasets/wikitext/wikitext-2-raw-v1/0.0.0/b08601e04326c79dfdd32d625aee71d232d685c3 (last modified on Sat Mar 14 15:46:50 2026).
+Using the latest cached version of the dataset since wikitext couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'wikitext-2-raw-v1' at /root/.cache/huggingface/datasets/wikitext/wikitext-2-raw-v1/0.0.0/b08601e04326c79dfdd32d625aee71d232d685c3 (last modified on Sat Mar 14 15:46:50 2026).
+Token indices sequence length is longer than the specified maximum sequence length for this model (2436214 > 131072). Running this sequence through the model will result in indexing errors
+2026-03-18:10:44:04,898 WARNING  [loading.py:546] Using the latest cached version of the module from /root/.cache/huggingface/modules/evaluate_modules/metrics/evaluate-metric--exact_match/9d3b67e0c429cd7460b2b05aab53419b48eea369b73e1d9f185a56ca90c373d4 (last modified on Sat Mar 14 15:11:47 2026) since it couldn't be found locally at evaluate-metric--exact_match, or remotely on the Hugging Face Hub.
+2026-03-18:10:44:05,081 WARNING  [huggingface.py:105] `pretrained` model kwarg is not of type `str`. Many other model arguments may be ignored. Please do not launch via accelerate or use `parallelize=True` if passing an existing model this way.
+2026-03-18:10:44:05,721 WARNING  [huggingface.py:305] Passed an already-initialized model through `pretrained`, assuming single-process call to evaluate() or custom distributed integration
+2026-03-18:10:44:10,432 WARNING  [__init__.py:194] Some tasks could not be loaded due to missing dependencies. Run with `--verbosity DEBUG` for full details.
+2026-03-18:10:44:14,047 WARNING  [__init__.py:194] Some tasks could not be loaded due to missing dependencies. Run with `--verbosity DEBUG` for full details.
+Using the latest cached version of the dataset since allenai/ai2_arc couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,069 WARNING  [load.py:1645] Using the latest cached version of the dataset since allenai/ai2_arc couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'ARC-Challenge' at /root/.cache/huggingface/datasets/allenai___ai2_arc/ARC-Challenge/0.0.0/210d026faf9955653af8916fad021475a3f00453 (last modified on Sat Mar 14 15:12:01 2026).
+2026-03-18:10:44:14,070 WARNING  [cache.py:95] Found the latest cached dataset configuration 'ARC-Challenge' at /root/.cache/huggingface/datasets/allenai___ai2_arc/ARC-Challenge/0.0.0/210d026faf9955653af8916fad021475a3f00453 (last modified on Sat Mar 14 15:12:01 2026).
+Using the latest cached version of the dataset since allenai/ai2_arc couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,116 WARNING  [load.py:1645] Using the latest cached version of the dataset since allenai/ai2_arc couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'ARC-Easy' at /root/.cache/huggingface/datasets/allenai___ai2_arc/ARC-Easy/0.0.0/210d026faf9955653af8916fad021475a3f00453 (last modified on Sat Mar 14 15:12:05 2026).
+2026-03-18:10:44:14,117 WARNING  [cache.py:95] Found the latest cached dataset configuration 'ARC-Easy' at /root/.cache/huggingface/datasets/allenai___ai2_arc/ARC-Easy/0.0.0/210d026faf9955653af8916fad021475a3f00453 (last modified on Sat Mar 14 15:12:05 2026).
+2026-03-18:10:44:14,191 WARNING  [task.py:626] [Task: boolq] metric acc is defined, but aggregation is not. using default aggregation=mean
+2026-03-18:10:44:14,191 WARNING  [task.py:638] [Task: boolq] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+Using the latest cached version of the dataset since super_glue couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,192 WARNING  [load.py:1645] Using the latest cached version of the dataset since super_glue couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'boolq' at /root/.cache/huggingface/datasets/super_glue/boolq/0.0.0/3de24cf8022e94f4ee4b9d55a6f539891524d646 (last modified on Sat Mar 14 15:12:14 2026).
+2026-03-18:10:44:14,193 WARNING  [cache.py:95] Found the latest cached dataset configuration 'boolq' at /root/.cache/huggingface/datasets/super_glue/boolq/0.0.0/3de24cf8022e94f4ee4b9d55a6f539891524d646 (last modified on Sat Mar 14 15:12:14 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,385 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'formal_logic' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/formal_logic/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:19 2026).
+2026-03-18:10:44:14,391 WARNING  [cache.py:95] Found the latest cached dataset configuration 'formal_logic' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/formal_logic/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:19 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,400 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_european_history' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_european_history/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:22 2026).
+2026-03-18:10:44:14,406 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_european_history' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_european_history/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:22 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,416 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_us_history' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_us_history/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:26 2026).
+2026-03-18:10:44:14,421 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_us_history' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_us_history/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:26 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,430 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_world_history' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_world_history/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:29 2026).
+2026-03-18:10:44:14,435 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_world_history' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_world_history/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:29 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,444 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'international_law' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/international_law/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:33 2026).
+2026-03-18:10:44:14,450 WARNING  [cache.py:95] Found the latest cached dataset configuration 'international_law' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/international_law/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:33 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,459 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'jurisprudence' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/jurisprudence/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:36 2026).
+2026-03-18:10:44:14,464 WARNING  [cache.py:95] Found the latest cached dataset configuration 'jurisprudence' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/jurisprudence/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:36 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,473 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'logical_fallacies' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/logical_fallacies/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:40 2026).
+2026-03-18:10:44:14,478 WARNING  [cache.py:95] Found the latest cached dataset configuration 'logical_fallacies' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/logical_fallacies/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:40 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,487 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'moral_disputes' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/moral_disputes/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:43 2026).
+2026-03-18:10:44:14,492 WARNING  [cache.py:95] Found the latest cached dataset configuration 'moral_disputes' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/moral_disputes/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:43 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,501 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'moral_scenarios' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/moral_scenarios/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:47 2026).
+2026-03-18:10:44:14,506 WARNING  [cache.py:95] Found the latest cached dataset configuration 'moral_scenarios' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/moral_scenarios/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:47 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,514 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'philosophy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/philosophy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:50 2026).
+2026-03-18:10:44:14,519 WARNING  [cache.py:95] Found the latest cached dataset configuration 'philosophy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/philosophy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:50 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,528 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'prehistory' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/prehistory/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:53 2026).
+2026-03-18:10:44:14,533 WARNING  [cache.py:95] Found the latest cached dataset configuration 'prehistory' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/prehistory/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:53 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,543 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'professional_law' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_law/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:57 2026).
+2026-03-18:10:44:14,548 WARNING  [cache.py:95] Found the latest cached dataset configuration 'professional_law' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_law/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:12:57 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,557 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'world_religions' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/world_religions/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:01 2026).
+2026-03-18:10:44:14,562 WARNING  [cache.py:95] Found the latest cached dataset configuration 'world_religions' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/world_religions/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:01 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,571 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'college_medicine' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_medicine/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:11 2026).
+2026-03-18:10:44:14,576 WARNING  [cache.py:95] Found the latest cached dataset configuration 'college_medicine' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_medicine/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:11 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,586 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'global_facts' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/global_facts/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:14 2026).
+2026-03-18:10:44:14,591 WARNING  [cache.py:95] Found the latest cached dataset configuration 'global_facts' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/global_facts/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:14 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,600 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'human_aging' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/human_aging/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:18 2026).
+2026-03-18:10:44:14,605 WARNING  [cache.py:95] Found the latest cached dataset configuration 'human_aging' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/human_aging/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:18 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,613 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'management' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/management/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:22 2026).
+2026-03-18:10:44:14,619 WARNING  [cache.py:95] Found the latest cached dataset configuration 'management' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/management/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:22 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,628 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'marketing' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/marketing/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:25 2026).
+2026-03-18:10:44:14,633 WARNING  [cache.py:95] Found the latest cached dataset configuration 'marketing' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/marketing/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:25 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,642 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'medical_genetics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/medical_genetics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:28 2026).
+2026-03-18:10:44:14,647 WARNING  [cache.py:95] Found the latest cached dataset configuration 'medical_genetics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/medical_genetics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:28 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,655 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'miscellaneous' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/miscellaneous/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:32 2026).
+2026-03-18:10:44:14,661 WARNING  [cache.py:95] Found the latest cached dataset configuration 'miscellaneous' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/miscellaneous/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:32 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,669 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'nutrition' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/nutrition/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:35 2026).
+2026-03-18:10:44:14,674 WARNING  [cache.py:95] Found the latest cached dataset configuration 'nutrition' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/nutrition/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:35 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,683 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'professional_accounting' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_accounting/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:39 2026).
+2026-03-18:10:44:14,688 WARNING  [cache.py:95] Found the latest cached dataset configuration 'professional_accounting' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_accounting/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:39 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,697 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'professional_medicine' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_medicine/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:42 2026).
+2026-03-18:10:44:14,702 WARNING  [cache.py:95] Found the latest cached dataset configuration 'professional_medicine' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_medicine/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:42 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,711 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'virology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/virology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:46 2026).
+2026-03-18:10:44:14,716 WARNING  [cache.py:95] Found the latest cached dataset configuration 'virology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/virology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:46 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,726 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'business_ethics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/business_ethics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:04 2026).
+2026-03-18:10:44:14,731 WARNING  [cache.py:95] Found the latest cached dataset configuration 'business_ethics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/business_ethics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:04 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,740 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'clinical_knowledge' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/clinical_knowledge/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:08 2026).
+2026-03-18:10:44:14,745 WARNING  [cache.py:95] Found the latest cached dataset configuration 'clinical_knowledge' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/clinical_knowledge/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:08 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,753 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'econometrics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/econometrics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:49 2026).
+2026-03-18:10:44:14,759 WARNING  [cache.py:95] Found the latest cached dataset configuration 'econometrics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/econometrics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:49 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,768 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_geography' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_geography/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:53 2026).
+2026-03-18:10:44:14,773 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_geography' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_geography/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:53 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,782 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_government_and_politics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_government_and_politics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:56 2026).
+2026-03-18:10:44:14,787 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_government_and_politics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_government_and_politics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:13:56 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,796 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_macroeconomics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_macroeconomics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:00 2026).
+2026-03-18:10:44:14,802 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_macroeconomics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_macroeconomics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:00 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,811 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_microeconomics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_microeconomics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:03 2026).
+2026-03-18:10:44:14,816 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_microeconomics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_microeconomics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:03 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,824 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_psychology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_psychology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:07 2026).
+2026-03-18:10:44:14,830 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_psychology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_psychology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:07 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,839 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'human_sexuality' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/human_sexuality/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:10 2026).
+2026-03-18:10:44:14,844 WARNING  [cache.py:95] Found the latest cached dataset configuration 'human_sexuality' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/human_sexuality/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:10 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,852 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'professional_psychology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_psychology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:13 2026).
+2026-03-18:10:44:14,857 WARNING  [cache.py:95] Found the latest cached dataset configuration 'professional_psychology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/professional_psychology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:13 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,867 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'public_relations' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/public_relations/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:17 2026).
+2026-03-18:10:44:14,872 WARNING  [cache.py:95] Found the latest cached dataset configuration 'public_relations' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/public_relations/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:17 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,881 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'security_studies' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/security_studies/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:21 2026).
+2026-03-18:10:44:14,886 WARNING  [cache.py:95] Found the latest cached dataset configuration 'security_studies' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/security_studies/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:21 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,896 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'sociology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/sociology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:24 2026).
+2026-03-18:10:44:14,901 WARNING  [cache.py:95] Found the latest cached dataset configuration 'sociology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/sociology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:24 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,910 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'us_foreign_policy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/us_foreign_policy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:27 2026).
+2026-03-18:10:44:14,915 WARNING  [cache.py:95] Found the latest cached dataset configuration 'us_foreign_policy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/us_foreign_policy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:27 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,924 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'college_computer_science' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_computer_science/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:48 2026).
+2026-03-18:10:44:14,929 WARNING  [cache.py:95] Found the latest cached dataset configuration 'college_computer_science' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_computer_science/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:48 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,938 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'college_mathematics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_mathematics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:51 2026).
+2026-03-18:10:44:14,943 WARNING  [cache.py:95] Found the latest cached dataset configuration 'college_mathematics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_mathematics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:51 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,951 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'college_physics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_physics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:55 2026).
+2026-03-18:10:44:14,956 WARNING  [cache.py:95] Found the latest cached dataset configuration 'college_physics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_physics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:55 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,983 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'computer_security' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/computer_security/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:58 2026).
+2026-03-18:10:44:14,989 WARNING  [cache.py:95] Found the latest cached dataset configuration 'computer_security' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/computer_security/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:58 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:14,997 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'conceptual_physics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/conceptual_physics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:02 2026).
+2026-03-18:10:44:15,002 WARNING  [cache.py:95] Found the latest cached dataset configuration 'conceptual_physics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/conceptual_physics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:02 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,011 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'electrical_engineering' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/electrical_engineering/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:05 2026).
+2026-03-18:10:44:15,016 WARNING  [cache.py:95] Found the latest cached dataset configuration 'electrical_engineering' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/electrical_engineering/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:05 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,025 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'elementary_mathematics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/elementary_mathematics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:09 2026).
+2026-03-18:10:44:15,030 WARNING  [cache.py:95] Found the latest cached dataset configuration 'elementary_mathematics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/elementary_mathematics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:09 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,039 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_biology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_biology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:12 2026).
+2026-03-18:10:44:15,044 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_biology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_biology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:12 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,054 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_chemistry' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_chemistry/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:16 2026).
+2026-03-18:10:44:15,060 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_chemistry' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_chemistry/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:16 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,069 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_computer_science' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_computer_science/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:19 2026).
+2026-03-18:10:44:15,074 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_computer_science' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_computer_science/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:19 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,083 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_mathematics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_mathematics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:23 2026).
+2026-03-18:10:44:15,089 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_mathematics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_mathematics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:23 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,097 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_physics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_physics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:26 2026).
+2026-03-18:10:44:15,102 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_physics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_physics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:26 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,111 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'high_school_statistics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_statistics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:30 2026).
+2026-03-18:10:44:15,116 WARNING  [cache.py:95] Found the latest cached dataset configuration 'high_school_statistics' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/high_school_statistics/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:30 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,125 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'machine_learning' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/machine_learning/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:33 2026).
+2026-03-18:10:44:15,130 WARNING  [cache.py:95] Found the latest cached dataset configuration 'machine_learning' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/machine_learning/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:15:33 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,140 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'abstract_algebra' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/abstract_algebra/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:31 2026).
+2026-03-18:10:44:15,145 WARNING  [cache.py:95] Found the latest cached dataset configuration 'abstract_algebra' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/abstract_algebra/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:31 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,154 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'anatomy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/anatomy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:34 2026).
+2026-03-18:10:44:15,159 WARNING  [cache.py:95] Found the latest cached dataset configuration 'anatomy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/anatomy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:34 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,168 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'astronomy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/astronomy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:37 2026).
+2026-03-18:10:44:15,173 WARNING  [cache.py:95] Found the latest cached dataset configuration 'astronomy' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/astronomy/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:37 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,182 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'college_biology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_biology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:41 2026).
+2026-03-18:10:44:15,187 WARNING  [cache.py:95] Found the latest cached dataset configuration 'college_biology' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_biology/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:41 2026).
+Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,196 WARNING  [load.py:1645] Using the latest cached version of the dataset since hails/mmlu_no_train couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'college_chemistry' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_chemistry/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:44 2026).
+2026-03-18:10:44:15,202 WARNING  [cache.py:95] Found the latest cached dataset configuration 'college_chemistry' at /root/.cache/huggingface/datasets/hails___mmlu_no_train/college_chemistry/0.0.0/b2e1ec9aa795adafe68e8e983248dbd4b52a1c60 (last modified on Sat Mar 14 15:14:44 2026).
+Using the latest cached version of the dataset since openbookqa couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,209 WARNING  [load.py:1645] Using the latest cached version of the dataset since openbookqa couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'main' at /root/.cache/huggingface/datasets/openbookqa/main/0.0.0/388097ea7776314e93a529163e0fea805b8a6454 (last modified on Sat Mar 14 15:15:41 2026).
+2026-03-18:10:44:15,209 WARNING  [cache.py:95] Found the latest cached dataset configuration 'main' at /root/.cache/huggingface/datasets/openbookqa/main/0.0.0/388097ea7776314e93a529163e0fea805b8a6454 (last modified on Sat Mar 14 15:15:41 2026).
+Using the latest cached version of the module from /root/.cache/huggingface/modules/datasets_modules/datasets/piqa/6c611c1a9bf220943c4174e117d3b660859665baf1d43156230116185312d011 (last modified on Sat Mar 14 19:17:43 2026) since it couldn't be found locally at piqa, or remotely on the Hugging Face Hub.
+2026-03-18:10:44:15,519 WARNING  [load.py:1608] Using the latest cached version of the module from /root/.cache/huggingface/modules/datasets_modules/datasets/piqa/6c611c1a9bf220943c4174e117d3b660859665baf1d43156230116185312d011 (last modified on Sat Mar 14 19:17:43 2026) since it couldn't be found locally at piqa, or remotely on the Hugging Face Hub.
+2026-03-18:10:44:15,850 WARNING  [task.py:626] [Task: rte] metric acc is defined, but aggregation is not. using default aggregation=mean
+2026-03-18:10:44:15,850 WARNING  [task.py:638] [Task: rte] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+Using the latest cached version of the dataset since glue couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,851 WARNING  [load.py:1645] Using the latest cached version of the dataset since glue couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'rte' at /root/.cache/huggingface/datasets/glue/rte/0.0.0/bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c (last modified on Sat Mar 14 19:17:55 2026).
+2026-03-18:10:44:15,852 WARNING  [cache.py:95] Found the latest cached dataset configuration 'rte' at /root/.cache/huggingface/datasets/glue/rte/0.0.0/bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c (last modified on Sat Mar 14 19:17:55 2026).
+Using the latest cached version of the dataset since winogrande couldn't be found on the Hugging Face Hub
+2026-03-18:10:44:15,906 WARNING  [load.py:1645] Using the latest cached version of the dataset since winogrande couldn't be found on the Hugging Face Hub
+Found the latest cached dataset configuration 'winogrande_xl' at /root/.cache/huggingface/datasets/winogrande/winogrande_xl/0.0.0/01e74176c63542e6b0bcb004dcdea22d94fb67b5 (last modified on Sat Mar 14 19:18:03 2026).
+2026-03-18:10:44:15,906 WARNING  [cache.py:95] Found the latest cached dataset configuration 'winogrande_xl' at /root/.cache/huggingface/datasets/winogrande/winogrande_xl/0.0.0/01e74176c63542e6b0bcb004dcdea22d94fb67b5 (last modified on Sat Mar 14 19:18:03 2026).
+2026-03-18:10:44:16,640 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:17,477 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:19,091 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:20,371 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:20,490 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:20,645 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:20,837 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:21,060 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:21,173 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:21,275 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:21,429 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:21,752 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:22,585 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:22,877 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:23,179 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:24,852 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:25,013 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:25,175 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:25,271 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:25,480 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:25,577 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:25,796 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:25,891 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:26,626 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:26,912 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:27,180 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:27,436 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:27,591 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:27,686 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:27,937 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:28,047 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:28,233 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:28,415 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:28,780 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:29,009 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:29,520 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:29,642 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:30,221 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:30,323 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:30,555 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:30,744 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:30,838 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:30,931 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:31,025 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:31,122 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:31,216 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:31,437 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:31,574 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:31,931 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:32,223 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:32,414 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:32,509 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:32,761 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:32,904 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:33,106 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:33,211 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:33,304 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:33,430 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:33,572 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:33,712 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:33,805 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:34,002 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:35,544 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:35,656 INFO     [task.py:363] Building contexts for task on rank 0...
+2026-03-18:10:44:35,695 INFO     [evaluator.py:324] Running loglikelihood requests
+LlamaForCausalLM(
+  (model): LlamaModel(
+    (embed_tokens): Embedding(128256, 4096)
+    (layers): ModuleList(
+      (0-31): 32 x QLlamaDecoderLayer(
+        (self_attn): QLlamaAttention(
+          (q_proj): QRSparseLinear(
+            (qlinear): QLinearLayer()
+          )
+          (k_proj): QRSparseLinear(
+            (qlinear): QLinearLayer()
+          )
+          (v_proj): QRSparseLinear(
+            (qlinear): QLinearLayer()
+          )
+          (o_proj): QRSparseLinear(
+            (qlinear): QLinearLayer()
+          )
+          (rotary_emb): LlamaRotaryEmbedding()
+        )
+        (mlp): QLlamaMLP(
+          (gate_proj): QRSparseLinear(
+            (qlinear): QLinearLayer()
+          )
+          (down_proj): QRSparseLinear(
+            (qlinear): QLinearLayer()
+          )
+          (up_proj): QRSparseLinear(
+            (qlinear): QLinearLayer()
+          )
+          (act_fn): SiLU()
+        )
+        (input_layernorm): QLlamaRMSNorm(
+          (originalNorm): LlamaRMSNorm((4096,), eps=1e-05)
+        )
+        (post_attention_layernorm): QLlamaRMSNorm(
+          (originalNorm): LlamaRMSNorm((4096,), eps=1e-05)
+        )
+      )
+    )
+    (norm): LlamaRMSNorm((4096,), eps=1e-05)
+    (rotary_emb): LlamaRotaryEmbedding()
+  )
+  (lm_head): Linear(in_features=4096, out_features=128256, bias=False)
+)
+Quantized Model Size: 22.21 GB
+Quantized Type is: NVFP4 
+Sparse Method is: rsparse
+Sparsity is: 0.5000
+Keep Ratio is: 1.0000
+Total time taken: 10.94 seconds
+bos/eos tokens updated: tokenizer.bos_token_id=1,  tokenizer.eos_token_id=2
+map layer 0 to cuda:0
+map layer 1 to cuda:0
+map layer 2 to cuda:0
+map layer 3 to cuda:0
+map layer 4 to cuda:0
+map layer 5 to cuda:0
+map layer 6 to cuda:0
+map layer 7 to cuda:0
+map layer 8 to cuda:1
+map layer 9 to cuda:1
+map layer 10 to cuda:1
+map layer 11 to cuda:1
+map layer 12 to cuda:1
+map layer 13 to cuda:1
+map layer 14 to cuda:1
+map layer 15 to cuda:1
+map layer 16 to cuda:1
+map layer 17 to cuda:1
+map layer 18 to cuda:1
+map layer 19 to cuda:1
+map layer 20 to cuda:1
+map layer 21 to cuda:1
+map layer 22 to cuda:1
+map layer 23 to cuda:1
+map layer 24 to cuda:0
+map layer 25 to cuda:0
+map layer 26 to cuda:0
+map layer 27 to cuda:0
+map layer 28 to cuda:0
+map layer 29 to cuda:0
+map layer 30 to cuda:0
+map layer 31 to cuda:0
+  0%|          | 0/85660 [00:00<?, ?it/s]  0%|          | 1/85660 [00:04<97:57:42,  4.12s/it]  0%|          | 9/85660 [00:07<16:16:42,  1.46it/s]  0%|          | 17/85660 [00:10<12:04:44,  1.97it/s]  0%|          | 25/85660 [00:12<9:57:08,  2.39it/s]   0%|          | 33/85660 [00:15<8:51:26,  2.69it/s]  0%|          | 41/85660 [00:17<8:13:45,  2.89it/s]  0%|          | 49/85660 [00:19<7:42:02,  3.09it/s]  0%|          | 57/85660 [00:21<7:19:08,  3.25it/s]  0%|          | 65/85660 [00:24<7:01:37,  3.38it/s]  0%|          | 73/85660 [00:26<6:48:55,  3.49it/s]  0%|          | 81/85660 [00:28<6:39:46,  3.57it/s]  0%|          | 89/85660 [00:30<6:31:08,  3.65it/s]  0%|          | 97/85660 [00:32<6:24:45,  3.71it/s]  0%|          | 105/85660 [00:34<6:18:34,  3.77it/s]  0%|          | 113/85660 [00:36<6:13:42,  3.82it/s]  0%|          | 121/85660 [00:38<6:10:27,  3.85it/s]  0%|          | 129/85660 [00:40<6:07:25,  3.88it/s]  0%|          | 137/85660 [00:42<6:03:10,  3.92it/s]  0%|          | 145/85660 [00:44<5:59:23,  3.97it/s]  0%|          | 153/85660 [00:46<5:55:24,  4.01it/s]  0%|          | 161/85660 [00:48<5:51:35,  4.05it/s]  0%|          | 169/85660 [00:50<5:48:18,  4.09it/s]  0%|          | 177/85660 [00:52<5:45:28,  4.12it/s]  0%|          | 185/85660 [00:54<5:42:54,  4.15it/s]  0%|          | 193/85660 [00:56<5:40:29,  4.18it/s]  0%|          | 201/85660 [00:57<5:38:36,  4.21it/s]  0%|          | 209/85660 [00:59<5:37:12,  4.22it/s]  0%|          | 217/85660 [01:01<5:35:27,  4.25it/s]  0%|          | 225/85660 [01:03<5:34:45,  4.25it/s]  0%|          | 233/85660 [01:05<5:32:56,  4.28it/s]  0%|          | 241/85660 [01:07<5:30:46,  4.30it/s]  0%|          | 249/85660 [01:08<5:29:13,  4.32it/s]  0%|          | 257/85660 [01:10<5:27:56,  4.34it/s]  0%|          | 265/85660 [01:12<5:26:40,  4.36it/s]  0%|          | 273/85660 [01:14<5:25:52,  4.37it/s]  0%|          | 281/85660 [01:16<5:24:34,  4.38it/s]  0%|          | 289/85660 [01:18<5:23:34,  4.40it/s]  0%|          | 297/85660 [01:19<5:21:54,  4.42it/s]  0%|          | 305/85660 [01:21<5:20:38,  4.44it/s]  0%|          | 313/85660 [01:23<5:19:31,  4.45it/s]  0%|          | 321/85660 [01:25<5:18:40,  4.46it/s]  0%|          | 329/85660 [01:26<5:17:24,  4.48it/s]  0%|          | 337/85660 [01:28<5:16:16,  4.50it/s]  0%|          | 345/85660 [01:30<5:15:27,  4.51it/s]  0%|          | 353/85660 [01:32<5:14:28,  4.52it/s]  0%|          | 361/85660 [01:34<5:13:22,  4.54it/s]  0%|          | 369/85660 [01:35<5:12:12,  4.55it/s]  0%|          | 377/85660 [01:37<5:11:08,  4.57it/s]  0%|          | 385/85660 [01:39<5:09:49,  4.59it/s]  0%|          | 393/85660 [01:40<5:08:38,  4.60it/s]  0%|          | 401/85660 [01:42<5:07:28,  4.62it/s]  0%|          | 409/85660 [01:44<5:06:14,  4.64it/s]  0%|          | 417/85660 [01:46<5:05:13,  4.65it/s]  0%|          | 425/85660 [01:47<5:04:23,  4.67it/s]  1%|          | 433/85660 [01:49<5:03:19,  4.68it/s]  1%|          | 441/85660 [01:51<5:02:27,  4.70it/s]
