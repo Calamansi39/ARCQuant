@@ -15,7 +15,23 @@ import torch.nn.functional as F
 from sklearn.cluster import KMeans
 import sys
 from model.quantize import *
-from model.kv_cache import *
+try:
+    from model.kv_cache import *
+except ImportError:
+    pass
+
+
+def _build_position_embeddings(model, hidden_states, position_ids):
+    rotary_emb = getattr(model.model, "rotary_emb", None)
+    if rotary_emb is None:
+        return None
+    if position_ids is None:
+        position_ids = torch.arange(
+            hidden_states.shape[1],
+            device=hidden_states.device,
+            dtype=torch.long,
+        ).unsqueeze(0)
+    return rotary_emb(hidden_states, position_ids)
 
 
 @torch.no_grad()
@@ -66,12 +82,15 @@ def get_reorder_index(model, act_scales, metric='mean'):
 
 
 def load_model(model_path):
-    config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+    config = AutoConfig.from_pretrained(model_path, trust_remote_code=False)
     config.use_cache = False
     kwargs = {"torch_dtype": "auto", "low_cpu_mem_usage": True}
-    model = AutoModelForCausalLM.from_pretrained(model_path, config=config, trust_remote_code=True, **kwargs)
+    model = AutoModelForCausalLM.from_pretrained(model_path, config=config, trust_remote_code=False, **kwargs)
     model.eval()
-    enc = AutoTokenizer.from_pretrained(model_path, use_fast=True, trust_remote_code=False)
+    try:
+        enc = AutoTokenizer.from_pretrained(model_path, use_fast=False, trust_remote_code=False, local_files_only=True)
+    except Exception:
+        enc = AutoTokenizer.from_pretrained(model_path, use_fast=False, trust_remote_code=False)
     return model, enc
 
 
@@ -297,7 +316,12 @@ def get_act_stats(model, dataloader, device_, metric='mean', seqlen=2048, reorde
     for i in tqdm(range(len(layers)), desc="Processing layers"):
         layer = layers[i].to(device)
         for j in range(nsamples):
-            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+            hidden_states = inps[j].unsqueeze(0)
+            layer_kwargs = dict(attention_mask=attention_mask, position_ids=position_ids)
+            position_embeddings = _build_position_embeddings(model, hidden_states, position_ids)
+            if position_embeddings is not None:
+                layer_kwargs["position_embeddings"] = position_embeddings
+            outs[j] = layer(hidden_states, **layer_kwargs)[0]
         layers[i] = layer.cpu()
         del layer
         inps, outs = outs, inps
@@ -527,8 +551,16 @@ def search_select_proportions(model, dataloader, device_, seqlen, reorder_index)
         if attention_mask is not None: attention_mask = attention_mask.to(device)
         if position_ids is not None: position_ids = position_ids.to(device)
 
+        outs = torch.zeros_like(inps)
         with torch.no_grad():
-            inps = layer(inps, attention_mask=attention_mask, position_ids=position_ids)[0]
+            for sample_idx in range(nsamples):
+                hidden_states = inps[sample_idx].unsqueeze(0)
+                layer_kwargs = dict(attention_mask=attention_mask, position_ids=position_ids)
+                position_embeddings = _build_position_embeddings(model, hidden_states, position_ids)
+                if position_embeddings is not None:
+                    layer_kwargs["position_embeddings"] = position_embeddings
+                outs[sample_idx] = layer(hidden_states, **layer_kwargs)[0].squeeze(0)
+        inps = outs
 
         for name, keys in act_scales.items():
             if 'output' in name:
@@ -575,4 +607,3 @@ def search_select_proportions(model, dataloader, device_, seqlen, reorder_index)
 
     print(f'Average bits is {(total_bits / total_elements):.2f}')
     return select_nums, average_bits
-

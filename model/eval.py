@@ -3,6 +3,20 @@ import torch.nn as nn
 from tqdm import tqdm
 import fnmatch
 
+
+def _build_position_embeddings(model, hidden_states, position_ids):
+    rotary_emb = getattr(model.model, "rotary_emb", None)
+    if rotary_emb is None:
+        return None
+    if position_ids is None:
+        position_ids = torch.arange(
+            hidden_states.shape[1],
+            device=hidden_states.device,
+            dtype=torch.long,
+        ).unsqueeze(0)
+    return rotary_emb(hidden_states, position_ids)
+
+
 def pattern_match(patterns, source_list):
     task_names = set()
     for pattern in patterns:
@@ -57,7 +71,12 @@ def eval_ppl(model, testenc, dev):
     for i in tqdm(range(len(layers))):
         layer = layers[i].to(dev)
         for j in range(nsamples):
-            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask, position_ids=position_ids)[0]
+            hidden_states = inps[j].unsqueeze(0)
+            layer_kwargs = dict(attention_mask=attention_mask, position_ids=position_ids)
+            position_embeddings = _build_position_embeddings(model, hidden_states, position_ids)
+            if position_embeddings is not None:
+                layer_kwargs["position_embeddings"] = position_embeddings
+            outs[j] = layer(hidden_states, **layer_kwargs)[0]
         layers[i] = layer.cpu()
         del layer
         inps, outs = outs, inps

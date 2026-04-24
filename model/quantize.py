@@ -5,7 +5,10 @@ import gc
 
 import sys
 sys.path.append('kernels/build/')
-import agemm 
+try:
+    import agemm
+except ImportError:
+    agemm = None
 
 import math
 import random
