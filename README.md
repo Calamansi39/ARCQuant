@@ -101,9 +101,11 @@ python arc.py run --model llama-3.1-8b --model-path /path/to/Llama-3.1-8B \
   --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
 ```
 
-`--method none` 运行 ARCQuant 原有量化路径；`--method teal` 还要提供 `--histogram-path /path/to/histograms`；`--method xmask` 调用学姐已有的 2:4 掩码路径，需要 `--x-mask-ckpt`。目前 TEAL/WINA 和统一 CLI 的 xmask 只接入 **Llama** 适配器，TEAL/WINA 不能与 `x_mask` 同时启用。`python arc.py list` 可查看模型与评测的真实接入状态。GPQA Diamond 和 MATH-500 已映射到当前 `lm-evaluation-harness` 的任务；DeepSeek V4 Flash、MiniMax H3、MAGI-2 及生成式评测仍需对应模型或评分适配器，登记路径不等于可以运行。
+`--method none` 运行 ARCQuant 原有量化路径；`--method teal` 还要提供 `--histogram-path /path/to/histograms`；`--method xmask` 调用学姐已有的 2:4 掩码路径，需要 `--x-mask-ckpt`。目前 TEAL/WINA 和统一 CLI 的 xmask 只接入 **Llama** 适配器，TEAL/WINA 不能与 `x_mask` 同时启用。`python arc.py list` 可查看模型与评测的真实接入状态。GPQA Diamond 和 MATH-500 已映射到当前 `lm-evaluation-harness` 的任务。
 
-更完整的命令、实现说明、权重与 benchmark 配置见 [实验指南](docs/EXPERIMENTS.md)；组会卡时粗估见 [GPU 预算](docs/GPU_BUDGET.md)。
+本机 DeepSeek、MiniMax H3、MAGI-2 的权重和主要评测数据已经核对。`python arc.py assets` 会重新检查文件。已有的 `base_eval` 评测器可通过同一个 `arc.py plan/run --backend base-eval --method none` 入口启动 DeepSeek 的 GPQA、MATH-500、LongBench v2、LiveCodeBench v6，以及两个视频模型的 VBench。这个后端用于**基线**，其中的 HiF4 没有使用 ARCQuant 增强残差通道，也没有 TEAL/WINA。新架构接入 ARCQuant 核心方法仍需模型层适配。
+
+更完整的命令和方法说明见 [实验指南](docs/EXPERIMENTS.md)；本机权重、数据和基线入口见 [资产与基线指南](docs/ASSETS_AND_BASELINES.md)；卡时估算见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
 ```

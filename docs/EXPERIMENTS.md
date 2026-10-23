@@ -70,19 +70,21 @@ python arc.py plan --model llama-3.1-8b --method xmask \
 | Llama 3.1 8B | 原有量化适配器；TEAL/WINA 已接入该路径 |
 | Qwen 2.5 7B、Mixtral 8x7B | 保留原有量化适配代码；未接入 TEAL/WINA，需按实际依赖版本验证 |
 | Qwen 3.8 27B | 从 LBC 配置保留名称；尚未验证权重和模型适配 |
-| DeepSeek V4 Flash | 已登记本机权重；尚无该架构的 ARCQuant 量化适配器 |
-| MiniMax H3、MAGI-2 preview | 已登记本机权重；视频模型接口与量化适配器尚未接入 |
+| DeepSeek V4 Flash | 权重完整；`base-eval` 基线可运行已有文本评测；尚无该架构的 ARCQuant 核心量化适配器 |
+| MiniMax H3、MAGI-2 preview | VBench 所需权重已核对，`base-eval` 生成与评分入口可通过统一 CLI 启动；尚无 ARCQuant 核心量化适配器 |
 
 | Benchmark | 当前状态 |
 | --- | --- |
 | WikiText-2、现有零样本任务、MMLU | 通过原有 perplexity / lm-eval 入口 |
 | GPQA Diamond、MATH-500 | 已配置当前 lm-eval 中的 `gpqa_diamond_zeroshot`、`hendrycks_math500` 任务；提供每任务 8 题的 `smoke` 档 |
-| LongBench v2、LiveCodeBench、Terminal-Bench、VBench | 已登记；尚未接好各自的输入、生成和评分流程 |
+| LongBench v2、LiveCodeBench v6 | 数据已核对，DeepSeek 可通过 `--backend base-eval` 使用现有生成与评分协议 |
+| VBench | 提示词和评分模型已核对；MiniMax H3 与 MAGI-2 可通过 `--backend base-eval` 使用现有生成与评分协议 |
+| Terminal-Bench core 0.1.1 | 86 个任务已下载；尚需容器代理与模型服务适配 |
 
-仓库已有 `model/eval_longbench.py`，它针对原 LongBench 任务，**不等于 LongBench v2 适配器**。VBench 的一次提示可能对应多个生成视频；配置中的 `tiny`/`official` 只是规划档位，不代表已经具备正式评分能力。
+仓库已有 `model/eval_longbench.py`，它针对原 LongBench 任务，**不等于 LongBench v2 适配器**。现有 LongBench v2 与 VBench 基线协议由外部固定版本的 `base_eval` 提供；VBench `tiny` 是 108 个唯一提示词、每精度 740 条视频。具体文件、版本及启动命令见 [资产与基线指南](ASSETS_AND_BASELINES.md)。
 
 当前新模型和生成式 benchmark 的路径可在 `configs/experiments.json` 修改，也可用环境变量覆盖。新增模型时先实现模型结构和 ARCQuant 投影适配，再验证量化输出；新增 benchmark 时按官方协议接入生成和评分，最后再把状态改为可运行。
 
 ## 已验证到哪一步
 
-已验证 CLI 参数与当前 `model/main.py` 对齐、HiF4 下 TEAL/WINA 的计划生成及稀疏函数的 CPU 数值行为。仓库的 `requirements.txt` 锁定 `transformers==4.46.3`；检查时本机 `arcquant` 环境是 5.9.0，旧 Llama 包装层在这个版本下无法构造。`prepare`/`run` 会先检查版本并提示更换环境。这里还缺少可直接回归的 Llama 权重、校准缓存与 TEAL 直方图，故**尚未完成真实模型精度和速度回归**。在组会或论文中使用结果前，应分别跑 `none`、`teal`、`wina` 的相同模型与 benchmark，并另外测量端到端延迟。
+已验证 CLI 参数与当前 `model/main.py` 对齐、HiF4 下 TEAL/WINA 的计划生成及稀疏函数的 CPU 数值行为。仓库的 `requirements.txt` 锁定 `transformers==4.46.3`；检查时本机 `arcquant` 环境是 5.9.0，旧 Llama 包装层在这个版本下无法构造。`--backend arcquant` 的 `prepare/run` 会先检查版本并提示更换环境。这里还缺少可直接回归的 Llama 权重、校准缓存与 TEAL 直方图，故**尚未完成真实模型精度和速度回归**。新接入的 `base-eval` 已通过模型、数据及协议的 CPU 预检，没有在这次改动后新跑完整 GPU 实验。在组会或论文中使用结果前，应分别跑 `none`、`teal`、`wina` 的相同模型与 benchmark，并另外测量端到端延迟。

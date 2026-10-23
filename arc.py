@@ -15,6 +15,9 @@ from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
+from benchmarks.asset_inventory import audit_benchmark, audit_catalog, audit_model
+from benchmarks.baseline_bridge import BaselineError, build_baseline_plan
+
 
 ROOT = Path(__file__).resolve().parent
 CATALOG = ROOT / "configs" / "experiments.json"
@@ -75,6 +78,10 @@ def missing_teal_histograms(root: Path, model_path: Path) -> list[Path]:
 
 def build_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
     catalog = catalog or read_catalog()
+    if getattr(args, "backend", "arcquant") == "base-eval":
+        return build_baseline_plan(args, catalog, ROOT)
+    if args.quant_type == "BF16":
+        raise PlanError("BF16 is available through --backend base-eval; choose an ARCQuant quantization type here.")
     model, model_path = resolve_model(args, catalog)
     benchmark = catalog["benchmarks"].get(args.benchmark)
     if benchmark is None:
@@ -171,6 +178,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
+    sub.add_parser("assets", help="audit local model weights and benchmark data without GPU")
     prep = sub.add_parser("prepare", help="produce ARCQuant reorder and calibration caches")
     prep.add_argument("--model", required=True)
     prep.add_argument("--model-path")
@@ -182,8 +190,12 @@ def _parser() -> argparse.ArgumentParser:
 
     for action in ("plan", "run"):
         p = sub.add_parser(action, help="print a plan" if action == "plan" else "execute and record a run")
+        p.add_argument("--backend", choices=["arcquant", "base-eval"], default="arcquant")
+        p.add_argument("--base-eval-root", help="source directory for the pinned external baseline evaluator")
+        p.add_argument("--gpu-ids", help="physical GPU IDs for base-eval, e.g. 0,1; MiniMax also accepts auto")
+        p.add_argument("--converted-model", help="two-way converted DeepSeek weights for base-eval")
         p.add_argument("--method", choices=["none", "teal", "wina", "xmask"], required=True)
-        p.add_argument("--quant-type", choices=["HiF4", "NVFP4", "MXFP4", "INT4"], default="HiF4")
+        p.add_argument("--quant-type", choices=["BF16", "HiF4", "NVFP4", "MXFP4", "INT4"], default="HiF4")
         p.add_argument("--model", required=True)
         p.add_argument("--model-path")
         p.add_argument("--benchmark", required=True)
@@ -220,8 +232,15 @@ def main(argv: list[str] | None = None) -> int:
             for key in ("methods", "models", "benchmarks"):
                 print(f"{key}:")
                 for name, entry in catalog[key].items():
-                    print(f"  {name:<22} {entry['status']}")
+                    baseline = entry.get("baseline_benchmarks") or entry.get("baseline_models")
+                    extra = "  base-eval: " + ", ".join(baseline) if baseline else ""
+                    print(f"  {name:<22} {entry['status']}{extra}")
             return 0
+        if args.action == "assets":
+            report = audit_catalog(catalog)
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+            return 0 if all(value["status"] == "ready" for group in report.values()
+                            for value in group.values()) else 2
         if args.action == "prepare":
             plan = prepare_plan(args, catalog)
             if args.dry_run:
@@ -235,6 +254,36 @@ def main(argv: list[str] | None = None) -> int:
         if args.action == "plan":
             print(json.dumps(plan, indent=2, ensure_ascii=False))
             return 0
+        if plan.get("backend") == "base-eval":
+            model_entry = {**catalog["models"][args.model], "path_env": "",
+                           "default_path": plan["model_path"]}
+            if args.model == "deepseek-v4-flash":
+                model_entry["variants"] = {**model_entry["variants"],
+                                           "tp2": plan["env"]["TP_MODEL"]}
+            model_check = audit_model(args.model, model_entry)
+            benchmark_entry = {**catalog["benchmarks"][args.benchmark],
+                               "data_env": "", "default_path": plan["dataset_path"]}
+            data_check = audit_benchmark(args.benchmark, benchmark_entry)
+            if model_check["status"] != "ready" or data_check["status"] != "ready" or (args.model == "deepseek-v4-flash" and model_check["tp2"]["status"] != "ready"):
+                raise PlanError("Baseline assets are incomplete; run 'python arc.py assets' for details.")
+            args.run_dir.mkdir(parents=True, exist_ok=True)
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+            manifest_path = args.run_dir / f"{stamp}_{args.model}_base-eval_{args.benchmark}.json"
+            manifest = {**plan, "source_revision": _git_revision(), "started_at_utc": stamp,
+                        "status": "running"}
+            manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+            try:
+                code = subprocess.run(plan["command"], cwd=plan["cwd"],
+                                      env={**os.environ, **plan["env"]}, check=False).returncode
+            except BaseException:
+                manifest["status"] = "interrupted"
+                manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+                raise
+            manifest["returncode"] = code
+            manifest["status"] = "completed" if code == 0 else "failed"
+            manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+            print(f"Run manifest: {manifest_path}")
+            return code
         check_runtime_compatibility()
         if not Path(plan["model_path"]).is_dir():
             raise PlanError(f"Model directory does not exist: {plan['model_path']}")
@@ -273,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
         print(f"Run manifest: {manifest_path}")
         return code
-    except PlanError as exc:
+    except (PlanError, BaselineError) as exc:
         print(f"arc: error: {exc}", file=sys.stderr)
         return 2
 

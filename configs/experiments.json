@@ -33,54 +33,117 @@
       "variants": {
         "original": "/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731",
         "tp2": "/mnt/kpfs_qyang/zhaolianchao/models/DeepSeek-V4-Flash-0731-mp2"
-      }
+      },
+      "baseline_benchmarks": [
+        "gpqa-diamond",
+        "math500",
+        "longbench-v2",
+        "livecodebench"
+      ]
     },
     "minimax-h3": {
       "family": "minimax",
       "modality": "video",
       "status": "registered-only",
       "path_env": "ARCQUANT_MINIMAX_MODEL",
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MiniMax-H3"
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MiniMax-H3",
+      "baseline_benchmarks": [
+        "vbench"
+      ],
+      "asset_scope": "T2VA/VBench; transformer_ref and original FL2VA/Ref2VA checkpoints are not required"
     },
     "magi-2-preview": {
       "family": "magi2",
       "modality": "video",
       "status": "registered-only",
       "path_env": "ARCQUANT_MAGI2_MODEL",
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MAGI-2-preview"
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MAGI-2-preview",
+      "baseline_benchmarks": [
+        "vbench"
+      ]
     }
   },
   "benchmarks": {
     "wikitext2": {
       "status": "legacy-ready",
       "runner": "ppl",
-      "profiles": {"full": {"limit": -1}}
+      "profiles": {
+        "full": {
+          "limit": -1
+        }
+      }
     },
     "lm-eval-zero-shot": {
       "status": "legacy-ready",
       "runner": "lm-eval",
       "tasks": "piqa,arc_challenge,boolq,hellaswag,winogrande,lambada_openai,arc_easy",
       "fewshot": 0,
-      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+      "profiles": {
+        "smoke": {
+          "limit": 8
+        },
+        "full": {
+          "limit": -1
+        }
+      }
     },
     "mmlu-5shot": {
       "status": "legacy-ready",
       "runner": "lm-eval",
       "tasks": "mmlu",
       "fewshot": 5,
-      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+      "profiles": {
+        "smoke": {
+          "limit": 8
+        },
+        "full": {
+          "limit": -1
+        }
+      }
     },
     "longbench-v2": {
       "status": "registered-only",
       "modality": "text",
       "data_env": "ARCQUANT_LONGBENCH_DATA",
-      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+      "profiles": {
+        "smoke": {
+          "limit": 8
+        },
+        "full": {
+          "limit": -1
+        }
+      },
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--THUDM--LongBench-v2/snapshots/2b48e494f2c7a2f0af81aae178e05c7e1dde0fe9",
+      "data_file": "data.json",
+      "record_format": "json",
+      "expected_records": 503,
+      "expected_bytes": 465490535,
+      "dataset_revision": "2b48e494f2c7a2f0af81aae178e05c7e1dde0fe9",
+      "baseline_models": [
+        "deepseek-v4-flash"
+      ]
     },
     "livecodebench": {
       "status": "registered-only",
       "modality": "text",
       "data_env": "ARCQUANT_LIVECODEBENCH_DATA",
-      "profiles": {"smoke": {"limit": 2}, "full": {"limit": -1}}
+      "profiles": {
+        "smoke": {
+          "limit": 2
+        },
+        "full": {
+          "limit": -1
+        }
+      },
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--livecodebench--code_generation_lite/snapshots/0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "data_file": "test6.jsonl",
+      "record_format": "jsonl",
+      "expected_records": 175,
+      "expected_bytes": 134303240,
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "baseline_models": [
+        "deepseek-v4-flash"
+      ]
     },
     "gpqa-diamond": {
       "status": "lm-eval-ready",
@@ -88,7 +151,24 @@
       "runner": "lm-eval",
       "tasks": "gpqa_diamond_zeroshot",
       "fewshot": 0,
-      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+      "profiles": {
+        "smoke": {
+          "limit": 8
+        },
+        "full": {
+          "limit": -1
+        }
+      },
+      "data_env": "ARCQUANT_GPQA_DIAMOND_DATA",
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--Idavidrein--gpqa/snapshots/633f5ee89ab8ad4522a9f850766b73f62147ffdd",
+      "data_file": "gpqa_diamond.csv",
+      "record_format": "csv",
+      "expected_records": 198,
+      "expected_bytes": 1373492,
+      "dataset_revision": "633f5ee89ab8ad4522a9f850766b73f62147ffdd",
+      "baseline_models": [
+        "deepseek-v4-flash"
+      ]
     },
     "math500": {
       "status": "lm-eval-ready",
@@ -96,25 +176,95 @@
       "runner": "lm-eval",
       "tasks": "hendrycks_math500",
       "fewshot": 0,
-      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+      "profiles": {
+        "smoke": {
+          "limit": 8
+        },
+        "full": {
+          "limit": -1
+        }
+      },
+      "data_env": "ARCQUANT_MATH500_DATA",
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--HuggingFaceH4--MATH-500/snapshots/6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "data_file": "test.jsonl",
+      "record_format": "jsonl",
+      "expected_records": 500,
+      "expected_bytes": 446564,
+      "dataset_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
+      "baseline_models": [
+        "deepseek-v4-flash"
+      ]
     },
     "terminal-bench": {
       "status": "registered-only",
       "modality": "text",
       "data_env": "ARCQUANT_TERMINAL_BENCH_DATA",
-      "profiles": {"smoke": {"limit": 1}, "small": {"limit": 5}, "full": {"limit": -1}}
+      "profiles": {
+        "smoke": {
+          "limit": 1
+        },
+        "small": {
+          "limit": 5
+        },
+        "full": {
+          "limit": -1
+        }
+      },
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/terminal-bench-core-0.1.1/tasks",
+      "data_file": ".",
+      "record_format": "terminal_tasks",
+      "expected_records": 86,
+      "dataset_revision": "91e10457b5410f16c44364da1a34cb6de8c488a5",
+      "dataset_name": "terminal-bench-core",
+      "dataset_version": "0.1.1"
     },
     "vbench": {
       "status": "registered-only",
       "modality": "video",
       "data_env": "ARCQUANT_VBENCH_DATA",
-      "profiles": {"tiny": {"limit": 108}, "official": {"limit": 944}}
+      "profiles": {
+        "tiny": {
+          "limit": 108
+        },
+        "official": {
+          "limit": 944
+        }
+      },
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/vbench/VBench",
+      "data_file": "vbench/VBench_full_info.json",
+      "record_format": "unique_prompt_json",
+      "expected_records": 944,
+      "expected_bytes": 228118,
+      "baseline_models": [
+        "minimax-h3",
+        "magi-2-preview"
+      ]
     }
   },
   "methods": {
-    "none": {"status": "legacy-ready", "description": "ARCQuant quantization without activation sparsity"},
-    "teal": {"status": "llama-only", "description": "Histogram threshold activation sparsity from feature/arc-teal"},
-    "wina": {"status": "llama-only", "description": "Uniform weight-informed top-k activation sparsity, before ARCQuant quantization"},
-    "xmask": {"status": "llama-cli", "description": "Existing ARCQuant 2:4 x_mask checkpoint path through the unified CLI"}
+    "none": {
+      "status": "legacy-ready",
+      "description": "ARCQuant quantization without activation sparsity"
+    },
+    "teal": {
+      "status": "llama-only",
+      "description": "Histogram threshold activation sparsity from feature/arc-teal"
+    },
+    "wina": {
+      "status": "llama-only",
+      "description": "Uniform weight-informed top-k activation sparsity, before ARCQuant quantization"
+    },
+    "xmask": {
+      "status": "llama-cli",
+      "description": "Existing ARCQuant 2:4 x_mask checkpoint path through the unified CLI"
+    }
+  },
+  "backends": {
+    "base-eval": {
+      "path_env": "ARCQUANT_BASE_EVAL_ROOT",
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/base_eval",
+      "revision": "c452d6d",
+      "description": "Existing machine-local BF16/W4A4 baseline and generation evaluator; not ARCQuant residual-channel quantization"
+    }
   }
 }
