@@ -69,6 +69,7 @@ python arc.py plan --model llama-3.1-8b --method xmask \
 | --- | --- |
 | Llama 3.1 8B | 原有量化适配器；TEAL/WINA 已接入该路径 |
 | Qwen 2.5 7B、Mixtral 8x7B | 保留原有量化适配代码；未接入 TEAL/WINA，需按实际依赖版本验证 |
+| Qwen 3.8 27B | 从 LBC 配置保留名称；尚未验证权重和模型适配 |
 | DeepSeek V4 Flash | 已登记本机权重；尚无该架构的 ARCQuant 量化适配器 |
 | MiniMax H3、MAGI-2 preview | 已登记本机权重；视频模型接口与量化适配器尚未接入 |
 

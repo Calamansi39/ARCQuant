@@ -12,6 +12,12 @@
       "status": "legacy-ready",
       "path_env": "ARCQUANT_QWEN_MODEL"
     },
+    "qwen3.8-27b": {
+      "family": "qwen",
+      "modality": "text",
+      "status": "registered-only",
+      "path_env": "ARCQUANT_QWEN38_MODEL"
+    },
     "mixtral-8x7b": {
       "family": "mixtral",
       "modality": "text",
@@ -23,7 +29,11 @@
       "modality": "text",
       "status": "registered-only",
       "path_env": "ARCQUANT_DEEPSEEK_MODEL",
-      "default_path": "/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731"
+      "default_path": "/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731",
+      "variants": {
+        "original": "/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731",
+        "tp2": "/mnt/kpfs_qyang/zhaolianchao/models/DeepSeek-V4-Flash-0731-mp2"
+      }
     },
     "minimax-h3": {
       "family": "minimax",
