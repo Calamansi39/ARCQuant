@@ -8,7 +8,6 @@ from eval import *
 
 import time
 
-from visualize import *
 from x_mask_utils import (
     iter_layer_x_mask_modules,
     load_x_mask_checkpoint,
@@ -58,6 +57,8 @@ if __name__ == '__main__':
         'model', type=str,
         help='LlaMa model to load; pass location of hugginface converted checkpoint.'
     )
+    parser.add_argument('--model_family', choices=['auto', 'llama', 'qwen', 'mixtral'], default='auto',
+        help='Model adapter; auto infers from the model path.')
     parser.add_argument(
         '--seed',
         type=int, default=0, 
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 
     parser.add_argument(
         '--tasks',
-        nargs='+',
+        nargs='*',
         default=["piqa", "hellaswag", "arc_easy", "arc_challenge", "winogrande", "lambada_openai"],
         help='Tasks to evaluate on LM Eval.')
     parser.add_argument(
@@ -85,6 +86,10 @@ if __name__ == '__main__':
     parser.add_argument('--output_file', type=str, default=None, help='Optional path to save lm_eval results as JSON.')
     parser.add_argument('--lm_eval_batch_size', type=int, default=16, help='Batch size for evaluation with lm eval harness.')
     parser.add_argument('--num_fewshot', type=int, default=0, help='Number of few-shot examples for lm_eval.')
+    parser.add_argument('--lm_eval_limit', type=int, default=-1,
+        help='Maximum number of examples per lm-eval task; -1 means full evaluation.')
+    parser.add_argument('--lm_eval_include_path', type=str, default=None,
+        help='Optional directory with custom lm-eval task YAML files.')
     parser.add_argument('--batch_size_overrides', type=str, default='{"mmlu": 1, "ceval-valid": 1}',
         help='JSON dict of per-task batch size overrides to prevent OOM on long 5-shot contexts.')
     parser.add_argument('--fewshot_overrides', type=str, default='{"mmlu": 5, "ceval-valid": 5}',
@@ -102,6 +107,14 @@ if __name__ == '__main__':
         action="store_true",
         help="Disable channel reordering for both activations (X) and weights (W).",
     )
+    parser.add_argument('--sparse_method', choices=['none', 'teal', 'wina'], default='none',
+        help='Activation sparsity applied before ARCQuant quantization (Llama only).')
+    parser.add_argument('--sparsity', type=float, default=0.0,
+        help='Target activation sparsity for TEAL or WINA, in [0, 1).')
+    parser.add_argument('--teal_histogram_path', type=str, default=None,
+        help='Root directory containing TEAL per-layer histogram files.')
+    parser.add_argument('--disable_prefill_sparsity', action='store_true',
+        help='Apply TEAL or WINA sparsity only during token decoding.')
 
     # ---- activation 2:4 x-mask (FlatQuant-style switch_top2_hard) ----
     parser.add_argument(
@@ -150,20 +163,38 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
+    if args.sparse_method != 'none':
+        if not 0 <= args.sparsity < 1:
+            parser.error('--sparsity must be in [0, 1).')
+        if args.use_x_mask:
+            parser.error('--use_x_mask cannot currently be combined with --sparse_method.')
+        if args.sparse_method == 'teal' and not args.teal_histogram_path:
+            parser.error('TEAL requires --teal_histogram_path.')
+    elif args.sparsity != 0:
+        parser.error('--sparsity requires --sparse_method teal or wina.')
+
     model_name = args.model.split('/')[-2] if len(args.model.split('/')[-1]) == 0 else args.model.split('/')[-1]
     assert model_name != None, "Please check the model path."
 
-    if "llama" in args.model.lower():
+    model_family = args.model_family
+    if model_family == 'auto':
+        model_family = next((family for family in ('llama', 'qwen', 'mixtral')
+                             if family in args.model.lower()), None)
+    if args.sparse_method != 'none' and model_family != 'llama':
+        parser.error('TEAL and WINA currently require the Llama model adapter.')
+    if model_family == 'llama':
         model = get_llama(args.model)
         reorder_model_func = reorder_model_llama
        
-    elif "qwen" in args.model.lower():
+    elif model_family == 'qwen':
         model = get_qwen(args.model)
         reorder_model_func = reorder_model_qwen
     
-    elif "mixtral" in args.model.lower():
+    elif model_family == 'mixtral':
         model = get_mixtral(args.model)
         reorder_model_func = reorder_model_mixtral
+    else:
+        parser.error('Cannot infer model family; pass --model_family llama, qwen or mixtral.')
        
     model.eval()
 
@@ -199,8 +230,15 @@ if __name__ == '__main__':
         "x_mask_skip_layers": args.x_mask_skip_layers,
         "x_mask_r_thr": None if float(args.x_mask_r_thr) < 0 else float(args.x_mask_r_thr),
     }
-    if "llama" in args.model.lower():
+    if model_family == 'llama':
         reorder_kwargs["rec"] = bool(args.rec)
+        if args.sparse_method != 'none':
+            reorder_kwargs["sparse_config"] = {
+                "method": args.sparse_method,
+                "sparsity": args.sparsity,
+                "histogram_path": args.teal_histogram_path,
+                "apply_prefill": not args.disable_prefill_sparsity,
+            }
     model = reorder_model_func(
         model,
         **reorder_kwargs,
@@ -258,7 +296,7 @@ if __name__ == '__main__':
 
     
             
-    if args.tasks is not None:
+    if args.tasks:
         import random
         import lm_eval
         import numpy as np
@@ -267,12 +305,12 @@ if __name__ == '__main__':
         from lm_eval.tasks import TaskManager
         from transformers import AutoTokenizer
 
-        if "llama" in args.model.lower():
+        if model_family == 'llama':
             tokenizer = AutoTokenizer.from_pretrained(args.model)
         else:
             tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False, legacy=False)
 
-        task_manager = TaskManager()
+        task_manager = TaskManager(include_path=args.lm_eval_include_path)
         task_patterns = []
         for item in args.tasks:
             task_patterns.extend([x.strip() for x in str(item).split(",") if x.strip()])
@@ -292,6 +330,8 @@ if __name__ == '__main__':
         batch_size_overrides = _json.loads(args.batch_size_overrides) if args.batch_size_overrides else {}
 
         task_names = sorted(set(lm_eval_utils.pattern_match(task_patterns, task_manager.all_tasks)))
+        if not task_names:
+            raise ValueError(f"No lm-eval task matched: {task_patterns}")
         results_by_task = {}
         for task_name in task_names:
             random.seed(args.seed)
@@ -311,6 +351,8 @@ if __name__ == '__main__':
                 tasks=[task_name],
                 num_fewshot=task_fewshot,
                 batch_size=task_bsz,
+                limit=None if args.lm_eval_limit < 0 else args.lm_eval_limit,
+                task_manager=task_manager,
             )
             results_by_task[task_name] = result.get("results", {}).get(task_name, {})
         print("\n" + "=" * 60)

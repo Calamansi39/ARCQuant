@@ -1,0 +1,110 @@
+{
+  "models": {
+    "llama-3.1-8b": {
+      "family": "llama",
+      "modality": "text",
+      "status": "legacy-ready",
+      "path_env": "ARCQUANT_LLAMA_MODEL"
+    },
+    "qwen2.5-7b": {
+      "family": "qwen",
+      "modality": "text",
+      "status": "legacy-ready",
+      "path_env": "ARCQUANT_QWEN_MODEL"
+    },
+    "mixtral-8x7b": {
+      "family": "mixtral",
+      "modality": "text",
+      "status": "legacy-ready",
+      "path_env": "ARCQUANT_MIXTRAL_MODEL"
+    },
+    "deepseek-v4-flash": {
+      "family": "deepseek",
+      "modality": "text",
+      "status": "registered-only",
+      "path_env": "ARCQUANT_DEEPSEEK_MODEL",
+      "default_path": "/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731"
+    },
+    "minimax-h3": {
+      "family": "minimax",
+      "modality": "video",
+      "status": "registered-only",
+      "path_env": "ARCQUANT_MINIMAX_MODEL",
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MiniMax-H3"
+    },
+    "magi-2-preview": {
+      "family": "magi2",
+      "modality": "video",
+      "status": "registered-only",
+      "path_env": "ARCQUANT_MAGI2_MODEL",
+      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MAGI-2-preview"
+    }
+  },
+  "benchmarks": {
+    "wikitext2": {
+      "status": "legacy-ready",
+      "runner": "ppl",
+      "profiles": {"full": {"limit": -1}}
+    },
+    "lm-eval-zero-shot": {
+      "status": "legacy-ready",
+      "runner": "lm-eval",
+      "tasks": "piqa,arc_challenge,boolq,hellaswag,winogrande,lambada_openai,arc_easy",
+      "fewshot": 0,
+      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+    },
+    "mmlu-5shot": {
+      "status": "legacy-ready",
+      "runner": "lm-eval",
+      "tasks": "mmlu",
+      "fewshot": 5,
+      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+    },
+    "longbench-v2": {
+      "status": "registered-only",
+      "modality": "text",
+      "data_env": "ARCQUANT_LONGBENCH_DATA",
+      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+    },
+    "livecodebench": {
+      "status": "registered-only",
+      "modality": "text",
+      "data_env": "ARCQUANT_LIVECODEBENCH_DATA",
+      "profiles": {"smoke": {"limit": 2}, "full": {"limit": -1}}
+    },
+    "gpqa-diamond": {
+      "status": "lm-eval-ready",
+      "modality": "text",
+      "runner": "lm-eval",
+      "tasks": "gpqa_diamond_zeroshot",
+      "fewshot": 0,
+      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+    },
+    "math500": {
+      "status": "lm-eval-ready",
+      "modality": "text",
+      "runner": "lm-eval",
+      "tasks": "hendrycks_math500",
+      "fewshot": 0,
+      "profiles": {"smoke": {"limit": 8}, "full": {"limit": -1}}
+    },
+    "terminal-bench": {
+      "status": "registered-only",
+      "modality": "text",
+      "data_env": "ARCQUANT_TERMINAL_BENCH_DATA",
+      "profiles": {"smoke": {"limit": 1}, "small": {"limit": 5}, "full": {"limit": -1}}
+    },
+    "vbench": {
+      "status": "registered-only",
+      "modality": "video",
+      "data_env": "ARCQUANT_VBENCH_DATA",
+      "profiles": {"tiny": {"limit": 108}, "official": {"limit": 944}}
+    }
+  },
+  "methods": {
+    "none": {"status": "legacy-ready", "description": "ARCQuant quantization without activation sparsity"},
+    "teal": {"status": "llama-only", "description": "Histogram threshold activation sparsity from feature/arc-teal"},
+    "wina": {"status": "llama-only", "description": "Uniform weight-informed top-k activation sparsity, before ARCQuant quantization"},
+    "xmask": {"status": "llama-cli", "description": "Existing ARCQuant 2:4 x_mask checkpoint path through the unified CLI"}
+  }
+}

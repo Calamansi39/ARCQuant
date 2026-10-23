@@ -80,7 +80,30 @@ FlashInfer:
 cd third-party/flashinfer
 python -m pip install -v .
 ```
-We will release our vLLM evaluation very soon. 
+We will release our vLLM evaluation very soon.
+
+## TEAL / WINA 统一实验入口（中文）
+
+本仓库以学姐维护的 ARCQuant 版本为基础，保留原有的低比特量化、`x_mask` 和联合校准代码，同时加入 Llama 模型的 TEAL 与 WINA 激活稀疏选项。**量化**是把权重和激活表示成低精度数值；**激活稀疏**是把一部分运行时数值置零。两者可以按“稀疏化 → ARCQuant 量化 → 评测”的顺序组合。在这里选择 `HiF4` 就是 W4A4 数值模拟路径，不代表已经生成压缩后的 4-bit 权重文件，也不自动代表推理更快。
+
+从仓库根目录开始：
+
+```bash
+# 用已有的 ARCQuant 预处理脚本生成 saved/ 中的重排与校准文件
+python arc.py prepare --model llama-3.1-8b --model-path /path/to/Llama-3.1-8B
+
+# 只查看实验计划；不会加载权重或占用 GPU
+python arc.py plan --model llama-3.1-8b --model-path /path/to/Llama-3.1-8B \
+  --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
+
+# 真正运行；实验记录写入 runs/
+python arc.py run --model llama-3.1-8b --model-path /path/to/Llama-3.1-8B \
+  --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
+```
+
+`--method none` 运行 ARCQuant 原有量化路径；`--method teal` 还要提供 `--histogram-path /path/to/histograms`；`--method xmask` 调用学姐已有的 2:4 掩码路径，需要 `--x-mask-ckpt`。目前 TEAL/WINA 和统一 CLI 的 xmask 只接入 **Llama** 适配器，TEAL/WINA 不能与 `x_mask` 同时启用。`python arc.py list` 可查看模型与评测的真实接入状态。GPQA Diamond 和 MATH-500 已映射到当前 `lm-evaluation-harness` 的任务；DeepSeek V4 Flash、MiniMax H3、MAGI-2 及生成式评测仍需对应模型或评分适配器，登记路径不等于可以运行。
+
+更完整的命令、实现说明、权重与 benchmark 配置见 [实验指南](docs/EXPERIMENTS.md)；组会卡时粗估见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
 ```

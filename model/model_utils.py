@@ -9,7 +9,6 @@ from transformers.models.mixtral.modeling_mixtral import MixtralDecoderLayer
 from qLinearLayer import find_qlinear_layers
 from qLlamaLayer import QLlamaDecoderLayer
 from qQwenLayer import QQwen2DecoderLayer
-from qMixtralLayer import QMixtralDecoderLayer
 
 
 from functools import partial
@@ -33,6 +32,7 @@ def reorder_model_llama(
     x_mask_r_thr=None,
     rec: bool = False,
     x_mask_skip_layers=None,
+    sparse_config=None,
 ):
     model.config.use_cache = False
     layers = model.model.layers
@@ -56,6 +56,7 @@ def reorder_model_llama(
                 x_mask_alpha=x_mask_alpha,
                 x_mask_r_thr=x_mask_r_thr,
                 rec=rec,
+                sparse_config=sparse_config,
             )
         elif isinstance(layers[i], QLlamaDecoderLayer):
             m = layers[i]
@@ -65,6 +66,10 @@ def reorder_model_llama(
         m.mlp.register_buffer('down_reorder_index', reorder_index[nameTemplate.format(i, 'mlp', 'down_proj', 'input')].to(torch.int16))
         m.self_attn.register_buffer('q_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'q_proj', 'input')].to(torch.int16))
         m.self_attn.register_buffer('o_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'o_proj', 'input')].to(torch.int16))
+        if sparse_config:
+            m.mlp.register_buffer('gate_reorder_index', reorder_index[nameTemplate.format(i, 'mlp', 'gate_proj', 'input')].to(torch.int16))
+            m.self_attn.register_buffer('k_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'k_proj', 'input')].to(torch.int16))
+            m.self_attn.register_buffer('v_reorder_index', reorder_index[nameTemplate.format(i, 'self_attn', 'v_proj', 'input')].to(torch.int16))
         layers[i] = layers[i].cpu()
         layers[i] = m.cpu()
         del m
@@ -135,6 +140,7 @@ def reorder_model_mixtral(
     x_mask_r_thr=None,
     x_mask_skip_layers=None,
 ):
+    from qMixtralLayer import QMixtralDecoderLayer
     model.config.use_cache = False
     layers = model.model.layers
     assert reorder_index is not None, "Reorder index is None"

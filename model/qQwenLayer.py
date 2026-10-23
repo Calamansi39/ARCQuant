@@ -5,13 +5,10 @@ import math
 from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer, Qwen2RMSNorm, Qwen2Attention, Qwen2MLP
 from qLinearLayer import QLinearLayer
 from quantize import *
-from visualize import *
 from x_mask import XMaskSwitchTop2Hard
 import os
 from optional_agemm import HAS_AGEMM, require_agemm
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
 
 def rotate_half(x):

@@ -7,13 +7,10 @@ from tqdm import tqdm
 from transformers.models.mixtral.modeling_mixtral import MixtralDecoderLayer, MixtralRMSNorm, MixtralAttention, MixtralSparseMoeBlock, MixtralBlockSparseTop2MLP
 from qLinearLayer import QLinearLayer
 from quantize import *
-from visualize import *
 from x_mask import XMaskSwitchTop2Hard
 import os
 from optional_agemm import HAS_AGEMM, require_agemm
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
 @torch.no_grad()
 def quantize_int_group(w, nbits, group_size):
