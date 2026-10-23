@@ -10,7 +10,7 @@ ARCQuant 原本负责**量化**：把模型的权重（W）和中间激活（A�
 
 `--quant-type HiF4` 是本仓库的 W4A4 数值模拟路径。`--method` 选择稀疏规则，二者是独立的选项。当前量化实现仍可能在内存中持有普通浮点张量；稀疏值为零也不保证底层矩阵乘法已经跳过这些计算。**精度、真实显存占用与推理速度需要分开测量。**
 
-本次采用学姐 `main` 为代码基准，同时合并你的 `Calamansi39/ARCQuant` 主线提交 `e4ab5a2`，因此你的仓库可以保留原有提交历史后再接收整合分支。学姐加入的 `x_mask`、softmax alpha 和联合校准代码保留在主流程；你原有的 `model/bridge.py`、预处理兼容修正和快捷脚本也保留。对于 `model/eval.py`、`model/quantize.py` 的冲突，使用学姐当前实现，避免旧版量化接口覆盖新接口。实验入口在根目录的 `arc.py`，登记表在 `configs/experiments.json`，Llama 稀疏实现位于 `model/sparse_utils.py` 和 `model/qLlamaLayer.py`。
+本次采用学姐 `main` 为代码基准，同时合并你的 `Calamansi39/ARCQuant` 主线提交 `e4ab5a2`，已在你的仓库主线保留原有提交历史。学姐加入的 `x_mask`、softmax alpha 和联合校准代码保留在主流程；你原有的 `model/bridge.py`、预处理兼容修正和快捷脚本也保留。对于 `model/eval.py`、`model/quantize.py` 的冲突，使用学姐当前实现，避免旧版量化接口覆盖新接口。实验入口在根目录的 `arc.py`，登记表在 `configs/experiments.json`，Llama 稀疏实现位于 `model/sparse_utils.py` 和 `model/qLlamaLayer.py`。
 
 ## 已接入的方法
 
