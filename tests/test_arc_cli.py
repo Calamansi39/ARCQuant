@@ -38,6 +38,15 @@ class ArcCliTests(unittest.TestCase):
         self.assertEqual(command[command.index("--quant_type") + 1], "HiF4")
         self.assertNotIn("--teal_histogram_path", command)
 
+    def test_greedy_plan_uses_one_default_strategy_path(self):
+        for method in ("teal", "wina"):
+            plan = arc.build_plan(args(method=method, sparsity=0.5, allocation="greedy"))
+            self.assertEqual(plan["allocation"], "greedy")
+            self.assertEqual(plan["command"][plan["command"].index("--sparse_strategy_path") + 1],
+                             plan["strategy_path"])
+            self.assertTrue(plan["strategy_path"].endswith(f"/{method}/strategy.json"))
+            self.assertEqual("--teal_histogram_path" in plan["command"], method == "teal")
+
     def test_unsupported_model_and_benchmark_are_rejected(self):
         with self.assertRaisesRegex(arc.PlanError, "no ARCQuant model adapter"):
             arc.build_plan(args(model="magi-2-preview"))

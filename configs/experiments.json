@@ -4,13 +4,25 @@
       "family": "llama",
       "modality": "text",
       "status": "legacy-ready",
-      "path_env": "ARCQUANT_LLAMA_MODEL"
+      "path_env": "ARCQUANT_LLAMA_MODEL",
+      "source": {
+        "type": "hf_model",
+        "repo_id": "meta-llama/Llama-3.1-8B",
+        "revision": "main",
+        "revision_policy": "resolve and record exact SHA at fetch time"
+      }
     },
     "qwen2.5-7b": {
       "family": "qwen",
       "modality": "text",
       "status": "legacy-ready",
-      "path_env": "ARCQUANT_QWEN_MODEL"
+      "path_env": "ARCQUANT_QWEN_MODEL",
+      "source": {
+        "type": "hf_model",
+        "repo_id": "Qwen/Qwen2.5-7B",
+        "revision": "main",
+        "revision_policy": "resolve and record exact SHA at fetch time"
+      }
     },
     "qwen3.8-27b": {
       "family": "qwen",
@@ -22,55 +34,102 @@
       "family": "mixtral",
       "modality": "text",
       "status": "legacy-ready",
-      "path_env": "ARCQUANT_MIXTRAL_MODEL"
+      "path_env": "ARCQUANT_MIXTRAL_MODEL",
+      "source": {
+        "type": "hf_model",
+        "repo_id": "mistralai/Mixtral-8x7B-v0.1",
+        "revision": "main",
+        "revision_policy": "resolve and record exact SHA at fetch time"
+      }
     },
     "deepseek-v4-flash": {
       "family": "deepseek",
       "modality": "text",
       "status": "registered-only",
       "path_env": "ARCQUANT_DEEPSEEK_MODEL",
-      "default_path": "/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731",
       "variants": {
-        "original": "/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731",
-        "tp2": "/mnt/kpfs_qyang/zhaolianchao/models/DeepSeek-V4-Flash-0731-mp2"
+        "tp2": {
+          "directory": "deepseek-v4-flash-tp2",
+          "path_env": "ARCQUANT_DEEPSEEK_TP2",
+          "generated_by": "base_eval DeepSeek two-way conversion"
+        }
       },
       "baseline_benchmarks": [
         "gpqa-diamond",
         "math500",
         "longbench-v2",
         "livecodebench"
-      ]
+      ],
+      "source": {
+        "type": "hf_model",
+        "repo_id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+        "revision": "main",
+        "revision_policy": "resolve and record exact SHA at fetch time"
+      }
     },
     "minimax-h3": {
       "family": "minimax",
       "modality": "video",
       "status": "registered-only",
       "path_env": "ARCQUANT_MINIMAX_MODEL",
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MiniMax-H3",
       "baseline_benchmarks": [
         "vbench"
       ],
-      "asset_scope": "T2VA/VBench; transformer_ref and original FL2VA/Ref2VA checkpoints are not required"
+      "asset_scope": "T2VA/VBench; transformer_ref and original FL2VA/Ref2VA checkpoints are not required",
+      "source": {
+        "type": "hf_model",
+        "repo_id": "MiniMaxAI/MiniMax-H3",
+        "revision": "42ed227ee7df40d41602854ae760620d6eb651fe",
+        "allow_patterns": [
+          "model_index.json",
+          "README.md",
+          "LICENSE",
+          "*.py",
+          "text_encoder/**",
+          "transformer/**",
+          "vae/**",
+          "audio_vae/**",
+          "tokenizer/**",
+          "processor/**",
+          "scheduler/**",
+          "audio_scheduler/**"
+        ]
+      }
     },
     "magi-2-preview": {
       "family": "magi2",
       "modality": "video",
       "status": "registered-only",
       "path_env": "ARCQUANT_MAGI2_MODEL",
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/models/MAGI-2-preview",
       "baseline_benchmarks": [
         "vbench"
-      ]
+      ],
+      "source": {
+        "type": "hf_model",
+        "repo_id": "sand-ai/MAGI-2-preview",
+        "revision": "2dea51b64db47ee5b4402d36fd90829a0c58913b"
+      },
+      "runtime_source": {
+        "type": "git",
+        "url": "https://github.com/SandAI-org/MAGI-2-preview.git",
+        "revision": "f68a0f9bbccbea56e0177a9bd912abc3b18ffe61"
+      }
     }
   },
   "benchmarks": {
     "wikitext2": {
       "status": "legacy-ready",
       "runner": "ppl",
+      "data_file": "wikitext-2-raw-v1/test-00000-of-00001.parquet",
       "profiles": {
         "full": {
           "limit": -1
         }
+      },
+      "source": {
+        "type": "hf_dataset",
+        "repo_id": "Salesforce/wikitext",
+        "revision": "b08601e04326c79dfdd32d625aee71d232d685c3"
       }
     },
     "lm-eval-zero-shot": {
@@ -113,7 +172,6 @@
           "limit": -1
         }
       },
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--THUDM--LongBench-v2/snapshots/2b48e494f2c7a2f0af81aae178e05c7e1dde0fe9",
       "data_file": "data.json",
       "record_format": "json",
       "expected_records": 503,
@@ -121,7 +179,12 @@
       "dataset_revision": "2b48e494f2c7a2f0af81aae178e05c7e1dde0fe9",
       "baseline_models": [
         "deepseek-v4-flash"
-      ]
+      ],
+      "source": {
+        "type": "hf_dataset",
+        "repo_id": "THUDM/LongBench-v2",
+        "revision": "2b48e494f2c7a2f0af81aae178e05c7e1dde0fe9"
+      }
     },
     "livecodebench": {
       "status": "registered-only",
@@ -135,7 +198,6 @@
           "limit": -1
         }
       },
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--livecodebench--code_generation_lite/snapshots/0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
       "data_file": "test6.jsonl",
       "record_format": "jsonl",
       "expected_records": 175,
@@ -143,7 +205,12 @@
       "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
       "baseline_models": [
         "deepseek-v4-flash"
-      ]
+      ],
+      "source": {
+        "type": "hf_dataset",
+        "repo_id": "livecodebench/code_generation_lite",
+        "revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505"
+      }
     },
     "gpqa-diamond": {
       "status": "lm-eval-ready",
@@ -160,7 +227,6 @@
         }
       },
       "data_env": "ARCQUANT_GPQA_DIAMOND_DATA",
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--Idavidrein--gpqa/snapshots/633f5ee89ab8ad4522a9f850766b73f62147ffdd",
       "data_file": "gpqa_diamond.csv",
       "record_format": "csv",
       "expected_records": 198,
@@ -168,7 +234,12 @@
       "dataset_revision": "633f5ee89ab8ad4522a9f850766b73f62147ffdd",
       "baseline_models": [
         "deepseek-v4-flash"
-      ]
+      ],
+      "source": {
+        "type": "hf_dataset",
+        "repo_id": "Idavidrein/gpqa",
+        "revision": "633f5ee89ab8ad4522a9f850766b73f62147ffdd"
+      }
     },
     "math500": {
       "status": "lm-eval-ready",
@@ -185,7 +256,6 @@
         }
       },
       "data_env": "ARCQUANT_MATH500_DATA",
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/hf_home/hub/datasets--HuggingFaceH4--MATH-500/snapshots/6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
       "data_file": "test.jsonl",
       "record_format": "jsonl",
       "expected_records": 500,
@@ -193,7 +263,12 @@
       "dataset_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
       "baseline_models": [
         "deepseek-v4-flash"
-      ]
+      ],
+      "source": {
+        "type": "hf_dataset",
+        "repo_id": "HuggingFaceH4/MATH-500",
+        "revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be"
+      }
     },
     "terminal-bench": {
       "status": "registered-only",
@@ -210,18 +285,23 @@
           "limit": -1
         }
       },
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/terminal-bench-core-0.1.1/tasks",
-      "data_file": ".",
+      "data_file": "tasks",
       "record_format": "terminal_tasks",
       "expected_records": 86,
       "dataset_revision": "91e10457b5410f16c44364da1a34cb6de8c488a5",
       "dataset_name": "terminal-bench-core",
-      "dataset_version": "0.1.1"
+      "dataset_version": "0.1.1",
+      "source": {
+        "type": "git",
+        "url": "https://github.com/laude-institute/terminal-bench.git",
+        "revision": "91e10457b5410f16c44364da1a34cb6de8c488a5"
+      }
     },
     "vbench": {
       "status": "registered-only",
       "modality": "video",
       "data_env": "ARCQUANT_VBENCH_DATA",
+      "scorer_manifests": ["configs/vbench_download_manifest.json", "configs/vbench_bert_download_manifest.json"],
       "profiles": {
         "tiny": {
           "limit": 108
@@ -230,7 +310,6 @@
           "limit": 944
         }
       },
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/data/vbench/VBench",
       "data_file": "vbench/VBench_full_info.json",
       "record_format": "unique_prompt_json",
       "expected_records": 944,
@@ -238,7 +317,12 @@
       "baseline_models": [
         "minimax-h3",
         "magi-2-preview"
-      ]
+      ],
+      "source": {
+        "type": "git",
+        "url": "https://github.com/Vchitect/VBench.git",
+        "revision": "fd18b3d055cb0fc6f066ca90fe2c3c8cbb698490"
+      }
     }
   },
   "methods": {
@@ -248,11 +332,11 @@
     },
     "teal": {
       "status": "llama-prototype",
-      "description": "Uniform TEAL histogram threshold variant from feature/arc-teal; separate histograms required; no model-level validation"
+      "description": "Native signed h1/h2 histogram thresholds, plus optional per-projection greedy allocation; Llama + ARCQuant combination requires model-level validation"
     },
     "wina": {
       "status": "llama-prototype",
-      "description": "Uniform WINA top-k variant before ARCQuant quantization; no greedy allocation, transform, or model-level validation"
+      "description": "Native per-token column-norm top-k, uniform or greedy allocation; WINA's optional weight transform is not integrated"
     },
     "xmask": {
       "status": "llama-cli",
@@ -262,9 +346,10 @@
   "backends": {
     "base-eval": {
       "path_env": "ARCQUANT_BASE_EVAL_ROOT",
-      "default_path": "/mnt/kpfs_qyang/zhaolianchao/base_eval",
-      "revision": "c452d6d",
-      "description": "Existing machine-local BF16/W4A4 baseline and generation evaluator; not ARCQuant residual-channel quantization"
+      "revision": "c452d6d3b5a5765ab66871bb1d18d8244f6f2dec",
+      "description": "Pinned external BF16/W4A4 baseline and generation evaluator; requires separate model-specific runtime, and does not use ARCQuant residual channels",
+      "access_note": "The recorded GitHub URL returned repository-not-found with the current HTTPS and SSH credentials on 2026-10-25; use --source with an authorized checkout or supply access",
+      "source_url": "https://github.com/xiaodiandian-AI/base_eval.git"
     }
   }
 }

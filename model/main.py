@@ -1,5 +1,11 @@
 import torch
+import json
 from collections import defaultdict
+from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from benchmarks.sparse_strategy import StrategyError, load_strategy
 
 from model_utils import reorder_model_llama, reorder_model_qwen, reorder_model_mixtral
 from parallel_utils import map_layers_to_multi_gpus
@@ -84,6 +90,8 @@ if __name__ == '__main__':
         help='Whether to evaluate perplexity.'
     )
     parser.add_argument('--output_file', type=str, default=None, help='Optional path to save lm_eval results as JSON.')
+    parser.add_argument('--sparse_stats_file', type=str, default=None,
+        help='Optional JSON file for observed TEAL/WINA zero ratios by projection.')
     parser.add_argument('--lm_eval_batch_size', type=int, default=16, help='Batch size for evaluation with lm eval harness.')
     parser.add_argument('--num_fewshot', type=int, default=0, help='Number of few-shot examples for lm_eval.')
     parser.add_argument('--lm_eval_limit', type=int, default=-1,
@@ -113,6 +121,8 @@ if __name__ == '__main__':
         help='Target activation sparsity for TEAL or WINA, in [0, 1).')
     parser.add_argument('--teal_histogram_path', type=str, default=None,
         help='Root directory containing TEAL per-layer histogram files.')
+    parser.add_argument('--sparse_strategy_path', type=str, default=None,
+        help='Offline greedy per-layer allocation in strategy.json format.')
     parser.add_argument('--disable_prefill_sparsity', action='store_true',
         help='Apply TEAL or WINA sparsity only during token decoding.')
 
@@ -170,8 +180,20 @@ if __name__ == '__main__':
             parser.error('--use_x_mask cannot currently be combined with --sparse_method.')
         if args.sparse_method == 'teal' and not args.teal_histogram_path:
             parser.error('TEAL requires --teal_histogram_path.')
+        if args.sparse_strategy_path:
+            try:
+                sparse_strategy = load_strategy(args.sparse_strategy_path, method=args.sparse_method,
+                                                target_sparsity=args.sparsity)
+            except StrategyError as exc:
+                parser.error(str(exc))
+        else:
+            sparse_strategy = None
     elif args.sparsity != 0:
         parser.error('--sparsity requires --sparse_method teal or wina.')
+    elif args.sparse_strategy_path:
+        parser.error('--sparse_strategy_path requires --sparse_method teal or wina.')
+    else:
+        sparse_strategy = None
 
     model_name = args.model.split('/')[-2] if len(args.model.split('/')[-1]) == 0 else args.model.split('/')[-1]
     assert model_name != None, "Please check the model path."
@@ -197,6 +219,13 @@ if __name__ == '__main__':
         parser.error('Cannot infer model family; pass --model_family llama, qwen or mixtral.')
        
     model.eval()
+    if sparse_strategy is not None:
+        try:
+            load_strategy(args.sparse_strategy_path, method=args.sparse_method,
+                          layer_count=len(model.model.layers), target_sparsity=args.sparsity,
+                          model_config=Path(args.model) / "config.json")
+        except StrategyError as exc:
+            parser.error(str(exc))
 
     import os
 
@@ -238,6 +267,7 @@ if __name__ == '__main__':
                 "sparsity": args.sparsity,
                 "histogram_path": args.teal_histogram_path,
                 "apply_prefill": not args.disable_prefill_sparsity,
+                "layer_sparsities": sparse_strategy["layers"] if sparse_strategy else {},
             }
     model = reorder_model_func(
         model,
@@ -382,11 +412,29 @@ if __name__ == '__main__':
             wandb.log(summary_metrics)
 
         if args.output_file:
-            import json
-            from pathlib import Path
             output_path = Path(args.output_file)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open("w") as f:
                 json.dump(results_by_task, f, indent=2)
             print(f"\nResults saved to {args.output_file}")
+
+    if args.sparse_method != 'none':
+        from sparse_utils import PROJECTIONS
+        totals = {name: {'zeros': 0.0, 'elements': 0.0} for name in PROJECTIONS}
+        for layer in model.model.layers:
+            for part in (layer.self_attn, layer.mlp):
+                for name, mask in part.sparse_fns.items():
+                    totals[name]['zeros'] += mask.zero_count.item()
+                    totals[name]['elements'] += mask.total_count.item()
+        ratios = {name: (values['zeros'] / values['elements'] if values['elements'] else None)
+                  for name, values in totals.items()}
+        stats = {'method': args.sparse_method, 'target_sparsity': args.sparsity,
+                 'observed_zero_ratio_by_projection': ratios,
+                 'counted_elements_by_projection': {name: int(values['elements'])
+                                                    for name, values in totals.items()}}
+        print('Observed sparse input zero ratios: ' + json.dumps(ratios, sort_keys=True))
+        if args.sparse_stats_file:
+            output_path = Path(args.sparse_stats_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(json.dumps(stats, indent=2) + '\n', encoding='utf-8')
   

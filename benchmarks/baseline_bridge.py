@@ -11,6 +11,8 @@ import os
 import subprocess
 from pathlib import Path
 
+from benchmarks.paths import REPOSITORY_ROOT, asset_path, asset_root, resolve_path, variant_path
+
 
 class BaselineError(ValueError):
     pass
@@ -25,22 +27,18 @@ SUPPORTED = {
 
 
 def _model_path(args, entry: dict) -> Path:
-    raw = args.model_path or os.environ.get(entry.get("path_env", "")) or entry.get("default_path")
-    if not raw:
-        raise BaselineError(f"Set {entry.get('path_env')} or --model-path.")
-    return Path(raw).expanduser().resolve()
+    return asset_path(entry, args.model, "models", override=args.model_path)
 
 
 def _backend_root(args, catalog: dict) -> Path:
     spec = catalog["backends"]["base-eval"]
-    raw = args.base_eval_root or os.environ.get(spec["path_env"]) or spec["default_path"]
-    root = Path(raw).expanduser().resolve()
-    if not (root / "README.md").is_file():
-        raise BaselineError(f"base_eval source is absent at {root}; set --base-eval-root.")
-    return root
+    raw = args.base_eval_root or os.environ.get(spec["path_env"]) or spec.get("default_path")
+    return resolve_path(raw) if raw else REPOSITORY_ROOT / "external" / "base_eval"
 
 
 def _revision(root: Path) -> str | None:
+    if not (root / ".git").exists():
+        return None
     completed = subprocess.run(["git", "-c", f"safe.directory={root}", "rev-parse", "HEAD"], cwd=root,
                                capture_output=True, text=True, check=False)
     return completed.stdout.strip() if completed.returncode == 0 else None
@@ -58,8 +56,7 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
         raise BaselineError(f"Unknown profile {args.profile!r}; choose {', '.join(benchmark['profiles'])}.")
     model_path = _model_path(args, catalog["models"][args.model])
     backend_root = _backend_root(args, catalog)
-    data_root = Path(os.environ.get(benchmark.get("data_env", "")) or
-                     benchmark["default_path"]).expanduser().resolve()
+    data_root = asset_path(benchmark, args.benchmark, "datasets")
     precision = PRECISION[args.quant_type]
     tag = "bf16" if precision == "bf16" else f"{precision}-w4a4"
     gpu_ids = args.gpu_ids or ("auto" if args.model == "minimax-h3" else "0,1")
@@ -69,22 +66,18 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
                                len(set(gpu_ids.split(","))) != len(gpu_ids.split(","))):
         raise BaselineError("--gpu-ids must be 'auto' or distinct comma-separated GPU numbers.")
 
-    env = {"HF_HOME": os.environ.get("HF_HOME", "/mnt/kpfs_qyang/zhaolianchao/data/hf_home"),
-           "HF_HUB_OFFLINE": "1", "HF_DATASETS_OFFLINE": "1"}
-    project_root = backend_root.parent
-    env["PATH"] = str(project_root / "miniconda3/bin") + os.pathsep + os.environ.get("PATH", "")
-    safe_repositories = [backend_root, project_root / "work/MAGI-2-preview",
-                         project_root / "work/LongBench", project_root / "work/LiveCodeBench"]
-    env["GIT_CONFIG_COUNT"] = str(len(safe_repositories))
-    for index, safe_root in enumerate(safe_repositories):
-        env[f"GIT_CONFIG_KEY_{index}"] = "safe.directory"
-        env[f"GIT_CONFIG_VALUE_{index}"] = str(safe_root)
+    env = {"HF_HOME": os.environ.get("HF_HOME", str(asset_root() / "hf_home")),
+           "HF_HUB_OFFLINE": os.environ.get("HF_HUB_OFFLINE", "0"),
+           "HF_DATASETS_OFFLINE": os.environ.get("HF_DATASETS_OFFLINE", "0")}
+    for variable in ("H3_PYTHON", "VBENCH_PYTHON", "MAGI2_PYTHON", "CPU_PYTHON"):
+        configured = os.environ.get(f"ARCQUANT_{variable}")
+        if configured:
+            env[variable] = str(resolve_path(configured))
     results_root = repository_root / "runs" / "baseline_results"
     limit = benchmark["profiles"][args.profile]["limit"]
     if args.model == "deepseek-v4-flash":
-        env["PATH"] = str(project_root / "miniconda3/envs/arcquant/bin") + os.pathsep + env["PATH"]
-        converted = Path(args.converted_model or
-                         catalog["models"][args.model]["variants"]["tp2"]).expanduser().resolve()
+        converted = variant_path(catalog["models"][args.model], "tp2",
+                                 override=args.converted_model)
         env.update(QUANTS=precision, SOURCE_MODEL=str(model_path), TP_MODEL=str(converted),
                    RESULTS_ROOT=str(results_root))
         if args.benchmark in ("gpqa-diamond", "math500"):
@@ -102,14 +95,14 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
             raise BaselineError("Video models currently use the VBench evaluator only.")
         env.update(MODEL=str(model_path), TAGS=tag,
                    VBENCH_REPO=str(data_root),
-                   VBENCH_CACHE_DIR=os.environ.get("VBENCH_CACHE_DIR", "/mnt/kpfs_qyang/zhaolianchao/data/vbench_cache"))
+                   VBENCH_CACHE_DIR=os.environ.get("VBENCH_CACHE_DIR", str(asset_root() / "vbench_cache")))
         sampling = "--tiny" if args.profile == "tiny" else "--official"
         if args.model == "minimax-h3":
             command = ["bash", str(backend_root / "scripts/run_all_vbench_dynamic.sh"),
                        "all", gpu_ids, sampling]
         else:
             env["MAGI2_CKPT_ROOT"] = str(model_path)
-            env["MAGI2_REPO"] = os.environ.get("MAGI2_REPO", "/mnt/kpfs_qyang/zhaolianchao/work/MAGI-2-preview")
+            env["MAGI2_REPO"] = os.environ.get("MAGI2_REPO", str(REPOSITORY_ROOT / "external" / "MAGI-2-preview"))
             command = ["bash", str(backend_root / "scripts/run_all_magi2_vbench.sh"),
                        "all", gpu_ids, sampling]
         output_dir = backend_root / "results" / model_path.name / "vbench_standard" / tag

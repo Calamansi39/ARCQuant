@@ -23,5 +23,7 @@ outputs/*
 *.sh
 saved/
 runs/
+assets/
+external/
 *.png
 *.sh

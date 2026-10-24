@@ -8,11 +8,15 @@ from __future__ import annotations
 
 import csv
 import json
-import os
 from pathlib import Path
+
+from benchmarks.paths import asset_path, variant_path
 
 
 MODEL_FILES = {
+    "llama-3.1-8b": ("config.json", "tokenizer_config.json"),
+    "qwen2.5-7b": ("config.json", "tokenizer_config.json"),
+    "mixtral-8x7b": ("config.json", "tokenizer_config.json"),
     "deepseek-v4-flash": (
         "config.json", "generation_config.json", "tokenizer.json",
         "tokenizer_config.json", "model.safetensors.index.json",
@@ -37,9 +41,8 @@ MODEL_FILES = {
 }
 
 
-def _resolve(entry: dict, env_key: str) -> Path | None:
-    value = os.environ.get(entry.get(env_key, "")) or entry.get("default_path")
-    return Path(value).expanduser().resolve() if value else None
+def _resolve(entry: dict, name: str, kind: str) -> Path:
+    return asset_path(entry, name, kind)
 
 
 def _safetensors_header_ok(path: Path) -> bool:
@@ -51,7 +54,7 @@ def _safetensors_header_ok(path: Path) -> bool:
 
 
 def audit_model(name: str, entry: dict) -> dict:
-    root = _resolve(entry, "path_env")
+    root = _resolve(entry, name, "models")
     issues: list[str] = []
     referenced_shards: set[Path] = set()
     if root is None or not root.is_dir():
@@ -71,6 +74,13 @@ def audit_model(name: str, entry: dict) -> dict:
             issues.append(f"missing shard {shard.relative_to(root)}")
         elif not _safetensors_header_ok(shard):
             issues.append(f"invalid safetensors header {shard.relative_to(root)}")
+    if name in ("llama-3.1-8b", "qwen2.5-7b", "mixtral-8x7b"):
+        standalone = list(root.glob("*.safetensors"))
+        if not referenced_shards and not standalone:
+            issues.append("no model weight files or indexed shards")
+        for shard in standalone:
+            if not _safetensors_header_ok(shard):
+                issues.append(f"invalid safetensors header {shard.relative_to(root)}")
     for relative in MODEL_FILES.get(name, ()):
         file = root / relative
         if file.is_file() and file.suffix == ".safetensors" and not _safetensors_header_ok(file):
@@ -80,7 +90,7 @@ def audit_model(name: str, entry: dict) -> dict:
     if name == "minimax-h3":
         result["scope"] = "T2VA/VBench components; reference-conditioned transformer_ref is optional and absent"
     if name == "deepseek-v4-flash":
-        converted = Path(entry["variants"]["tp2"]).expanduser().resolve()
+        converted = variant_path(entry, "tp2")
         files = ("conversion.json", "model0-mp2.safetensors", "model1-mp2.safetensors")
         converted_issues = [f"missing {item}" for item in files if not (converted / item).is_file()]
         for item in files[1:]:
@@ -112,9 +122,7 @@ def _count_records(path: Path, entry: dict) -> int:
 
 
 def audit_benchmark(name: str, entry: dict) -> dict:
-    root = _resolve(entry, "data_env")
-    if root is None:
-        return {"status": "unconfigured", "path": None, "issues": ["no data path is configured"]}
+    root = _resolve(entry, name, "datasets")
     relative = entry.get("data_file", ".")
     file = root / relative
     issues: list[str] = []
@@ -143,5 +151,5 @@ def audit_catalog(catalog: dict) -> dict:
                    if name in MODEL_FILES},
         "benchmarks": {name: audit_benchmark(name, entry)
                        for name, entry in catalog["benchmarks"].items()
-                       if "record_format" in entry},
+                       if "data_file" in entry},
     }

@@ -30,13 +30,14 @@ To do:
 
 ## 1. Installation
 ```bash
-conda create -n arcquant python=3.10 -y
+conda create -n arcquant python=3.11 -y
 conda activate arcquant
 ```
-Please make sure that [CUDA 12.8](https://developer.nvidia.com/cuda-12-8-1-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=runfile_local) is in your environment.
+For the original native NVFP4 kernels, use the matching [CUDA 12.8](https://developer.nvidia.com/cuda-12-8-1-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=runfile_local) toolchain. For the HiF4 PyTorch evaluation path, install a PyTorch build compatible with your GPU driver; see the [Chinese quickstart](docs/QUICKSTART.md).
 ```bash
-git clone --recurse-submodules https://github.com/actypedef/ARCQuant.git
+git clone --recurse-submodules https://github.com/Calamansi39/ARCQuant.git
 cd ARCQuant
+# Install the PyTorch build matching your CUDA driver first; see docs/QUICKSTART.md.
 pip install -r requirements.txt
 ```
 
@@ -82,30 +83,17 @@ python -m pip install -v .
 ```
 We will release our vLLM evaluation very soon.
 
-## TEAL / WINA 统一实验入口（中文）
+## 中文快速指南：方法整合与迁移
 
-本仓库的整合版本以学姐维护的 ARCQuant 代码为基准，同时合并你自己仓库已有的预处理提交。它保留原有的低比特量化、`x_mask` 和联合校准代码，加入 Llama 模型的 TEAL 与 WINA 激活稀疏**原型**。**量化**是把权重和激活表示成低精度数值；**激活稀疏**是把一部分运行时数值置零。两者可以按“稀疏化 → ARCQuant 量化 → 评测”的顺序组合。在这里选择 `HiF4` 就是 W4A4 数值模拟路径，不代表已经生成压缩后的 4-bit 权重文件，也不自动代表推理更快。方法代码来源、与原仓库的差异和未验证的部分见 [TEAL / WINA 来源核查](docs/METHOD_PROVENANCE.md)。
-
-从仓库根目录开始：
+本仓库在 ARCQuant 量化代码中加入了 Llama 的 TEAL 和 WINA 激活稀疏入口，并用 `arc.py` 统一管理实验、资产来源和结果。先读 [从零开始的使用指南](docs/QUICKSTART.md)：它解释了每种方法、离线与在线步骤、下载模型和数据、准备缓存、查看计划以及启动评测。模型和 benchmark 的来源与版本保存在 [实验清单](configs/experiments.json)。
 
 ```bash
-# 用已有的 ARCQuant 预处理脚本生成 saved/ 中的重排与校准文件
-python arc.py prepare --model llama-3.1-8b --model-path /path/to/Llama-3.1-8B
-
-# 只查看实验计划；不会加载权重或占用 GPU
-python arc.py plan --model llama-3.1-8b --model-path /path/to/Llama-3.1-8B \
-  --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
-
-# 真正运行；实验记录写入 runs/
-python arc.py run --model llama-3.1-8b --model-path /path/to/Llama-3.1-8B \
-  --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
+python arc.py list
+python arc.py fetch --model llama-3.1-8b --dry-run
+python arc.py plan --model llama-3.1-8b --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
 ```
 
-`--method none` 运行 ARCQuant 原有量化路径；`--method teal` 还要提供 `--histogram-path /path/to/histograms`；`--method xmask` 调用学姐已有的 2:4 掩码路径，需要 `--x-mask-ckpt`。目前 TEAL/WINA 和统一 CLI 的 xmask 只接入 **Llama** 适配器，TEAL/WINA 不能与 `x_mask` 同时启用。`python arc.py list` 可查看模型与评测的真实接入状态。GPQA Diamond 和 MATH-500 已映射到当前 `lm-evaluation-harness` 的任务。
-
-本机 DeepSeek、MiniMax H3、MAGI-2 的权重和主要评测数据已经核对。`python arc.py assets` 会重新检查文件。已有的 `base_eval` 评测器可通过同一个 `arc.py plan/run --backend base-eval --method none` 入口启动 DeepSeek 的 GPQA、MATH-500、LongBench v2、LiveCodeBench v6，以及两个视频模型的 VBench。这个后端用于**基线**，其中的 HiF4 没有使用 ARCQuant 增强残差通道，也没有 TEAL/WINA。新架构接入 ARCQuant 核心方法仍需模型层适配。
-
-更完整的命令和方法说明见 [实验指南](docs/EXPERIMENTS.md)；本机权重、数据和基线入口见 [资产与基线指南](docs/ASSETS_AND_BASELINES.md)；卡时估算见 [GPU 预算](docs/GPU_BUDGET.md)。
+`plan` 不加载权重；`run` 才启动实验。TEAL 先用 `arc.py calibrate --method teal` 生成直方图，WINA 的均匀稀疏率不需要离线校准。DeepSeek V4 Flash、MiniMax H3 和 MAGI-2 当前只有固定外部基线评测入口，尚无 ARCQuant + TEAL/WINA 模型适配。方法来源与可验证范围见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移资产及外部评测器见 [资产指南](docs/ASSETS_AND_BASELINES.md)，GPU 时间估算见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
 ```

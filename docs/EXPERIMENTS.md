@@ -1,90 +1,35 @@
-# ARCQuant 实验指南
+# 实验入口与参数
 
-## 先理解仓库在做什么
+首次使用请先读 [从零开始](QUICKSTART.md)。所有实验从仓库根目录运行 `python arc.py ...`；`configs/experiments.json` 保存可用模型、benchmark、数据源和状态。模型权重及数据本身不进 Git。
 
-ARCQuant 原本负责**量化**：把模型的权重（W）和中间激活（A）按较低精度处理。本次在学姐维护的 `joannahuadu/ARCQuant` 主线代码上加入了另一种可选步骤：**激活稀疏**，即在计算前把一部分激活置零。执行顺序是：
+## 日常只需四个动作
 
-```text
-模型权重 → TEAL / WINA 稀疏激活 → ARCQuant 重排与量化 → 评测
+```bash
+python arc.py list                         # 看登记与适配状态
+python arc.py fetch --model llama-3.1-8b  # 按清单下载一种资产
+python arc.py plan ...                     # 核对命令和路径，不用 GPU
+python arc.py run ...                      # 真正运行并记录到 runs/
 ```
 
-`--quant-type HiF4` 是本仓库的 W4A4 数值模拟路径。`--method` 选择稀疏规则，二者是独立的选项。当前量化实现仍可能在内存中持有普通浮点张量；稀疏值为零也不保证底层矩阵乘法已经跳过这些计算。**精度、真实显存占用与推理速度需要分开测量。**
+对于 ARCQuant + Llama，先运行 `python arc.py prepare --model llama-3.1-8b` 生成 `saved/` 中的量化校准缓存。TEAL 再运行 `python arc.py calibrate --model llama-3.1-8b --method teal --sparsity 0.5` 生成直方图。WINA 的 `uniform` 分配不用额外离线数据；`greedy` 需要 `calibrate --allocation greedy`。相同方法的 `plan/run` 默认在资产目录自动查找这些产物。
 
-本次采用学姐 `main` 为代码基准，同时合并你的 `Calamansi39/ARCQuant` 主线提交 `e4ab5a2`，已在你的仓库主线保留原有提交历史。学姐加入的 `x_mask`、softmax alpha 和联合校准代码保留在主流程；你原有的 `model/bridge.py`、预处理兼容修正和快捷脚本也保留。对于 `model/eval.py`、`model/quantize.py` 的冲突，使用学姐当前实现，避免旧版量化接口覆盖新接口。实验入口在根目录的 `arc.py`，登记表在 `configs/experiments.json`，Llama 稀疏实现位于 `model/sparse_utils.py` 和 `model/qLlamaLayer.py`。
+```bash
+python arc.py run --model llama-3.1-8b --method none --quant-type HiF4 --benchmark math500 --profile smoke
+python arc.py run --model llama-3.1-8b --method teal --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
+python arc.py run --model llama-3.1-8b --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
+```
 
-## 已接入的方法
+`--sparsity` 是目标稀疏率，取 `[0,1)`；`--allocation uniform|greedy` 决定七个投影用相同率还是离线逐投影分配；`--disable-prefill-sparsity` 只在解码时掩码。`--model-path` 可覆盖权重目录，`--histogram-path` / `--strategy` 可覆盖离线产物路径。`--quant-type HiF4` 指 W4A4 数值路径，不代表已生成压缩权重或启用了稀疏内核。`--method xmask --x-mask-ckpt FILE` 走学姐原有的另一条 2:4 路径，当前不与 TEAL/WINA 同时启用。
 
-| `--method` | 做什么 | 额外输入 | 当前范围 |
+## 当前适配范围
+
+| 模型 | ARCQuant 自有量化 | TEAL/WINA | 外部生成基线 |
 | --- | --- | --- | --- |
-| `none` | 只运行 ARCQuant 量化 | 无 | 原有 Llama / Qwen / Mixtral 适配代码 |
-| `teal` | 按校准直方图得到阈值，低于阈值的激活置零 | 每层注意力和 MLP 的 `histograms.pt` | Llama |
-| `wina` | 每个 token 按分数取 top-k 激活，其余置零 | 无；分数使用原权重输入列范数 | Llama |
-| `xmask` | 调用学姐主线已有的 2:4 掩码路径 | 已校准的 `x_mask` checkpoint | 统一 CLI 中的 Llama |
+| Llama 3.1 8B | 原有适配代码 | 已接入 Llama 投影，需真实模型回归 | 无 |
+| Qwen 2.5 7B、Mixtral 8x7B | 原有适配代码 | 未接入 | 无 |
+| DeepSeek V4 Flash | 未接入 | 未接入 | GPQA、MATH-500、LongBench v2、LiveCodeBench |
+| MiniMax H3、MAGI-2 | 未接入 | 未接入 | VBench |
 
-TEAL 的阈值代码直接来自此前的 `feature/arc-teal` 分支，对应 [FasterDecoding/TEAL](https://github.com/FasterDecoding/TEAL) 的规则；直方图目录形如 `layer-0/self_attn/histograms.pt` 与 `layer-0/mlp/histograms.pt`。`prepare` 不会生成这些直方图。WINA 接入的是**均匀稀疏率**版本：K 投影和 MLP gate 投影用真实权重输入列的 L2 范数，其他投影用 1；默认在预填充阶段只稀疏最后约 99% 的 token，解码阶段逐 token 稀疏。尚未接入原 WINA 的逐矩阵 greedy 稀疏率分配与权重变换。参考代码为 [Calamansi39/wina](https://github.com/Calamansi39/wina) 的 `04ac8794aa4ae345d09414733ceb76470d3b6a3e`，上游为 [microsoft/wina](https://github.com/microsoft/wina)。详细的逐项来源和验证边界见 [TEAL / WINA 来源核查](METHOD_PROVENANCE.md)。
+Llama 的 `math500` 和 `gpqa-diamond` 使用 `lm-evaluation-harness` 任务；DeepSeek 的同名任务通过 `base-eval` 的生成式协议评测，不能直接并表。`terminal-bench` 目前只登记数据，尚无代理/容器评测入口。`model/eval_longbench.py` 是旧 LongBench，不是 LongBench v2。模型或 benchmark 状态可由 `python arc.py list` 查看，不能把“已登记”理解为“已跑通”。
 
-学姐主线已有另一种 `x_mask` 2:4 激活掩码。`--method xmask --x-mask-ckpt /path/to/checkpoint.pt` 会转发给原有 `model/main.py --use_x_mask` 路径，可选 `--x-mask-r-thr`、`--rec` 和 `--softmax-alpha-ckpt`。当前不允许在同一次运行中把 TEAL/WINA 和 `x_mask` 叠加，因为两种掩码会改变同一量化输入，尚未完成联合校准。
-
-## 第一次运行
-
-在仓库根目录使用已安装依赖的环境。模型权重不提交到 Git；通过 `--model-path` 或登记表中的环境变量提供路径。
-
-```bash
-python arc.py list
-export ARCQUANT_LLAMA_MODEL=/path/to/Llama-3.1-8B
-
-# 准备重排索引、选择通道数与激活统计，写入 saved/
-python arc.py prepare --model llama-3.1-8b --dry-run
-python arc.py prepare --model llama-3.1-8b
-```
-
-`prepare --dry-run` 只打印命令。真正的 `prepare` 会调用原有 `reorder_indices.py` 并使用 GPU。默认校准集是 WikiText-2，128 个样本，每个 2048 token，激活排序指标是 `max`。同一模型换了校准集或排序指标，需要重新生成对应缓存。
-
-先用 `plan` 核对将执行的命令和缓存路径：
-
-```bash
-python arc.py plan --model llama-3.1-8b --method none \
-  --quant-type HiF4 --benchmark wikitext2
-
-python arc.py plan --model llama-3.1-8b --method teal --sparsity 0.5 \
-  --histogram-path /path/to/teal/histograms \
-  --quant-type HiF4 --benchmark gpqa-diamond --profile smoke
-
-python arc.py plan --model llama-3.1-8b --method wina --sparsity 0.5 \
-  --quant-type HiF4 --benchmark math500 --profile smoke
-
-python arc.py plan --model llama-3.1-8b --method xmask \
-  --x-mask-ckpt /path/to/x_mask.pt --quant-type HiF4 --benchmark wikitext2
-```
-
-把 `plan` 换成 `run` 才会加载权重并评测。`run` 在开始前检查权重目录、ARCQuant 缓存和 TEAL 各层直方图文件；记录文件写入 `runs/`。lm-eval 评测结果也写到该目录。`saved/` 和 `runs/` 均不提交到 Git。
-
-`--sparsity 0.5` 是目标稀疏率；WINA 的逐 token top-k 比例由它直接决定。TEAL 的实际零值比例受校准直方图与输入分布影响。加 `--disable-prefill-sparsity` 可以仅对解码 token 启用稀疏。
-
-## 模型和评测状态
-
-“已登记”只表示名称和路径已经进入配置，**不表示模型能够被 ARCQuant 加载**。
-
-| 模型 | 当前状态 |
-| --- | --- |
-| Llama 3.1 8B | 原有量化适配器；TEAL/WINA 已接入该路径 |
-| Qwen 2.5 7B、Mixtral 8x7B | 保留原有量化适配代码；未接入 TEAL/WINA，需按实际依赖版本验证 |
-| Qwen 3.8 27B | 从 LBC 配置保留名称；尚未验证权重和模型适配 |
-| DeepSeek V4 Flash | 权重完整；`base-eval` 基线可运行已有文本评测；尚无该架构的 ARCQuant 核心量化适配器 |
-| MiniMax H3、MAGI-2 preview | VBench 所需权重已核对，`base-eval` 生成与评分入口可通过统一 CLI 启动；尚无 ARCQuant 核心量化适配器 |
-
-| Benchmark | 当前状态 |
-| --- | --- |
-| WikiText-2、现有零样本任务、MMLU | 通过原有 perplexity / lm-eval 入口 |
-| GPQA Diamond、MATH-500 | 已配置当前 lm-eval 中的 `gpqa_diamond_zeroshot`、`hendrycks_math500` 任务；提供每任务 8 题的 `smoke` 档 |
-| LongBench v2、LiveCodeBench v6 | 数据已核对，DeepSeek 可通过 `--backend base-eval` 使用现有生成与评分协议 |
-| VBench | 提示词和评分模型已核对；MiniMax H3 与 MAGI-2 可通过 `--backend base-eval` 使用现有生成与评分协议 |
-| Terminal-Bench core 0.1.1 | 86 个任务已下载；尚需容器代理与模型服务适配 |
-
-仓库已有 `model/eval_longbench.py`，它针对原 LongBench 任务，**不等于 LongBench v2 适配器**。现有 LongBench v2 与 VBench 基线协议由外部固定版本的 `base_eval` 提供；VBench `tiny` 是 108 个唯一提示词、每精度 740 条视频。具体文件、版本及启动命令见 [资产与基线指南](ASSETS_AND_BASELINES.md)。
-
-当前新模型和生成式 benchmark 的路径可在 `configs/experiments.json` 修改，也可用环境变量覆盖。新增模型时先实现模型结构和 ARCQuant 投影适配，再验证量化输出；新增 benchmark 时按官方协议接入生成和评分，最后再把状态改为可运行。
-
-## 已验证到哪一步
-
-已验证 CLI 参数与当前 `model/main.py` 对齐、HiF4 下 TEAL/WINA 的计划生成及稀疏函数的 CPU 数值行为。仓库的 `requirements.txt` 锁定 `transformers==4.46.3`；检查时本机 `arcquant` 环境是 5.9.0，旧 Llama 包装层在这个版本下无法构造。`--backend arcquant` 的 `prepare/run` 会先检查版本并提示更换环境。这里还缺少可直接回归的 Llama 权重、校准缓存与 TEAL 直方图，故**尚未完成真实模型精度和速度回归**。新接入的 `base-eval` 已通过模型、数据及协议的 CPU 预检，没有在这次改动后新跑完整 GPU 实验。在组会或论文中使用结果前，应分别跑 `none`、`teal`、`wina` 的相同模型与 benchmark，并另外测量端到端延迟。
+外部基线的启动及多环境依赖见 [资产与基线](ASSETS_AND_BASELINES.md)。方法代码来源、离线/在线结构、WINA 可选变换尚未接入的原因见 [实现核查](METHOD_PROVENANCE.md)。需要卡时估计时看 [GPU 预算](GPU_BUDGET.md)。

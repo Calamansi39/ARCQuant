@@ -304,14 +304,15 @@ class QLlamaAttention(nn.Module):
         self.reorder_xw = bool(reorder_xw)
         self.rec = bool(rec)
         self.sparse_method = sparse_config["method"] if sparse_config else "none"
+        layer_sparsity = sparse_config.get("layer_sparsities", {}).get(str(i), sparse_config["sparsity"]) if sparse_config else 0.0
         if self.sparse_method == "teal":
             self.sparse_fns = build_llama_teal_sparsifiers(
-                i, sparse_config["histogram_path"], sparse_config["sparsity"],
+                i, sparse_config["histogram_path"], layer_sparsity,
                 apply_prefill=sparse_config.get("apply_prefill", True),
             )
         elif self.sparse_method == "wina":
             self.sparse_fns = build_llama_wina_sparsifiers(
-                originalAttn, "self_attn", sparse_config["sparsity"],
+                originalAttn, "self_attn", layer_sparsity,
                 apply_prefill=sparse_config.get("apply_prefill", True),
             )
         self.x_mask_in = (
@@ -549,14 +550,15 @@ class QLlamaMLP(nn.Module):
         self.reorder_xw = bool(reorder_xw)
         self.rec = bool(rec)
         self.sparse_method = sparse_config["method"] if sparse_config else "none"
+        layer_sparsity = sparse_config.get("layer_sparsities", {}).get(str(i), sparse_config["sparsity"]) if sparse_config else 0.0
         if self.sparse_method == "teal":
             self.sparse_fns = build_llama_teal_sparsifiers(
-                i, sparse_config["histogram_path"], sparse_config["sparsity"],
+                i, sparse_config["histogram_path"], layer_sparsity,
                 apply_prefill=sparse_config.get("apply_prefill", True),
             )
         elif self.sparse_method == "wina":
             self.sparse_fns = build_llama_wina_sparsifiers(
-                originalMLP, "mlp", sparse_config["sparsity"],
+                originalMLP, "mlp", layer_sparsity,
                 apply_prefill=sparse_config.get("apply_prefill", True),
             )
         self.x_mask_up = (

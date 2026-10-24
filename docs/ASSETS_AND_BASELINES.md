@@ -1,55 +1,60 @@
-# 本机模型与评测数据：检查结果和使用方法
+# 模型、数据和外部基线
 
-本页记录 2026-10-24 在这台服务器上核对的文件。模型权重和数据集放在仓库外，Git 只保存路径、检查规则和启动入口。`python arc.py assets` 不申请 GPU，会重新检查本机文件、权重分片索引及数据条数。
+## 迁移时复制什么
 
-## 先看文件是否齐全
+在新机器只需克隆 Git 仓库，按 [快速指南](QUICKSTART.md) 安装依赖，再用 `python arc.py fetch ...` 下载所需模型和 benchmark。来源、版本、预期数据条数及运行状态统一记录在 [`configs/experiments.json`](../configs/experiments.json)。`assets/`、`saved/`、`runs/` 和 `external/` 被 Git 忽略；GitHub 不存储数十到数百 GB 的权重或视频。
 
-| 模型 | 本机目录 | 核对结果 |
-| --- | --- | --- |
-| DeepSeek V4 Flash 0731 | `/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731` | 与 Hugging Face 镜像的 74 个文件逐项匹配大小；48 个权重分片齐全；两卡转换权重另在 `models/DeepSeek-V4-Flash-0731-mp2`，两片和转换记录齐全。 |
-| MiniMax H3 | `/mnt/kpfs_qyang/zhaolianchao/models/MiniMax-H3` | **当前 VBench 文本生成视频（T2VA）所需文件齐全**：本机既有下载清单的 61 个文件大小匹配，文本编码器、transformer、VAE 的索引分片均在。官方完整仓库另有参考条件生成所用 `transformer_ref`、原始 `FL2VA/` 和 `Ref2VA/` 等 196 个未下载文件，约 354 GB；它们不参与当前 T2VA 评测。 |
-| MAGI-2 preview | `/mnt/kpfs_qyang/zhaolianchao/models/MAGI-2-preview` | 与 Hugging Face 镜像的 89 个文件逐项匹配大小；preview、refiner 和文本编码器的索引分片、视频和音频 VAE 均在。 |
-
-这里的“齐全”指文件存在、大小与已知清单一致，索引能找到全部分片，Safetensors 文件头有效。它不等于已逐字节计算数百 GB 权重的哈希，也不等于 ARCQuant 已支持该模型架构。
-
-| Benchmark | 固定版本与本机数据 | 核对结果 |
-| --- | --- | --- |
-| GPQA Diamond | `Idavidrein/gpqa`，快照 `633f5ee` | 198 题 |
-| MATH-500 | `HuggingFaceH4/MATH-500`，快照 `6e4ed1a` | 500 题 |
-| LongBench v2 | `THUDM/LongBench-v2`，快照 `2b48e49` | 503 题，`data.json` 可解析 |
-| LiveCodeBench v6 | `livecodebench/code_generation_lite`，快照 `0fe84c3` | `test6.jsonl` 为 175 题，文件大小与本机固定清单一致 |
-| VBench | 本机 `data/vbench/VBench` | 官方元数据含 944 条唯一英文提示词；21 个评分模型及 BERT 文件的哈希已核对，合计约 9.43 GB |
-| Terminal-Bench | 官方 `terminal-bench-core==0.1.1`，提交 `91e1045` | 已下载到 `data/terminal-bench-core-0.1.1/tasks`，86 个任务都含 `task.yaml` |
-
-上表中的 `data/` 目录均位于 `/mnt/kpfs_qyang/zhaolianchao/data/`。完整路径、快照号和预期条数记录在 [`configs/experiments.json`](../configs/experiments.json)。Terminal-Bench 还有其他版本；本次固定的是 `0.1.1` 任务集。它的运行还需要终端代理、容器和模型服务，当前统一 CLI 只检查任务数据。
-
-## 用统一 CLI 查看和启动已有基线
+默认 `assets/` 放在仓库内；设置 `ARCQUANT_ASSET_ROOT` 后可放到任何大磁盘。Hugging Face 下载使用 `<资产根>/hf_home/hub` 缓存，`models/` 与 `datasets/` 中建立相对链接，不重复保存一份巨型权重。仓库原有的 ARCQuant 校准缓存保存在 `saved/`；TEAL/WINA 离线产物保存在 `<资产根>/calibration/`。如果直接复制整套资产目录到另一台机器，保留内部相对路径即可。
 
 ```bash
-cd /mnt/kpfs_qyang/LBC
-git status
+python arc.py list
+python arc.py fetch --model llama-3.1-8b
+python arc.py fetch --benchmark wikitext2
+python arc.py fetch --benchmark gpqa-diamond
+python arc.py fetch --benchmark math500
+python arc.py fetch --benchmark longbench-v2
+python arc.py fetch --benchmark livecodebench
+python arc.py fetch --benchmark terminal-bench
+python arc.py fetch --benchmark vbench
 python arc.py assets
-
-# 只生成计划，不申请 GPU
-python arc.py plan --backend base-eval --model deepseek-v4-flash \
-  --benchmark gpqa-diamond --profile smoke --method none \
-  --quant-type HiF4 --gpu-ids 0,1
-
-python arc.py plan --backend base-eval --model minimax-h3 \
-  --benchmark vbench --profile tiny --method none \
-  --quant-type HiF4 --gpu-ids auto
-
-python arc.py plan --backend base-eval --model magi-2-preview \
-  --benchmark vbench --profile tiny --method none \
-  --quant-type HiF4 --gpu-ids 0,1
 ```
 
-把 `plan` 改为 `run` 才会启动实际实验。`smoke` 是少量文本题目；VBench `tiny` 是 108 条唯一提示词，按官方采样规则仍需每种精度生成 740 条视频。选择 `full` 或 `official` 前请看 [GPU 预算](GPU_BUDGET.md)。实验清单写到仓库的 `runs/`，DeepSeek 基线结果也写到 `runs/baseline_results/`；视频评分和视频缓存由现有评测器保存在其 `results/` 下。
+`fetch` 一次下载一个对象，避免误拉取几个大型模型。MiniMax H3 默认只取文本生成视频（T2VA）所需组件；不包含参考视频生成的大型 `transformer_ref` 等额外权重。部分模型需要 Hugging Face 访问许可和 token。对于已有权重，用 `--model-path` 或 `ARCQUANT_LLAMA_MODEL`、`ARCQUANT_DEEPSEEK_MODEL` 等清单中的环境变量指定即可。`python arc.py assets` 只检查本机文件、索引分片和已登记数据条数；它不等于模型精度或运行环境验证。
 
-`--backend base-eval` 调用本机已有、提交为 `c452d6d` 的 [`base_eval`](https://github.com/xiaodiandian-AI/base_eval) 评测实现。它已有 DeepSeek 的 GPQA、MATH-500、LongBench v2、LiveCodeBench v6 入口，以及 MiniMax H3、MAGI-2 的 VBench 入口。可用 `ARCQUANT_BASE_EVAL_ROOT` 或 `--base-eval-root` 指定其它副本。
+## 外部生成评测器
 
-**结果含义要分清：**这个后端的 `HiF4` 是已有基线的 W4A4 量化后反量化计算；它没有使用 ARCQuant 的增强残差通道，也没有接入 TEAL/WINA。`--backend arcquant` 才走本仓库原有的量化和 Llama 稀疏实现。新模型接入 ARCQuant 核心量化和稀疏层，仍需要分别实现它们的投影、校准与推理路径。
+DeepSeek V4 Flash、MiniMax H3、MAGI-2 的当前入口是固定 Git 提交的 [`base_eval`](https://github.com/xiaodiandian-AI/base_eval)。先执行：
 
-## 已做的 CPU 预检
+```bash
+python arc.py fetch --backend base-eval
+python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpqa-diamond --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
+```
 
-DeepSeek 的 GPQA、LongBench v2、LiveCodeBench v6，MiniMax H3 的 VBench tiny，以及 MAGI-2 的 VBench tiny，均通过了已有评测器的 CPU 预检。它们检查模型与数据路径、提示词或任务协议、生成参数；没有加载完整权重或占用 GPU。本次没有新跑精度、视频生成或速度实验。
+**访问限制（2026-10-25）：**清单中的 `xiaodiandian-AI/base_eval` 地址，用当前 HTTPS 和 SSH 身份均返回仓库不存在或无权限。新机器必须先获得该仓库读取权限，或取得有授权的完整 Git checkout / bundle；否则 `fetch --backend base-eval` 会失败。已有授权副本时可运行 `python arc.py fetch --backend base-eval --source /path/to/base_eval`，仍会检出清单固定的 SHA。这个外部依赖未上传到本仓库，不能把视频和 DeepSeek 基线描述为仅克隆 ARCQuant 即可运行。
+
+下载会固定到清单中的 SHA，放入 `external/base_eval`，并把 `external/data` 链接到资产根目录，以适配评测器的相邻目录约定。`run` 会检查该 SHA、启动脚本、权重和数据，不会误用另一版评测协议。外部评测器有自己的 Python 和 GPU 依赖，不包含在 ARCQuant 的 `requirements.txt` 中；在新服务器还需按其 `requirements-deepseek-v4.txt`、`requirements-minimax-h3.txt`、`requirements-vbench-a800.txt` 及 MAGI-2 官方运行说明准备环境。视频环境的可执行文件可分别通过 `ARCQUANT_H3_PYTHON`、`ARCQUANT_VBENCH_PYTHON`、`ARCQUANT_MAGI2_PYTHON` 指定。VBench 的评分模型来源、SHA256 和大小也保存为 [`VBench 评分资产清单`](../configs/vbench_download_manifest.json) 与 [`BERT 清单`](../configs/vbench_bert_download_manifest.json)，来源为本机外部评测器的固定清单；可用其 `preload_vbench_assets.py --full` 下载和校验。`fetch --benchmark vbench` 只下载 VBench 源码与提示词。
+
+DeepSeek 两卡推理先进行权重转换。外部评测器提供转换程序；确保当前 shell 已激活它所需的运行环境，然后从本仓库根目录执行：
+
+```bash
+python external/base_eval/convert_deepseek_v4.py --world-size 2 \
+  --source-model assets/models/deepseek-v4-flash \
+  --output assets/models/deepseek-v4-flash-tp2 --plan
+# 检查计划后去掉 --plan，执行实际转换
+```
+
+若设置了 `ARCQUANT_ASSET_ROOT`，把以上 `assets/` 改为该根目录。运行时用 `--converted-model` 或 `ARCQUANT_DEEPSEEK_TP2` 指向转换结果。两卡默认要求每卡约 132 GiB 可用显存；不同 GPU 要先评估显存和吞吐。VBench `tiny` 虽只覆盖 108 个唯一提示词，按官方维度规则仍生成约 740 条视频/精度；见 [GPU 预算](GPU_BUDGET.md)。
+
+```bash
+python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark livecodebench --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
+python arc.py plan --backend base-eval --model minimax-h3 --benchmark vbench --profile tiny --method none --quant-type HiF4 --gpu-ids auto
+python arc.py plan --backend base-eval --model magi-2-preview --benchmark vbench --profile tiny --method none --quant-type HiF4 --gpu-ids 0,1
+```
+
+将 `plan` 改为 `run` 后才真正评测。`base-eval` 的 HiF4 是独立 W4A4 基线，不含 ARCQuant 的增强残差通道，更不含 TEAL/WINA。LongBench v2 与 LiveCodeBench 走生成和专用评分协议；GPQA Diamond 与 MATH-500 在该后端也走生成式协议。ARCQuant Llama 的 `math500` / `gpqa-diamond` 入口则使用 lm-eval 任务，两者不可直接当成同一评测协议比较。
+
+## 2026-10-24 本机核对记录
+
+这台服务器曾检查过 DeepSeek V4 Flash 原权重的 48 个分片及两卡转换的两片、MiniMax H3 的 T2VA 所需组件、MAGI-2 preview 的 89 个文件；相应索引分片与已知文件大小匹配。GPQA Diamond 198 题、MATH-500 500 题、LongBench v2 503 题、LiveCodeBench v6 175 题、Terminal-Bench core 0.1.1 的 86 个任务、VBench 的 944 条唯一英文提示词也通过了本机数据检查。这些是**当时的本机记录**，迁移后仍应重新运行 `python arc.py assets`。文件检查不包含数百 GB 权重的逐字节哈希，也不证明新 GPU 上的精度、速度或兼容性。
+
+当前机器已有资产可通过环境变量复用，例如 `ARCQUANT_DEEPSEEK_MODEL=/mnt/kpfs_qyang/djs/models/DeepSeek-V4-Flash-0731`、`ARCQUANT_MINIMAX_MODEL=/mnt/kpfs_qyang/zhaolianchao/models/MiniMax-H3`、`ARCQUANT_MAGI2_MODEL=/mnt/kpfs_qyang/zhaolianchao/models/MAGI-2-preview`。这些机器专属路径不写入清单默认值，因此在新机器克隆后不会误指向旧服务器。

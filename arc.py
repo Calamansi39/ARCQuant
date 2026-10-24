@@ -7,6 +7,7 @@ legacy model code and its GPU dependencies are imported only by ``run``.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -17,6 +18,9 @@ from pathlib import Path
 
 from benchmarks.asset_inventory import audit_benchmark, audit_catalog, audit_model
 from benchmarks.baseline_bridge import BaselineError, build_baseline_plan
+from benchmarks.fetch_assets import FetchError, fetch_entry
+from benchmarks.paths import asset_path, asset_root
+from benchmarks.sparse_strategy import StrategyError, load_strategy
 
 
 ROOT = Path(__file__).resolve().parent
@@ -49,10 +53,7 @@ def resolve_model(args: argparse.Namespace, catalog: dict) -> tuple[dict, Path]:
     model = catalog["models"].get(args.model)
     if model is None:
         raise PlanError(f"Unknown model {args.model!r}; use 'python arc.py list'.")
-    raw_path = args.model_path or os.environ.get(model.get("path_env", "")) or model.get("default_path")
-    if not raw_path:
-        raise PlanError(f"Set {model['path_env']} or pass --model-path for {args.model}.")
-    return model, Path(raw_path).expanduser().resolve()
+    return model, asset_path(model, args.model, "models", override=args.model_path)
 
 
 def cache_paths(model_path: Path, dataset: str, metric: str) -> list[Path]:
@@ -97,8 +98,13 @@ def build_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
     if args.method in ("teal", "wina"):
         if not 0 <= args.sparsity < 1:
             raise PlanError("--sparsity must be in [0, 1).")
-    if args.method == "teal" and not args.histogram_path:
-        raise PlanError("TEAL requires --histogram-path pointing to its calibration histograms.")
+    allocation = getattr(args, "allocation", "uniform")
+    if args.method not in ("teal", "wina") and allocation != "uniform":
+        raise PlanError("--allocation greedy requires --method teal or wina.")
+    if args.method not in ("teal", "wina") and getattr(args, "strategy", None):
+        raise PlanError("--strategy requires --method teal or wina.")
+    if args.method in ("teal", "wina") and allocation == "uniform" and getattr(args, "strategy", None):
+        raise PlanError("--strategy requires --allocation greedy.")
     if args.method in ("none", "xmask") and args.sparsity != 0:
         raise PlanError("Choose --method teal or wina before setting --sparsity.")
     if args.method == "xmask":
@@ -122,7 +128,16 @@ def build_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
     if args.method in ("teal", "wina"):
         command += ["--sparsity", str(args.sparsity)]
         if args.method == "teal":
-            command += ["--teal_histogram_path", str(Path(args.histogram_path).expanduser().resolve())]
+            histogram_path = Path(args.histogram_path).expanduser().resolve() if args.histogram_path else (
+                asset_root() / "calibration" / args.model / "teal" / "histograms"
+            ).resolve()
+            command += ["--teal_histogram_path", str(histogram_path)]
+        if allocation == "greedy":
+            strategy_value = getattr(args, "strategy", None)
+            strategy_path = Path(strategy_value).expanduser().resolve() if strategy_value else (
+                asset_root() / "calibration" / args.model / args.method / "strategy.json"
+            ).resolve()
+            command += ["--sparse_strategy_path", str(strategy_path)]
         if args.disable_prefill_sparsity:
             command.append("--disable_prefill_sparsity")
     if args.method == "xmask":
@@ -154,6 +169,9 @@ def build_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
         "profile": args.profile,
         "method": args.method,
         "quant_type": args.quant_type,
+        "allocation": allocation if args.method in ("teal", "wina") else None,
+        "histogram_path": str(histogram_path) if args.method == "teal" else None,
+        "strategy_path": str(strategy_path) if args.method in ("teal", "wina") and allocation == "greedy" else None,
         "command": command,
         "cache_paths": [str(path) for path in cache_paths(model_path, args.calibration_dataset, args.act_sort_metric)],
     }
@@ -174,11 +192,42 @@ def prepare_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
             "cache_paths": [str(path) for path in cache_paths(model_path, args.dataset, args.act_sort_metric)]}
 
 
+def calibration_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
+    catalog = catalog or read_catalog()
+    model, model_path = resolve_model(args, catalog)
+    if model["family"] != "llama" or model["status"] != "legacy-ready":
+        raise PlanError("Native TEAL/WINA calibration currently supports the legacy Llama adapter only.")
+    if not 0 < args.sparsity < 1:
+        raise PlanError("--sparsity must be in (0, 1).")
+    if args.method == "wina" and args.allocation == "uniform":
+        raise PlanError("Uniform WINA needs no offline calibration; use 'arc.py prepare' for ARCQuant caches.")
+    output = Path(args.output_dir).expanduser().resolve() if args.output_dir else (
+        asset_root() / "calibration" / args.model / args.method
+    ).resolve()
+    command = [sys.executable, str(ROOT / "model" / "calibrate_sparse.py"),
+               "--model-path", str(model_path), "--method", args.method,
+               "--allocation", args.allocation, "--output-dir", str(output),
+               "--dataset", args.dataset, "--samples", str(args.samples),
+               "--seqlen", str(args.seqlen), "--sparsity", str(args.sparsity),
+               "--step", str(args.step), "--last-fraction", str(args.last_fraction),
+               "--device", args.device, "--seed", str(args.seed)]
+    return {"model": args.model, "model_path": str(model_path), "method": args.method,
+            "allocation": args.allocation, "output_dir": str(output), "command": command}
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
     sub.add_parser("assets", help="audit local model weights and benchmark data without GPU")
+    fetch = sub.add_parser("fetch", help="download a recorded model, benchmark or evaluator source")
+    fetch_target = fetch.add_mutually_exclusive_group(required=True)
+    fetch_target.add_argument("--model", help="model key from 'arc.py list'")
+    fetch_target.add_argument("--benchmark", help="benchmark key from 'arc.py list'")
+    fetch_target.add_argument("--backend", choices=["base-eval"])
+    fetch_target.add_argument("--runtime", choices=["magi-2-preview"])
+    fetch.add_argument("--dry-run", action="store_true")
+    fetch.add_argument("--source", help="local Git checkout or alternate URL for a Git backend/runtime")
     prep = sub.add_parser("prepare", help="produce ARCQuant reorder and calibration caches")
     prep.add_argument("--model", required=True)
     prep.add_argument("--model-path")
@@ -187,6 +236,22 @@ def _parser() -> argparse.ArgumentParser:
     prep.add_argument("--samples", type=int, default=128)
     prep.add_argument("--seqlen", type=int, default=2048)
     prep.add_argument("--dry-run", action="store_true")
+    cal = sub.add_parser("calibrate", help="generate native TEAL histograms and optional TEAL/WINA greedy allocations")
+    cal.add_argument("--model", required=True)
+    cal.add_argument("--model-path")
+    cal.add_argument("--method", choices=["teal", "wina"], required=True)
+    cal.add_argument("--allocation", choices=["uniform", "greedy"], default="uniform")
+    cal.add_argument("--sparsity", type=float, required=True)
+    cal.add_argument("--dataset", choices=["wikitext2", "c4", "arc_mix"], default="wikitext2")
+    cal.add_argument("--samples", type=int, default=8)
+    cal.add_argument("--seqlen", type=int, default=256)
+    cal.add_argument("--step", type=float, default=0.025,
+                     help="greedy rate increment for a Q-sized weight matrix")
+    cal.add_argument("--last-fraction", type=float, default=0.25)
+    cal.add_argument("--device", default="cuda:0")
+    cal.add_argument("--seed", type=int, default=0)
+    cal.add_argument("--output-dir")
+    cal.add_argument("--dry-run", action="store_true")
 
     for action in ("plan", "run"):
         p = sub.add_parser(action, help="print a plan" if action == "plan" else "execute and record a run")
@@ -210,6 +275,8 @@ def _parser() -> argparse.ArgumentParser:
         p.add_argument("--softmax-alpha-ckpt")
         p.add_argument("--rec", action="store_true")
         p.add_argument("--sparsity", type=float, default=0.0)
+        p.add_argument("--allocation", choices=["uniform", "greedy"], default="uniform")
+        p.add_argument("--strategy", help="per-layer greedy strategy.json; defaults to assets/calibration/<model>/<method>/strategy.json")
         p.add_argument("--disable-prefill-sparsity", action="store_true")
         p.add_argument("--kv-cache", action="store_true")
         p.add_argument("--seed", type=int, default=0)
@@ -222,6 +289,13 @@ def _parser() -> argparse.ArgumentParser:
 def _git_revision() -> str | None:
     result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
     return result.stdout.strip() if result.returncode == 0 else None
+
+
+def runtime_env() -> dict[str, str]:
+    """Keep CLI downloads and dataset loaders on the same portable HF cache."""
+    env = os.environ.copy()
+    env.setdefault("HF_HOME", str(asset_root() / "hf_home"))
+    return env
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -241,6 +315,13 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report, indent=2, ensure_ascii=False))
             return 0 if all(value["status"] == "ready" for group in report.values()
                             for value in group.values()) else 2
+        if args.action == "fetch":
+            kind, name = next((kind, getattr(args, kind)) for kind in
+                              ("model", "benchmark", "backend", "runtime") if getattr(args, kind))
+            print(json.dumps(fetch_entry(catalog, kind, name, dry_run=args.dry_run,
+                                         source_override=args.source),
+                             indent=2, ensure_ascii=False))
+            return 0
         if args.action == "prepare":
             plan = prepare_plan(args, catalog)
             if args.dry_run:
@@ -249,12 +330,37 @@ def main(argv: list[str] | None = None) -> int:
             check_runtime_compatibility()
             if not Path(plan["model_path"]).is_dir():
                 raise PlanError(f"Model directory does not exist: {plan['model_path']}")
-            return subprocess.run(plan["command"], cwd=ROOT, check=False).returncode
+            return subprocess.run(plan["command"], cwd=ROOT, env=runtime_env(), check=False).returncode
+        if args.action == "calibrate":
+            plan = calibration_plan(args, catalog)
+            if args.dry_run:
+                print(json.dumps(plan, indent=2, ensure_ascii=False))
+                return 0
+            check_runtime_compatibility()
+            if not Path(plan["model_path"]).is_dir():
+                raise PlanError(f"Model directory does not exist: {plan['model_path']}")
+            return subprocess.run(plan["command"], cwd=ROOT, env=runtime_env(), check=False).returncode
         plan = build_plan(args, catalog)
         if args.action == "plan":
             print(json.dumps(plan, indent=2, ensure_ascii=False))
             return 0
         if plan.get("backend") == "base-eval":
+            backend_root = Path(plan["cwd"])
+            if backend_root == ROOT / "external" / "base_eval":
+                data_link = ROOT / "external" / "data"
+                if not data_link.is_symlink() or data_link.resolve() != asset_root().resolve():
+                    raise PlanError(
+                        "Portable base-eval data link does not match ARCQUANT_ASSET_ROOT; "
+                        "rerun 'python arc.py fetch --backend base-eval' with the same asset root."
+                    )
+            if plan["backend_revision"] != plan["backend_expected_revision"]:
+                raise PlanError(
+                    f"base-eval checkout at {backend_root} must be revision "
+                    f"{plan['backend_expected_revision']}; found {plan['backend_revision'] or 'no Git checkout'}. "
+                    "Run 'python arc.py fetch --backend base-eval' or pass a matching --base-eval-root."
+                )
+            if not Path(plan["command"][1]).is_file():
+                raise PlanError(f"base-eval launcher is missing: {plan['command'][1]}")
             model_entry = {**catalog["models"][args.model], "path_env": "",
                            "default_path": plan["model_path"]}
             if args.model == "deepseek-v4-flash":
@@ -274,7 +380,7 @@ def main(argv: list[str] | None = None) -> int:
             manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
             try:
                 code = subprocess.run(plan["command"], cwd=plan["cwd"],
-                                      env={**os.environ, **plan["env"]}, check=False).returncode
+                                      env={**runtime_env(), **plan["env"]}, check=False).returncode
             except BaseException:
                 manifest["status"] = "interrupted"
                 manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
@@ -291,12 +397,23 @@ def main(argv: list[str] | None = None) -> int:
         if missing:
             raise PlanError("Missing calibration caches: " + ", ".join(missing) + ". Run 'python arc.py prepare' first.")
         if args.method == "teal":
-            histogram_root = Path(args.histogram_path).expanduser()
+            histogram_root = Path(plan["histogram_path"])
             if not histogram_root.is_dir():
-                raise PlanError(f"TEAL histogram directory does not exist: {args.histogram_path}")
+                raise PlanError(f"TEAL histogram directory does not exist: {histogram_root}; run 'arc.py calibrate --method teal' first.")
             missing = missing_teal_histograms(histogram_root, Path(plan["model_path"]))
             if missing:
                 raise PlanError(f"Missing {len(missing)} TEAL histogram files; first: {missing[0]}")
+            calibration_file = histogram_root.parent / "calibration.json"
+            if calibration_file.is_file():
+                calibration = json.loads(calibration_file.read_text(encoding="utf-8"))
+                config_hash = hashlib.sha256((Path(plan["model_path"]) / "config.json").read_bytes()).hexdigest()
+                if calibration.get("model_config_sha256") != config_hash:
+                    raise PlanError(f"TEAL histograms at {histogram_root} were made for another model config")
+        if plan.get("strategy_path"):
+            config_file = Path(plan["model_path"]) / "config.json"
+            layer_count = int(json.loads(config_file.read_text(encoding="utf-8"))["num_hidden_layers"])
+            load_strategy(plan["strategy_path"], method=args.method, layer_count=layer_count,
+                          target_sparsity=args.sparsity, model_config=config_file)
         if args.method == "xmask":
             if not Path(args.x_mask_ckpt).expanduser().is_file():
                 raise PlanError(f"xmask checkpoint does not exist: {args.x_mask_ckpt}")
@@ -309,10 +426,14 @@ def main(argv: list[str] | None = None) -> int:
             result_path = args.run_dir / f"{stamp}_{args.model}_{args.method}_{args.benchmark}_results.json"
             plan["command"] += ["--output_file", str(result_path)]
             plan["result_path"] = str(result_path)
+        if args.method in ("teal", "wina"):
+            stats_path = args.run_dir / f"{stamp}_{args.model}_{args.method}_{args.benchmark}_sparsity.json"
+            plan["command"] += ["--sparse_stats_file", str(stats_path)]
+            plan["sparse_stats_path"] = str(stats_path)
         manifest = {**plan, "source_revision": _git_revision(), "started_at_utc": stamp, "status": "running"}
         manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
         try:
-            code = subprocess.run(plan["command"], cwd=ROOT, check=False).returncode
+            code = subprocess.run(plan["command"], cwd=ROOT, env=runtime_env(), check=False).returncode
         except BaseException:
             manifest["status"] = "interrupted"
             manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
@@ -322,7 +443,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
         print(f"Run manifest: {manifest_path}")
         return code
-    except (PlanError, BaselineError) as exc:
+    except (PlanError, BaselineError, FetchError, StrategyError) as exc:
         print(f"arc: error: {exc}", file=sys.stderr)
         return 2
 

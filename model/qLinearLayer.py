@@ -29,7 +29,7 @@ def NVFP4_reorder_quantize_w(w, reorder_index, select_num):
     scale = torch.max(w.abs()).float() / (448.0*6.0)
     qw, scale_w = require_agemm().reorder_quantize_w(w / scale, reorder_index, select_num)
     return qw, scale_w, scale
-    
+
 class QLinearLayer(nn.Module):
     def __init__(
         self,
@@ -55,12 +55,13 @@ class QLinearLayer(nn.Module):
         self.select_num = select_num
         self.quant_type = quant_type
 
-        self.use_agemm = bool(self.quant_type == "NVFP4" and HAS_AGEMM and reorder_xw)
+        self.use_agemm = bool(self.quant_type == "NVFP4" and HAS_AGEMM and reorder_xw
+                              and originalLayer.weight.device.type == "cuda")
 
         if self.use_agemm:
             # self.W, self.scale_w, self.scale = NVFP4_reorder_quantize_w((originalLayer.weight.data), torch.arange(self.in_features).to(torch.int16).cuda(), 0)
             W, scale_w, scale = NVFP4_reorder_quantize_w(
-                (originalLayer.weight.data), reorder_index.to(torch.int16).cuda(), select_num
+                (originalLayer.weight.data), reorder_index.to(device=originalLayer.weight.device, dtype=torch.int16), select_num
             )
         else:
             if self.quant_type == "NVFP4" and not HAS_AGEMM:
@@ -73,7 +74,8 @@ class QLinearLayer(nn.Module):
 
             if reorder_xw:
                 w_reordered = torch.index_select(
-                    originalLayer.weight.data, 1, reorder_index.to(torch.int32).cuda()
+                    originalLayer.weight.data, 1,
+                    reorder_index.to(device=originalLayer.weight.device, dtype=torch.int32)
                 )
                 fake_reorder_index = torch.arange(self.in_features, device=w_reordered.device)
             else:
@@ -109,5 +111,3 @@ class QLinearLayer(nn.Module):
         else:
             y = y.reshape(q_len, -1)
         return y
-
-    

@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from pathlib import Path
+import os
 
 DEV = torch.device('cuda:0')
 
@@ -11,8 +12,15 @@ def set_seed(seed):
 
 def get_wikitext2(nsamples, seed, seqlen, model, tokenizer):
     from datasets import load_dataset
-    traindata = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
-    testdata = load_dataset('wikitext', 'wikitext-2-raw-v1', split='test')
+    asset_root = Path(os.environ.get("ARCQUANT_ASSET_ROOT", Path(__file__).resolve().parents[1] / "assets")).expanduser()
+    local = asset_root / "datasets" / "wikitext2" / "wikitext-2-raw-v1"
+    files = {split: local / f"{split}-00000-of-00001.parquet" for split in ("train", "test")}
+    if all(path.is_file() for path in files.values()):
+        dataset = load_dataset("parquet", data_files={key: str(value) for key, value in files.items()})
+        traindata, testdata = dataset["train"], dataset["test"]
+    else:
+        traindata = load_dataset('Salesforce/wikitext', 'wikitext-2-raw-v1', split='train')
+        testdata = load_dataset('Salesforce/wikitext', 'wikitext-2-raw-v1', split='test')
     trainenc = tokenizer("\n\n".join(traindata['text']), return_tensors='pt')
     testenc = tokenizer("\n\n".join(testdata['text']), return_tensors='pt')
 
@@ -259,14 +267,6 @@ def get_loaders(
     if "llama" in model.lower():
         from transformers import AutoTokenizer 
         tokenizer = AutoTokenizer.from_pretrained(model)
-        if tokenizer.bos_token_id != 1 or tokenizer.eos_token_id != 2:
-            try:
-                tokenizer.bos_token_id = 1
-                tokenizer.eos_token_id = 2
-                print(f"bos/eos tokens updated: {tokenizer.bos_token_id=},  {tokenizer.eos_token_id=}")
-            except AttributeError:
-                pass
-                print(f"bos/eos tokens unchanged: {tokenizer.bos_token_id=},  {tokenizer.eos_token_id=}")
     else:
         from transformers import AutoTokenizer 
         tokenizer = AutoTokenizer.from_pretrained(model, use_fast=False, legacy=False)

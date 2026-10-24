@@ -4,6 +4,21 @@ import torch
 import torch.nn as nn
 
 
+PROJECTIONS = ("q", "k", "v", "o", "gate", "up", "down")
+
+
+def projection_sparsities(sparsity, projections):
+    if isinstance(sparsity, dict):
+        if not set(projections).issubset(sparsity):
+            raise ValueError(f"Missing projection sparsities: {set(projections) - set(sparsity)}")
+        result = {name: float(sparsity[name]) for name in projections}
+    else:
+        result = {name: float(sparsity) for name in projections}
+    if any(not 0 <= value < 1 for value in result.values()):
+        raise ValueError("Each projection sparsity must be in [0, 1)")
+    return result
+
+
 def _interp(x, xp, fp):
     idx = torch.searchsorted(xp, x)
     idx = torch.clamp(idx, 1, len(xp) - 1)
@@ -48,6 +63,7 @@ class ThresholdSparsifier(nn.Module):
         super().__init__()
         self.distribution = distribution
         self.apply_prefill = apply_prefill
+        self.track_stats = True
         self.register_buffer("threshold", torch.tensor(0.0, dtype=torch.float32))
         self.register_buffer("zero_count", torch.tensor(0.0, dtype=torch.float64))
         self.register_buffer("total_count", torch.tensor(0.0, dtype=torch.float64))
@@ -68,6 +84,8 @@ class ThresholdSparsifier(nn.Module):
 
     @torch.no_grad()
     def update_stats(self, x):
+        if not self.track_stats:
+            return
         self.zero_count += float(x.numel() - torch.count_nonzero(x))
         self.total_count += float(x.numel())
 
@@ -104,6 +122,7 @@ class ThresholdSparsifier(nn.Module):
 
 
 def build_llama_teal_sparsifiers(layer_idx, histogram_root, sparsity, apply_prefill=True):
+    rates = projection_sparsities(sparsity, PROJECTIONS)
     layer_root = os.path.join(histogram_root, f"layer-{layer_idx}")
     attn_hist = os.path.join(layer_root, "self_attn", "histograms.pt")
     mlp_hist = os.path.join(layer_root, "mlp", "histograms.pt")
@@ -115,13 +134,13 @@ def build_llama_teal_sparsifiers(layer_idx, histogram_root, sparsity, apply_pref
 
     return nn.ModuleDict(
         {
-            "q": ThresholdSparsifier(attn_h1, sparsity=sparsity, apply_prefill=apply_prefill),
-            "k": ThresholdSparsifier(attn_h1, sparsity=sparsity, apply_prefill=apply_prefill),
-            "v": ThresholdSparsifier(attn_h1, sparsity=sparsity, apply_prefill=apply_prefill),
-            "o": ThresholdSparsifier(attn_h2, sparsity=sparsity, apply_prefill=apply_prefill),
-            "gate": ThresholdSparsifier(mlp_h1, sparsity=sparsity, apply_prefill=apply_prefill),
-            "up": ThresholdSparsifier(mlp_h1, sparsity=sparsity, apply_prefill=apply_prefill),
-            "down": ThresholdSparsifier(mlp_h2, sparsity=sparsity, apply_prefill=apply_prefill),
+            "q": ThresholdSparsifier(attn_h1, sparsity=rates["q"], apply_prefill=apply_prefill),
+            "k": ThresholdSparsifier(attn_h1, sparsity=rates["k"], apply_prefill=apply_prefill),
+            "v": ThresholdSparsifier(attn_h1, sparsity=rates["v"], apply_prefill=apply_prefill),
+            "o": ThresholdSparsifier(attn_h2, sparsity=rates["o"], apply_prefill=apply_prefill),
+            "gate": ThresholdSparsifier(mlp_h1, sparsity=rates["gate"], apply_prefill=apply_prefill),
+            "up": ThresholdSparsifier(mlp_h1, sparsity=rates["up"], apply_prefill=apply_prefill),
+            "down": ThresholdSparsifier(mlp_h2, sparsity=rates["down"], apply_prefill=apply_prefill),
         }
     )
 
@@ -131,19 +150,23 @@ class WeightInformedTopKSparsifier(nn.Module):
 
     The score is ``abs(activation) * column_l2_norm(weight)``. The original
     WINA top-k path masks the last 99% of prefill tokens and all decode tokens.
-    This class implements the uniform-sparsity variant, without WINA's
-    optional histogram and greedy per-matrix allocation stage.
+    Rates can be uniform or supplied per projection by an offline greedy
+    strategy. The top-k path does not need activation histograms.
     """
 
     def __init__(self, column_norm, sparsity=0.0, apply_prefill=True):
         super().__init__()
-        if not 0 <= sparsity < 1:
-            raise ValueError("WINA sparsity must be in [0, 1)")
-        self.sparsity = float(sparsity)
         self.apply_prefill = apply_prefill
+        self.track_stats = True
+        self.set_sparsity(sparsity)
         self.register_buffer("column_norm", column_norm.detach().float().clone())
         self.register_buffer("zero_count", torch.tensor(0.0, dtype=torch.float64))
         self.register_buffer("total_count", torch.tensor(0.0, dtype=torch.float64))
+
+    def set_sparsity(self, sparsity):
+        if not 0 <= sparsity < 1:
+            raise ValueError("WINA sparsity must be in [0, 1)")
+        self.sparsity = float(sparsity)
 
     @torch.no_grad()
     def reset_stats(self):
@@ -169,9 +192,10 @@ class WeightInformedTopKSparsifier(nn.Module):
             mask = torch.zeros_like(tail, dtype=torch.bool).scatter_(-1, indices, True)
             out = x.clone()
             out[:, start:, :] = tail * mask
-        with torch.no_grad():
-            self.zero_count += float(out.numel() - torch.count_nonzero(out))
-            self.total_count += float(out.numel())
+        if self.track_stats:
+            with torch.no_grad():
+                self.zero_count += float(out.numel() - torch.count_nonzero(out))
+                self.total_count += float(out.numel())
         return out
 
 
@@ -182,10 +206,11 @@ def build_llama_wina_sparsifiers(original_module, kind, sparsity, apply_prefill=
     their input-column norms. Other projections use a unit norm.
     """
     projections = ("q", "k", "v", "o") if kind == "self_attn" else ("gate", "up", "down")
+    rates = projection_sparsities(sparsity, projections)
     informed = {"k"} if kind == "self_attn" else {"gate"}
     result = {}
     for name in projections:
         weight = getattr(original_module, f"{name}_proj").weight
         norm = weight.detach().float().norm(dim=0) if name in informed else torch.ones(weight.shape[1], device=weight.device)
-        result[name] = WeightInformedTopKSparsifier(norm, sparsity, apply_prefill)
+        result[name] = WeightInformedTopKSparsifier(norm, rates[name], apply_prefill)
     return nn.ModuleDict(result)
