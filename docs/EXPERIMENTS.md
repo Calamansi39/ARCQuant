@@ -21,7 +21,7 @@ ARCQuant 原本负责**量化**：把模型的权重（W）和中间激活（A�
 | `wina` | 每个 token 按分数取 top-k 激活，其余置零 | 无；分数使用原权重输入列范数 | Llama |
 | `xmask` | 调用学姐主线已有的 2:4 掩码路径 | 已校准的 `x_mask` checkpoint | 统一 CLI 中的 Llama |
 
-TEAL 的直方图来自之前的 `feature/arc-teal` 实现，文件目录形如 `layer-0/self_attn/histograms.pt` 与 `layer-0/mlp/histograms.pt`。WINA 接入的是**均匀稀疏率**版本：K 投影和 MLP gate 投影用真实权重输入列的 L2 范数，其他投影用 1；默认在预填充阶段只稀疏最后约 99% 的 token，解码阶段逐 token 稀疏。尚未接入原 WINA 的逐矩阵 greedy 稀疏率分配。参考代码为 [Calamansi39/wina](https://github.com/Calamansi39/wina) 的 `04ac8794aa4ae345d09414733ceb76470d3b6a3e`，上游为 [microsoft/wina](https://github.com/microsoft/wina)。
+TEAL 的阈值代码直接来自此前的 `feature/arc-teal` 分支，对应 [FasterDecoding/TEAL](https://github.com/FasterDecoding/TEAL) 的规则；直方图目录形如 `layer-0/self_attn/histograms.pt` 与 `layer-0/mlp/histograms.pt`。`prepare` 不会生成这些直方图。WINA 接入的是**均匀稀疏率**版本：K 投影和 MLP gate 投影用真实权重输入列的 L2 范数，其他投影用 1；默认在预填充阶段只稀疏最后约 99% 的 token，解码阶段逐 token 稀疏。尚未接入原 WINA 的逐矩阵 greedy 稀疏率分配与权重变换。参考代码为 [Calamansi39/wina](https://github.com/Calamansi39/wina) 的 `04ac8794aa4ae345d09414733ceb76470d3b6a3e`，上游为 [microsoft/wina](https://github.com/microsoft/wina)。详细的逐项来源和验证边界见 [TEAL / WINA 来源核查](METHOD_PROVENANCE.md)。
 
 学姐主线已有另一种 `x_mask` 2:4 激活掩码。`--method xmask --x-mask-ckpt /path/to/checkpoint.pt` 会转发给原有 `model/main.py --use_x_mask` 路径，可选 `--x-mask-r-thr`、`--rec` 和 `--softmax-alpha-ckpt`。当前不允许在同一次运行中把 TEAL/WINA 和 `x_mask` 叠加，因为两种掩码会改变同一量化输入，尚未完成联合校准。
 

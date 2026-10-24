@@ -247,12 +247,12 @@
       "description": "ARCQuant quantization without activation sparsity"
     },
     "teal": {
-      "status": "llama-only",
-      "description": "Histogram threshold activation sparsity from feature/arc-teal"
+      "status": "llama-prototype",
+      "description": "Uniform TEAL histogram threshold variant from feature/arc-teal; separate histograms required; no model-level validation"
     },
     "wina": {
-      "status": "llama-only",
-      "description": "Uniform weight-informed top-k activation sparsity, before ARCQuant quantization"
+      "status": "llama-prototype",
+      "description": "Uniform WINA top-k variant before ARCQuant quantization; no greedy allocation, transform, or model-level validation"
     },
     "xmask": {
       "status": "llama-cli",
