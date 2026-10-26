@@ -85,15 +85,18 @@ We will release our vLLM evaluation very soon.
 
 ## 中文快速指南：方法整合与迁移
 
-本仓库在 ARCQuant 量化代码中加入了 Llama 的 TEAL 和 WINA 激活稀疏入口，并用 `arc.py` 统一管理实验、资产来源和结果。先读 [从零开始的使用指南](docs/QUICKSTART.md)：它解释了每种方法、离线与在线步骤、下载模型和数据、准备缓存、查看计划以及启动评测。模型和 benchmark 的来源与版本保存在 [实验清单](configs/experiments.json)。
+**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 先读 [目标模型进度](docs/TARGET_MODELS.md)：它逐项区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态。模型与 benchmark 的来源保存在 [实验清单](configs/experiments.json)，[从零开始的指南](docs/QUICKSTART.md) 说明资产准备和 CLI 用法。
 
 ```bash
 python arc.py list
-python arc.py fetch --model llama-3.1-8b --dry-run
-python arc.py plan --model llama-3.1-8b --method wina --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
+python arc.py assets --model deepseek-v4-flash --model minimax-h3 --model magi-2-preview \
+  --benchmark gpqa-diamond --benchmark math500 --benchmark longbench-v2 \
+  --benchmark livecodebench --benchmark vbench
+python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpqa-diamond \
+  --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
 ```
 
-`plan` 不加载权重；`run` 才启动实验。TEAL 先用 `arc.py calibrate --method teal` 生成直方图，WINA 的均匀稀疏率不需要离线校准。DeepSeek V4 Flash、MiniMax H3 和 MAGI-2 当前只有固定外部基线评测入口，尚无 ARCQuant + TEAL/WINA 模型适配。方法来源与可验证范围见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移资产及外部评测器见 [资产指南](docs/ASSETS_AND_BASELINES.md)，GPU 时间估算见 [GPU 预算](docs/GPU_BUDGET.md)。
+`assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型通过固定外部评测器提供 BF16/FP4 **基线**入口；ARCQuant 残差通道与 TEAL/WINA 尚未接到它们。仓库内已有的 Llama 稀疏代码是方法原型，不能作为目标模型完成的证据。方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
 ```

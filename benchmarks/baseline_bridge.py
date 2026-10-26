@@ -73,6 +73,8 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
         configured = os.environ.get(f"ARCQUANT_{variable}")
         if configured:
             env[variable] = str(resolve_path(configured))
+    if os.environ.get("ARCQUANT_BASE_EVAL_ENV"):
+        env["ARCQUANT_BASE_EVAL_ENV"] = str(resolve_path(os.environ["ARCQUANT_BASE_EVAL_ENV"]))
     results_root = repository_root / "runs" / "baseline_results"
     limit = benchmark["profiles"][args.profile]["limit"]
     if args.model == "deepseek-v4-flash":
@@ -93,6 +95,12 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
     else:
         if args.benchmark != "vbench":
             raise BaselineError("Video models currently use the VBench evaluator only.")
+        # A transferred VBench checkout can belong to another server user.
+        # Trust only that checkout for the launched evaluator process.
+        git_slot = int(os.environ.get("GIT_CONFIG_COUNT", "0"))
+        env.update({"GIT_CONFIG_COUNT": str(git_slot + 1),
+                    f"GIT_CONFIG_KEY_{git_slot}": "safe.directory",
+                    f"GIT_CONFIG_VALUE_{git_slot}": str(data_root)})
         env.update(MODEL=str(model_path), TAGS=tag,
                    VBENCH_REPO=str(data_root),
                    VBENCH_CACHE_DIR=os.environ.get("VBENCH_CACHE_DIR", str(asset_root() / "vbench_cache")))

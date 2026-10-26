@@ -74,7 +74,10 @@ def fetch_git(source: dict, destination: Path, *, dry_run: bool = False) -> dict
                                 "safe.directory", str(trusted)], check=True)
             env["GIT_CONFIG_GLOBAL"] = str(safe_config)
         if not destination.exists():
-            subprocess.run(["git", "clone", "--filter=blob:none", source["url"], str(destination)],
+            clone = ["git", "clone"]
+            if not local_source.is_dir():
+                clone.append("--filter=blob:none")
+            subprocess.run(clone + [source["url"], str(destination)],
                            check=True, env=env)
         if not (destination / ".git").exists():
             raise FetchError(f"{destination} exists but is not a Git checkout")
@@ -142,5 +145,11 @@ def fetch_entry(catalog: dict, kind: str, name: str, *, dry_run: bool = False,
                 raise FetchError(f"{sibling_data} exists; cannot link portable baseline data")
             if not sibling_data.is_symlink():
                 sibling_data.symlink_to(Path(os.path.relpath(target, sibling_data.parent)), target_is_directory=True)
+            activation = REPOSITORY_ROOT / "external" / "activate_arcquant.sh"
+            activation_target = REPOSITORY_ROOT / "benchmarks" / "activate_base_eval.sh"
+            if not activation.exists() and not activation.is_symlink():
+                activation.symlink_to(
+                    Path(os.path.relpath(activation_target, activation.parent))
+                )
         return result
     return fetch_huggingface(source, destination, dry_run=dry_run)

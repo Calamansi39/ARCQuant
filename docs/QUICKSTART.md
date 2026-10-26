@@ -4,6 +4,8 @@
 
 这条整合分支以 `joannahuadu/ARCQuant` 的量化实现为基准，保留 `Calamansi39/ARCQuant` 原有的预处理修正，再加入 TEAL/WINA 接线和统一 CLI；代码提交到 `Calamansi39/ARCQuant`。
 
+**本阶段要评测的模型是 DeepSeek V4 Flash、MiniMax H3、MAGI-2。** 请先看 [目标模型进度](TARGET_MODELS.md)。下面的 Llama 章节解释已有方法原型，不能作为这三个目标模型已适配的证明。
+
 ## 先看能做什么
 
 | 入口 | 当前可运行范围 | 说明 |
@@ -41,15 +43,43 @@ export ARCQUANT_ASSET_ROOT=/large-disk/arcquant-assets
 目录约定为 `models/<模型名>`、`datasets/<数据集名>`、`calibration/<模型名>/<方法>`、`hf_home/`。`fetch` 将 Hugging Face 文件只下载到 `hf_home/hub` 一次，再在 `models/` 或 `datasets/` 建一个相对链接；移动整套资产目录后链接仍有效。单项已有资产可通过 `--model-path` 或 `configs/experiments.json` 记载的环境变量覆盖。`assets` 检查本机文件，不会下载，也不使用 GPU。
 
 ```bash
-python arc.py fetch --model llama-3.1-8b --dry-run
-python arc.py fetch --model llama-3.1-8b
-python arc.py fetch --benchmark wikitext2
-python arc.py assets
+python arc.py fetch --model deepseek-v4-flash --dry-run
+python arc.py fetch --model minimax-h3 --dry-run
+python arc.py fetch --model magi-2-preview --dry-run
+python arc.py assets --model deepseek-v4-flash --model minimax-h3 --model magi-2-preview \
+  --benchmark gpqa-diamond --benchmark math500 --benchmark longbench-v2 \
+  --benchmark livecodebench --benchmark terminal-bench --benchmark vbench
 ```
 
-Llama 权重可能需要先在 Hugging Face 同意许可并执行 `huggingface-cli login`。下载时如果目录已有手工放置的权重，`fetch` 会保护它；直接设置 `ARCQUANT_LLAMA_MODEL=/已有/模型目录` 即可。模型源、固定版本、文件检查规则在 [`configs/experiments.json`](../configs/experiments.json)。`main` 版本的模型会在下载时把实际 SHA 写到资产目录的 `.arcquant_asset.json`；要求严格复现时应固定该 SHA。
+实际下载时每次只对一个模型或数据运行 `fetch`，并确认磁盘空间与许可。已有权重可用清单记载的环境变量或 `--model-path` 指定。模型源、固定版本、文件检查规则在 [`configs/experiments.json`](../configs/experiments.json)。`main` 版本会在下载时记录实际 SHA；严格复现应固定该 SHA。
 
-## 3. 运行 Llama + HiF4 + TEAL/WINA
+## 3. 目标模型与 benchmark
+
+先下载被登记的资产：
+
+```bash
+python arc.py fetch --model deepseek-v4-flash --dry-run
+python arc.py fetch --benchmark gpqa-diamond
+python arc.py fetch --benchmark math500
+python arc.py fetch --benchmark longbench-v2
+python arc.py fetch --benchmark livecodebench
+python arc.py fetch --benchmark terminal-bench
+python arc.py fetch --benchmark vbench
+python arc.py fetch --backend base-eval
+```
+
+当前登记的 `base_eval` GitHub 地址对这台机器的现有身份不可读取；要迁移外部生成评测器，需要先取得该仓库权限，或用 `python arc.py fetch --backend base-eval --source /已获授权的本地Git副本`。详情见 [资产与基线说明](ASSETS_AND_BASELINES.md)。
+
+DeepSeek 的外部基线还需把官方权重转换为两卡版本；固定评测器提供 `convert_deepseek_v4.py`。MiniMax H3、MAGI-2 还需要各自的生成环境、VBench 评分依赖及 GPU。先用以下命令检查计划，再根据 [`资产与基线说明`](ASSETS_AND_BASELINES.md) 安装对应运行环境：
+
+```bash
+python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpqa-diamond --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
+python arc.py plan --backend base-eval --model minimax-h3 --benchmark vbench --profile tiny --method none --quant-type HiF4 --gpu-ids auto
+```
+
+这些新模型目前**没有**接入 ARCQuant 投影包装层，因此不能把外部 `base-eval` 的 HiF4 结果称为 `ARCQuant + TEAL/WINA`。要在 DeepSeek 或视频模型上比较稀疏方法，还需先实现该模型的投影映射、校准、量化和真实生成接线。
+
+## 4. 已有的 Llama 方法原型
 
 先准备 ARCQuant 自己的通道重排和量化缓存。它需要模型权重和 GPU，输出在 `saved/`：
 
@@ -80,32 +110,6 @@ python arc.py plan --model llama-3.1-8b --method wina --allocation greedy --spar
 ```
 
 TEAL 也可把两条命令中的 `wina` 改为 `teal`。默认直方图和策略保存在 `assets/calibration/...`，`plan/run` 自动查找；自定义位置用 `--output-dir` 与 `--histogram-path` / `--strategy`。`--disable-prefill-sparsity` 可只对解码 token 启用稀疏。`smoke` 只是少量样本的接线检查，正式结果用 `--profile full`。实际运行会在 `runs/` 单独记录各投影观测到的零值比例；它包含本来就是零的激活，且不能当成加速比。
-
-## 4. 新模型与新 benchmark
-
-先下载被登记的资产：
-
-```bash
-python arc.py fetch --model deepseek-v4-flash --dry-run
-python arc.py fetch --benchmark gpqa-diamond
-python arc.py fetch --benchmark math500
-python arc.py fetch --benchmark longbench-v2
-python arc.py fetch --benchmark livecodebench
-python arc.py fetch --benchmark terminal-bench
-python arc.py fetch --benchmark vbench
-python arc.py fetch --backend base-eval
-```
-
-当前登记的 `base_eval` GitHub 地址对这台机器的现有身份不可读取；要迁移外部生成评测器，需要先取得该仓库权限，或用 `python arc.py fetch --backend base-eval --source /已获授权的本地Git副本`。详情见 [资产与基线说明](ASSETS_AND_BASELINES.md)。
-
-DeepSeek 的外部基线还需把官方权重转换为两卡版本；固定评测器提供 `convert_deepseek_v4.py`。MiniMax H3、MAGI-2 还需要各自的生成环境、VBench 评分依赖及 GPU。先用以下命令检查计划，再根据 [`资产与基线说明`](ASSETS_AND_BASELINES.md) 安装对应运行环境：
-
-```bash
-python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpqa-diamond --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
-python arc.py plan --backend base-eval --model minimax-h3 --benchmark vbench --profile tiny --method none --quant-type HiF4 --gpu-ids auto
-```
-
-这些新模型目前**没有**接入 ARCQuant 投影包装层，因此不能把外部 `base-eval` 的 HiF4 结果称为 `ARCQuant + TEAL/WINA`。要在 DeepSeek 或视频模型上比较稀疏方法，还需先实现该模型的投影映射、校准、量化和真实生成接线。
 
 ## 5. 两种方法到底做什么
 

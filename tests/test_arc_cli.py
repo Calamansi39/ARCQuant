@@ -98,6 +98,13 @@ class ArcCliTests(unittest.TestCase):
             with self.assertRaisesRegex(arc.PlanError, "requires transformers==4.46.3"):
                 arc.check_runtime_compatibility()
 
+    def test_assets_can_check_only_the_target_models(self):
+        with patch.object(arc, "audit_model", return_value={"status": "ready"}) as audit, \
+             patch.object(arc, "audit_benchmark", return_value={"status": "ready"}):
+            self.assertEqual(arc.main(["assets", "--model", "deepseek-v4-flash"]), 0)
+            audit.assert_called_once()
+            self.assertEqual(audit.call_args.args[0], "deepseek-v4-flash")
+
 
 if __name__ == "__main__":
     unittest.main()

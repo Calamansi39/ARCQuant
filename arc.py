@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-from benchmarks.asset_inventory import audit_benchmark, audit_catalog, audit_model
+from benchmarks.asset_inventory import MODEL_FILES, audit_benchmark, audit_catalog, audit_model
 from benchmarks.baseline_bridge import BaselineError, build_baseline_plan
 from benchmarks.fetch_assets import FetchError, fetch_entry
 from benchmarks.paths import asset_path, asset_root
@@ -219,7 +219,9 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
-    sub.add_parser("assets", help="audit local model weights and benchmark data without GPU")
+    assets = sub.add_parser("assets", help="audit local model weights and benchmark data without GPU")
+    assets.add_argument("--model", action="append", help="check only this model; may be repeated")
+    assets.add_argument("--benchmark", action="append", help="check only this benchmark; may be repeated")
     fetch = sub.add_parser("fetch", help="download a recorded model, benchmark or evaluator source")
     fetch_target = fetch.add_mutually_exclusive_group(required=True)
     fetch_target.add_argument("--model", help="model key from 'arc.py list'")
@@ -311,7 +313,26 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"  {name:<22} {entry['status']}{extra}")
             return 0
         if args.action == "assets":
-            report = audit_catalog(catalog)
+            if args.model or args.benchmark:
+                unknown_models = set(args.model or ()) - set(catalog["models"])
+                unknown_benchmarks = set(args.benchmark or ()) - set(catalog["benchmarks"])
+                if unknown_models or unknown_benchmarks:
+                    raise PlanError(f"Unknown assets: models={sorted(unknown_models)}, "
+                                    f"benchmarks={sorted(unknown_benchmarks)}")
+                unchecked_models = set(args.model or ()) - set(MODEL_FILES)
+                unchecked_benchmarks = {name for name in args.benchmark or ()
+                                        if "data_file" not in catalog["benchmarks"][name]}
+                if unchecked_models or unchecked_benchmarks:
+                    raise PlanError(f"No file audit rules: models={sorted(unchecked_models)}, "
+                                    f"benchmarks={sorted(unchecked_benchmarks)}")
+                report = {
+                    "models": {name: audit_model(name, catalog["models"][name])
+                               for name in dict.fromkeys(args.model or ())},
+                    "benchmarks": {name: audit_benchmark(name, catalog["benchmarks"][name])
+                                   for name in dict.fromkeys(args.benchmark or ())},
+                }
+            else:
+                report = audit_catalog(catalog)
             print(json.dumps(report, indent=2, ensure_ascii=False))
             return 0 if all(value["status"] == "ready" for group in report.values()
                             for value in group.values()) else 2

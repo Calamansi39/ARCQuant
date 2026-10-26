@@ -52,6 +52,8 @@ class FetchAssetsTests(unittest.TestCase):
             root = Path(folder)
             assets = root / "assets"
             assets.mkdir()
+            (root / "benchmarks").mkdir()
+            (root / "benchmarks" / "activate_base_eval.sh").write_text("# test\n")
             catalog = {"backends": {"base-eval": {"source_url": "https://example.invalid/base.git",
                                                   "revision": "abc123"}}}
             with patch.object(fetch_assets, "REPOSITORY_ROOT", root), \
@@ -59,6 +61,8 @@ class FetchAssetsTests(unittest.TestCase):
                  patch.object(fetch_assets, "fetch_git", return_value={"resolved_revision": "abc123"}):
                 fetch_assets.fetch_entry(catalog, "backend", "base-eval")
             self.assertEqual((root / "external" / "data").resolve(), assets)
+            self.assertEqual((root / "external" / "activate_arcquant.sh").resolve(),
+                             root / "benchmarks" / "activate_base_eval.sh")
 
 
 if __name__ == "__main__":
