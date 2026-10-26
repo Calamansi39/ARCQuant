@@ -77,7 +77,7 @@ python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpq
 python arc.py plan --backend base-eval --model minimax-h3 --benchmark vbench --profile tiny --method none --quant-type HiF4 --gpu-ids auto
 ```
 
-这些新模型目前**没有**接入 ARCQuant 投影包装层，因此不能把外部 `base-eval` 的 HiF4 结果称为 `ARCQuant + TEAL/WINA`。要在 DeepSeek 或视频模型上比较稀疏方法，还需先实现该模型的投影映射、校准、量化和真实生成接线。
+DeepSeek 已有[投影级适配代码](DEEPSEEK_ADAPTER.md)，但尚无目标模型校准产物与整模型推理接线；视频模型仍未适配。因此不能把外部 `base-eval` 的 HiF4 结果称为 `ARCQuant + TEAL/WINA`。要在 DeepSeek 或视频模型上比较稀疏方法，还需完成校准、真实生成接线与 GPU 验证。
 
 ## 4. 已有的 Llama 方法原型
 

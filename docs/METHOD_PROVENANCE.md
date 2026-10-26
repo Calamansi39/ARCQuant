@@ -28,4 +28,4 @@ TEAL 的早期 `model/sparse_utils.py` 前半部分来自本仓库曾有的 `fea
 - WINA 官方复现脚本使用 `--greedy --transform`。当前已经有 `greedy` 分配，但**没有**移植其可选的全模型张量变换。这个变换涉及 LayerNorm 融合、残差旋转和投影权重变换，必须与 ARCQuant 重排及量化缓存一起校准；不能只改一个分数开关。因此当前结果是 WINA 原生 top-k 规则与可选 greedy 分配在**未变换模型**上的组合，不能称为官方完整复现。
 - TEAL/WINA 原仓库没有验证与 ARCQuant 增强残差通道的 HiF4 W4A4 组合。`HiF4` 路径目前仍主要是密集矩阵乘法的数值模拟；出现零值不意味着实际稀疏内核已跳过乘法，也不能据此宣称加速。
 - 锁定 `transformers==4.46.3` 的小型 Llama CPU 检查已覆盖离线四组激活、官方层前向一致性、greedy 预算、TEAL 文件读取、WINA 零稀疏率下的量化输出一致性。还没有在真实 8B 模型上完成精度、逐层误差和端到端延迟回归。迁移后应先用 `smoke` 跑通，再用相同模型/评测协议分别测 `none`、`teal`、`wina`。
-- 当前仅 Llama 有 TEAL/WINA 的 ARCQuant 投影接线。Qwen、Mixtral 保留原量化路径，DeepSeek 和视频模型只登记了资产及外部基线；`base-eval` 不实现 ARCQuant 稀疏方法。
+- 当前仅 Llama 有 TEAL/WINA 的 ARCQuant 整模型投影接线。Qwen、Mixtral 保留原量化路径；DeepSeek 已有投影级代码和官方权重切片 CPU 检查，但尚未完成整模型接线及校准；视频模型仍只登记了资产及外部基线。`base-eval` 不实现 ARCQuant 稀疏方法。

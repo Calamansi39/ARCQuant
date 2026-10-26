@@ -85,7 +85,7 @@ We will release our vLLM evaluation very soon.
 
 ## 中文快速指南：方法整合与迁移
 
-**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 先读 [目标模型进度](docs/TARGET_MODELS.md)：它逐项区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态。模型与 benchmark 的来源保存在 [实验清单](configs/experiments.json)，[从零开始的指南](docs/QUICKSTART.md) 说明资产准备和 CLI 用法。
+**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 先读 [目标模型进度](docs/TARGET_MODELS.md)：它逐项区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态。DeepSeek 的投影级代码与未完成部分见 [适配进度](docs/DEEPSEEK_ADAPTER.md)。模型与 benchmark 的来源保存在 [实验清单](configs/experiments.json)，[从零开始的指南](docs/QUICKSTART.md) 说明资产准备和 CLI 用法。
 
 ```bash
 python arc.py list
@@ -96,7 +96,7 @@ python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpq
   --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
 ```
 
-`assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型通过固定外部评测器提供 BF16/FP4 **基线**入口；ARCQuant 残差通道与 TEAL/WINA 尚未接到它们。仓库内已有的 Llama 稀疏代码是方法原型，不能作为目标模型完成的证据。方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
+`assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型通过固定外部评测器提供 BF16/FP4 **基线**入口。DeepSeek 已有读取官方 FP8/FP4 权重并执行稀疏加 ARCQuant HiF4 的投影级代码，但目标模型的校准与整模型前向尚未接线；MiniMax H3 与 MAGI-2 尚无此类适配。仓库内已有的 Llama 稀疏代码不能作为目标模型完成的证据。方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
 ```
