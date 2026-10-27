@@ -7,7 +7,9 @@ They do not establish model accuracy, inference compatibility, or GPU capacity.
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 from benchmarks.paths import asset_path, variant_path
@@ -53,6 +55,14 @@ def _safetensors_header_ok(path: Path) -> bool:
     return 2 <= header_size <= 100_000_000 and path.stat().st_size >= header_size + 8
 
 
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(8 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def audit_model(name: str, entry: dict) -> dict:
     root = _resolve(entry, name, "models")
     issues: list[str] = []
@@ -63,6 +73,23 @@ def audit_model(name: str, entry: dict) -> dict:
     for relative in MODEL_FILES.get(name, ()):
         if not (root / relative).is_file():
             issues.append(f"missing {relative}")
+    for relative, expected in entry.get("source_signature", {}).items():
+        file = root / relative
+        if not file.is_file():
+            if relative not in MODEL_FILES.get(name, ()):
+                issues.append(f"missing signed source file {relative}")
+            continue
+        digest = _sha256(file)
+        if digest != expected:
+            issues.append(f"source signature mismatch {relative}")
+    for relative, expected in entry.get("required_file_sizes", {}).items():
+        file = root / relative
+        if not file.is_file():
+            if relative not in MODEL_FILES.get(name, ()):
+                issues.append(f"missing sized model file {relative}")
+        elif file.stat().st_size != expected:
+            issues.append(f"model file {relative}: expected {expected} bytes, "
+                          f"found {file.stat().st_size}")
     for index in root.rglob("*.safetensors.index.json"):
         try:
             weight_map = json.loads(index.read_text(encoding="utf-8"))["weight_map"]
@@ -132,6 +159,19 @@ def audit_benchmark(name: str, entry: dict) -> dict:
         actual_bytes = file.stat().st_size
         if actual_bytes != entry["expected_bytes"]:
             issues.append(f"expected {entry['expected_bytes']} bytes, found {actual_bytes}")
+    if file.is_file() and entry.get("data_sha256") and _sha256(file) != entry["data_sha256"]:
+        issues.append(f"dataset SHA256 mismatch {relative}")
+    source = entry.get("source", {})
+    if source.get("type") == "git":
+        revision = None
+        if (root / ".git").exists():
+            result = subprocess.run(["git", "-c", f"safe.directory={root.resolve()}",
+                                     "-C", str(root), "rev-parse", "HEAD"],
+                                    capture_output=True, text=True, check=False)
+            if result.returncode == 0:
+                revision = result.stdout.strip()
+        if revision != source["revision"]:
+            issues.append(f"Git revision {revision or 'missing'} != {source['revision']}")
     count = None
     if not issues and entry.get("record_format"):
         try:

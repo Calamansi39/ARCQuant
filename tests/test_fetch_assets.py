@@ -64,6 +64,26 @@ class FetchAssetsTests(unittest.TestCase):
             self.assertEqual((root / "external" / "activate_arcquant.sh").resolve(),
                              root / "benchmarks" / "activate_base_eval.sh")
 
+    def test_backend_link_repair_preserves_real_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            evaluator = root / "external/base_eval"
+            evaluator.mkdir(parents=True)
+            assets = root / "assets"
+            assets.mkdir()
+            (root / "benchmarks").mkdir()
+            (root / "benchmarks/activate_base_eval.sh").touch()
+            (root / "external/data").symlink_to(root / "wrong")
+            (root / "external/activate_arcquant.sh").symlink_to(root / "wrong")
+            with patch.object(fetch_assets, "REPOSITORY_ROOT", root), \
+                 patch.object(fetch_assets, "asset_root", return_value=assets):
+                fetch_assets.ensure_backend_links(evaluator)
+                self.assertTrue(all(fetch_assets.backend_link_status(evaluator).values()))
+                (root / "external/data").unlink()
+                (root / "external/data").mkdir()
+                with self.assertRaises(fetch_assets.FetchError):
+                    fetch_assets.ensure_backend_links(evaluator)
+
 
 if __name__ == "__main__":
     unittest.main()

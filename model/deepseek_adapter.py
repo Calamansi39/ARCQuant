@@ -146,7 +146,8 @@ class DeepSeekArcProjectionAdapter:
 
     @torch.no_grad()
     def linear(self, x: torch.Tensor, weight: torch.Tensor, key: str, *,
-               scale: torch.Tensor | None = None, bias: torch.Tensor | None = None) -> torch.Tensor:
+               scale: torch.Tensor | None = None, bias: torch.Tensor | None = None,
+               sparse_rows: torch.Tensor | None = None) -> torch.Tensor:
         projection_kind(key)
         if not self.bridge.has_layer(key):
             raise KeyError(f"Missing DeepSeek ARC calibration for {key}")
@@ -157,10 +158,20 @@ class DeepSeekArcProjectionAdapter:
             raise ValueError(f"{key}: logical weight width {numeric.shape[1]} != input {x.shape[-1]}")
         self._check_calibration(key, x.shape[-1])
         if self.method != "none" and self.sparsity:
-            # A 2D expert input has no sequence axis; treat each routed row as
-            # one token. A caller must choose its intended prefill policy.
             sparse = self._sparsifier(key, numeric)
-            x = sparse(x.unsqueeze(1)).squeeze(1) if x.ndim == 2 else sparse(x)
+            if x.ndim == 2:
+                # Routed experts receive only the tokens selected by the router;
+                # their row order no longer represents original sequence positions.
+                # Caller must specify which rows follow the method's prefill rule.
+                if sparse_rows is None or sparse_rows.dtype != torch.bool or sparse_rows.shape != x.shape[:1]:
+                    raise ValueError(f"{key}: 2D routed inputs require an explicit sparse_rows boolean mask")
+                if bool(sparse_rows.any()):
+                    x = x.clone()
+                    x[sparse_rows] = sparse(x[sparse_rows].unsqueeze(1)).squeeze(1)
+            else:
+                if sparse_rows is not None:
+                    raise ValueError("sparse_rows applies only to 2D routed inputs")
+                x = sparse(x)
         return self.bridge.linear(x, numeric.to(dtype=x.dtype), bias, key)
 
     @torch.no_grad()

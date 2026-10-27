@@ -85,13 +85,17 @@ We will release our vLLM evaluation very soon.
 
 ## 中文快速指南：方法整合与迁移
 
-**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 先读 [目标模型进度](docs/TARGET_MODELS.md)：它逐项区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态。DeepSeek 的投影级代码与未完成部分见 [适配进度](docs/DEEPSEEK_ADAPTER.md)。模型与 benchmark 的来源保存在 [实验清单](configs/experiments.json)，[从零开始的指南](docs/QUICKSTART.md) 说明资产准备和 CLI 用法。
+**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 换机器先按 [模型评测迁移指南](docs/MIGRATION_EVALUATION.md) 准备文件和环境，再用 `arc.py doctor` 查看逐项状态。[目标模型进度](docs/TARGET_MODELS.md) 区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态。DeepSeek 的投影级代码与未完成部分见 [适配进度](docs/DEEPSEEK_ADAPTER.md)。来源与固定版本保存在 [实验清单](configs/experiments.json)。
+
+外行读法：`provision` 准备模型权重、题库、评分器和源码；`doctor` 逐项检查能否启动；`plan` 展示将执行的命令；`run` 才真正占用 GPU。大文件在 Git 忽略的 `assets/`，本机专用环境路径在 `external/local_env.sh`，新机器可按 [`configs/runtime.example.sh`](configs/runtime.example.sh) 填写。TEAL/WINA 是先离线确定稀疏规则、再在线稀疏投影输入；三个新目标目前只有**独立量化基线**可经统一 CLI 启动，目标模型的 ARCQuant + 稀疏整模型方法还在适配中。
 
 ```bash
 python arc.py list
 python arc.py assets --model deepseek-v4-flash --model minimax-h3 --model magi-2-preview \
   --benchmark gpqa-diamond --benchmark math500 --benchmark longbench-v2 \
   --benchmark livecodebench --benchmark vbench
+python arc.py provision --model deepseek-v4-flash --benchmark gpqa-diamond
+python arc.py doctor --model deepseek-v4-flash --benchmark gpqa-diamond --gpu-ids 0,1 --native-dry-run
 python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpqa-diamond \
   --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
 ```

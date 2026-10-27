@@ -91,6 +91,19 @@ class DeepSeekAdapterTests(unittest.TestCase):
         with self.assertRaisesRegex(KeyError, "Missing DeepSeek ARC calibration"):
             adapter.linear(self.x, self.weight, self.key)
 
+    def test_routed_tokens_require_explicit_prefill_selection(self):
+        key = "layers.0.ffn.experts.0.w1.weight"
+        adapter = DeepSeekArcProjectionAdapter({key: torch.arange(4)}, {key: 0},
+                                               method="wina", sparsity=0.5)
+        x = torch.tensor([[1., 2., 3., 4.], [4., 3., 2., 1.]])
+        with self.assertRaisesRegex(ValueError, "sparse_rows"):
+            adapter.linear(x, self.weight, key)
+        actual = adapter.linear(x, self.weight, key,
+                                sparse_rows=torch.tensor([False, True]))
+        dense = DeepSeekArcProjectionAdapter({key: torch.arange(4)}, {key: 0}).linear(
+            x[:1], self.weight, key)
+        torch.testing.assert_close(actual[:1], dense)
+
     def test_invalid_calibration_is_rejected_before_quantization(self):
         with self.assertRaisesRegex(ValueError, "must match exactly"):
             DeepSeekArcProjectionAdapter({self.key: self.index}, {})

@@ -18,8 +18,12 @@ from pathlib import Path
 
 from benchmarks.asset_inventory import MODEL_FILES, audit_benchmark, audit_catalog, audit_model
 from benchmarks.baseline_bridge import BaselineError, build_baseline_plan
-from benchmarks.fetch_assets import FetchError, fetch_entry
+from benchmarks.fetch_assets import FetchError, backend_link_status, fetch_entry
 from benchmarks.paths import asset_path, asset_root
+from benchmarks.preflight import preflight
+from benchmarks.provision import execute_provision, provision_plan
+from benchmarks.scorer_assets import (audit_scorer, auxiliary_entries, entries as scorer_entries,
+                                       fetch_scorer)
 from benchmarks.sparse_strategy import StrategyError, load_strategy
 
 
@@ -222,14 +226,36 @@ def _parser() -> argparse.ArgumentParser:
     assets = sub.add_parser("assets", help="audit local model weights and benchmark data without GPU")
     assets.add_argument("--model", action="append", help="check only this model; may be repeated")
     assets.add_argument("--benchmark", action="append", help="check only this benchmark; may be repeated")
+    doctor = sub.add_parser("doctor", help="check concrete evaluation prerequisites without running a model")
+    doctor.add_argument("--model", required=True)
+    doctor.add_argument("--benchmark", required=True)
+    doctor.add_argument("--backend", choices=["base-eval", "arcquant"], default="base-eval")
+    doctor.add_argument("--method", choices=["none", "teal", "wina", "xmask"], default="none")
+    doctor.add_argument("--model-path")
+    doctor.add_argument("--base-eval-root")
+    doctor.add_argument("--converted-model")
+    doctor.add_argument("--gpu-ids")
+    doctor.add_argument("--skip-gpu", action="store_true", help="report GPU as unchecked")
+    doctor.add_argument("--hash-scorer", action="store_true", help="hash all VBench/BERT weights")
+    doctor.add_argument("--check-remote", action="store_true", help="test evaluator Git URL access for migration")
+    doctor.add_argument("--skip-runtime-probe", action="store_true", help="only check runtime executable paths")
+    doctor.add_argument("--native-dry-run", action="store_true",
+                        help="run the pinned evaluator's CPU-only model and prompt plan")
     fetch = sub.add_parser("fetch", help="download a recorded model, benchmark or evaluator source")
     fetch_target = fetch.add_mutually_exclusive_group(required=True)
     fetch_target.add_argument("--model", help="model key from 'arc.py list'")
     fetch_target.add_argument("--benchmark", help="benchmark key from 'arc.py list'")
     fetch_target.add_argument("--backend", choices=["base-eval"])
     fetch_target.add_argument("--runtime", choices=["magi-2-preview"])
+    fetch_target.add_argument("--scorer", choices=["vbench"], help="download hash-pinned VBench/BERT scoring weights")
     fetch.add_argument("--dry-run", action="store_true")
     fetch.add_argument("--source", help="local Git checkout or alternate URL for a Git backend/runtime")
+    provision = sub.add_parser("provision", help="prepare a target pair's missing files in dependency order")
+    provision.add_argument("--model", required=True)
+    provision.add_argument("--benchmark", required=True)
+    provision.add_argument("--backend-source", help="authorized base-eval Git URL or local checkout")
+    provision.add_argument("--verify-scorer-hashes", action="store_true")
+    provision.add_argument("--execute", action="store_true", help="download/convert missing files")
     prep = sub.add_parser("prepare", help="produce ARCQuant reorder and calibration caches")
     prep.add_argument("--model", required=True)
     prep.add_argument("--model-path")
@@ -336,7 +362,52 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report, indent=2, ensure_ascii=False))
             return 0 if all(value["status"] == "ready" for group in report.values()
                             for value in group.values()) else 2
+        if args.action == "doctor":
+            report = preflight(catalog, model=args.model, benchmark=args.benchmark,
+                               backend=args.backend, method=args.method,
+                               model_override=args.model_path,
+                               backend_override=args.base_eval_root,
+                               converted_override=args.converted_model,
+                               gpu_ids=args.gpu_ids, check_gpu=not args.skip_gpu,
+                               hash_scorer=args.hash_scorer,
+                               probe_runtime=not args.skip_runtime_probe,
+                               check_remote=args.check_remote,
+                               native_dry_run=args.native_dry_run)
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+            return 0 if report["status"] == "ready" else 2
+        if args.action == "provision":
+            steps = provision_plan(catalog, model=args.model, benchmark=args.benchmark,
+                                   backend_source=args.backend_source,
+                                   verify_scorer_hashes=args.verify_scorer_hashes)
+            completed = (execute_provision(catalog, steps, model=args.model,
+                                           benchmark=args.benchmark,
+                                           backend_source=args.backend_source)
+                         if args.execute else [])
+            if args.execute:
+                steps = provision_plan(catalog, model=args.model, benchmark=args.benchmark,
+                                       backend_source=args.backend_source,
+                                       verify_scorer_hashes=True)
+            print(json.dumps({"model": args.model, "benchmark": args.benchmark,
+                              "executed": args.execute, "completed": completed, "steps": steps,
+                              "next": f"python arc.py doctor --model {args.model} --benchmark {args.benchmark}"
+                              }, indent=2, ensure_ascii=False))
+            return 0 if not args.execute or all(step["status"] == "ready" for step in steps) else 2
         if args.action == "fetch":
+            if args.scorer:
+                if args.source:
+                    raise PlanError("--source is not supported for scorer weights")
+                if args.dry_run:
+                    files = scorer_entries()
+                    report = {"scorer": "vbench", "files": len(files) + len(auxiliary_entries()),
+                              "bytes": sum(item["size"] for _, item, _ in files) +
+                              sum(item["size"] for item in auxiliary_entries()),
+                              "sources": sorted({m["repo_id"] for m, _, _ in files} |
+                                                {item["url"] for item in auxiliary_entries()}),
+                              "status": audit_scorer(hash_contents=False)["status"]}
+                else:
+                    report = fetch_scorer()
+                print(json.dumps(report, indent=2, ensure_ascii=False))
+                return 0 if args.dry_run or report["status"] == "ready" else 2
             kind, name = next((kind, getattr(args, kind)) for kind in
                               ("model", "benchmark", "backend", "runtime") if getattr(args, kind))
             print(json.dumps(fetch_entry(catalog, kind, name, dry_run=args.dry_run,
@@ -368,11 +439,16 @@ def main(argv: list[str] | None = None) -> int:
         if plan.get("backend") == "base-eval":
             backend_root = Path(plan["cwd"])
             if backend_root == ROOT / "external" / "base_eval":
-                data_link = ROOT / "external" / "data"
-                if not data_link.is_symlink() or data_link.resolve() != asset_root().resolve():
+                links = backend_link_status(backend_root)
+                if not links["data_link"]:
                     raise PlanError(
                         "Portable base-eval data link does not match ARCQUANT_ASSET_ROOT; "
                         "rerun 'python arc.py fetch --backend base-eval' with the same asset root."
+                    )
+                if not links["activation_link"]:
+                    raise PlanError(
+                        "Portable base-eval activation link is missing or points elsewhere; "
+                        "rerun 'python arc.py fetch --backend base-eval'."
                     )
             if plan["backend_revision"] != plan["backend_expected_revision"]:
                 raise PlanError(
@@ -380,8 +456,8 @@ def main(argv: list[str] | None = None) -> int:
                     f"{plan['backend_expected_revision']}; found {plan['backend_revision'] or 'no Git checkout'}. "
                     "Run 'python arc.py fetch --backend base-eval' or pass a matching --base-eval-root."
                 )
-            if not Path(plan["command"][1]).is_file():
-                raise PlanError(f"base-eval launcher is missing: {plan['command'][1]}")
+            if not Path(plan["evaluator_launcher"]).is_file():
+                raise PlanError(f"base-eval launcher is missing: {plan['evaluator_launcher']}")
             model_entry = {**catalog["models"][args.model], "path_env": "",
                            "default_path": plan["model_path"]}
             if args.model == "deepseek-v4-flash":

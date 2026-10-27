@@ -19,6 +19,12 @@ def resolve_path(value: str | Path) -> Path:
     return (path if path.is_absolute() else REPOSITORY_ROOT / path).resolve()
 
 
+def executable_path(value: str | Path) -> Path:
+    """Keep a venv's bin/python symlink intact so Python finds its pyvenv.cfg."""
+    path = Path(value).expanduser()
+    return Path(os.path.abspath(path if path.is_absolute() else REPOSITORY_ROOT / path))
+
+
 def asset_path(entry: dict, name: str, kind: str, *, override: str | Path | None = None) -> Path:
     """Explicit flag > per-asset env > catalog path > portable asset root."""
     env_key = entry.get("path_env") if kind == "models" else entry.get("data_env")

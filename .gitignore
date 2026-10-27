@@ -27,3 +27,4 @@ assets/
 external/
 *.png
 *.sh
+!configs/runtime.example.sh

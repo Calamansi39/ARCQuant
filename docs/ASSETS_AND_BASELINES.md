@@ -32,7 +32,11 @@ python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpq
 
 **访问限制（2026-10-25）：**清单中的 `xiaodiandian-AI/base_eval` 地址，用当前 HTTPS 和 SSH 身份均返回仓库不存在或无权限。新机器必须先获得该仓库读取权限，或取得有授权的完整 Git checkout / bundle；否则 `fetch --backend base-eval` 会失败。已有授权副本时可运行 `python arc.py fetch --backend base-eval --source /path/to/base_eval`，仍会检出清单固定的 SHA。这个外部依赖未上传到本仓库，不能把视频和 DeepSeek 基线描述为仅克隆 ARCQuant 即可运行。
 
-下载会固定到清单中的 SHA，放入 `external/base_eval`，并把 `external/data` 链接到资产根目录，以适配评测器的相邻目录约定。它还把 `external/activate_arcquant.sh` 指向本仓库的环境选择脚本，使复制来的评测器可以使用显式指定的 Python 环境。`run` 会检查该 SHA、启动脚本、权重和数据，不会误用另一版评测协议。外部评测器有自己的 Python 和 GPU 依赖，不包含在 ARCQuant 的 `requirements.txt` 中；在新服务器还需按其 `requirements-deepseek-v4.txt`、`requirements-minimax-h3.txt`、`requirements-vbench-a800.txt` 及 MAGI-2 官方运行说明准备环境。建议将 `ARCQUANT_BASE_EVAL_ENV` 设为安装了 DeepSeek 评测依赖的 conda/venv 前缀；视频环境的可执行文件可分别通过 `ARCQUANT_H3_PYTHON`、`ARCQUANT_VBENCH_PYTHON`、`ARCQUANT_MAGI2_PYTHON` 指定。VBench 的评分模型来源、SHA256 和大小也保存为 [`VBench 评分资产清单`](../configs/vbench_download_manifest.json) 与 [`BERT 清单`](../configs/vbench_bert_download_manifest.json)，来源为本机外部评测器的固定清单；可用其 `preload_vbench_assets.py --full` 下载和校验。`fetch --benchmark vbench` 只下载 VBench 源码与提示词。
+下载会固定到清单中的 SHA，放入 `external/base_eval`，并把 `external/data` 链接到资产根目录，以适配评测器的相邻目录约定。它还把 `external/activate_arcquant.sh` 指向本仓库的环境选择脚本，使复制来的评测器可以使用显式指定的 Python 环境。`run` 会检查该 SHA、启动脚本、权重和数据，不会误用另一版评测协议。外部评测器有自己的 Python 和 GPU 依赖，不包含在 ARCQuant 的 `requirements.txt` 中；在新服务器还需按其 `requirements-deepseek-v4.txt`、`requirements-minimax-h3.txt`、`requirements-vbench-a800.txt` 及 MAGI-2 官方运行说明准备环境。建议将 `ARCQUANT_BASE_EVAL_ENV` 设为安装了 DeepSeek 评测依赖的 conda/venv 前缀；视频环境的可执行文件可分别通过 `ARCQUANT_H3_PYTHON`、`ARCQUANT_VBENCH_PYTHON`、`ARCQUANT_MAGI2_PYTHON` 指定。VBench 的评分模型来源、SHA256 和大小也保存为 [`VBench 评分资产清单`](../configs/vbench_download_manifest.json) 与 [`BERT 清单`](../configs/vbench_bert_download_manifest.json)，来源为本机外部评测器的固定清单；本仓库可用 `python arc.py fetch --scorer vbench` 下载及逐文件验哈希。`fetch --benchmark vbench` 只下载 VBench 源码与提示词。迁移的完整步骤见 [模型评测迁移指南](MIGRATION_EVALUATION.md)。
+
+DeepSeek LongBench/LiveCodeBench 的旧启动器会强制激活名为 `arcquant` 的 conda 环境；本仓库的包装入口核对脚本哈希后，仅在内存中替换这一句为显式环境激活，不修改评测器源码。
+
+VBench 的 ViCLIP 分词文件另记录于 [`ViCLIP 资产清单`](../configs/vbench_aux_download_manifest.json)。运行 `python arc.py fetch --scorer vbench` 会把它与评分权重一同准备并核验；否则 VBench 首次导入可能自行联网下载。
 
 ```bash
 export ARCQUANT_BASE_EVAL_ENV=/path/to/deepseek-eval-env

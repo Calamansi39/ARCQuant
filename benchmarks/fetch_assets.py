@@ -99,6 +99,35 @@ def fetch_git(source: dict, destination: Path, *, dry_run: bool = False) -> dict
     return plan
 
 
+def backend_link_status(evaluator: Path) -> dict[str, bool]:
+    """Check the two links required by the pinned evaluator layout."""
+    data = evaluator.parent / "data"
+    activation = evaluator.parent / "activate_arcquant.sh"
+    return {
+        "data_link": data.is_symlink() and data.resolve() == asset_root().resolve(),
+        "activation_link": activation.is_symlink() and activation.resolve() == (
+            REPOSITORY_ROOT / "benchmarks" / "activate_base_eval.sh").resolve(),
+    }
+
+
+def ensure_backend_links(evaluator: Path) -> None:
+    """Repair portable sibling links without replacing real files or directories."""
+    links = (
+        (evaluator.parent / "data", asset_root(), True),
+        (evaluator.parent / "activate_arcquant.sh",
+         REPOSITORY_ROOT / "benchmarks" / "activate_base_eval.sh", False),
+    )
+    for link, target, is_dir in links:
+        link.parent.mkdir(parents=True, exist_ok=True)
+        if link.is_symlink():
+            if link.resolve() == target.resolve():
+                continue
+            link.unlink()
+        elif link.exists():
+            raise FetchError(f"{link} exists as a real file or directory; cannot replace it")
+        link.symlink_to(Path(os.path.relpath(target, link.parent)), target_is_directory=is_dir)
+
+
 def fetch_entry(catalog: dict, kind: str, name: str, *, dry_run: bool = False,
                 source_override: str | None = None) -> dict:
     if source_override and Path(source_override).expanduser().exists():
@@ -136,20 +165,6 @@ def fetch_entry(catalog: dict, kind: str, name: str, *, dry_run: bool = False,
         except subprocess.CalledProcessError as exc:
             raise FetchError(f"Git fetch failed for {name}: {exc}") from exc
         if kind == "backend" and not dry_run:
-            sibling_data = REPOSITORY_ROOT / "external" / "data"
-            target = asset_root()
-            sibling_data.parent.mkdir(parents=True, exist_ok=True)
-            if sibling_data.is_symlink() and sibling_data.resolve() != target.resolve():
-                sibling_data.unlink()
-            if sibling_data.exists() and not sibling_data.is_symlink():
-                raise FetchError(f"{sibling_data} exists; cannot link portable baseline data")
-            if not sibling_data.is_symlink():
-                sibling_data.symlink_to(Path(os.path.relpath(target, sibling_data.parent)), target_is_directory=True)
-            activation = REPOSITORY_ROOT / "external" / "activate_arcquant.sh"
-            activation_target = REPOSITORY_ROOT / "benchmarks" / "activate_base_eval.sh"
-            if not activation.exists() and not activation.is_symlink():
-                activation.symlink_to(
-                    Path(os.path.relpath(activation_target, activation.parent))
-                )
+            ensure_backend_links(destination)
         return result
     return fetch_huggingface(source, destination, dry_run=dry_run)

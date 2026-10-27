@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
-from benchmarks.paths import REPOSITORY_ROOT, asset_path, asset_root, resolve_path, variant_path
+from benchmarks.paths import REPOSITORY_ROOT, asset_path, asset_root, executable_path, resolve_path, variant_path
 
 
 class BaselineError(ValueError):
@@ -72,9 +73,14 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
     for variable in ("H3_PYTHON", "VBENCH_PYTHON", "MAGI2_PYTHON", "CPU_PYTHON"):
         configured = os.environ.get(f"ARCQUANT_{variable}")
         if configured:
-            env[variable] = str(resolve_path(configured))
+            env[variable] = str(executable_path(configured))
     if os.environ.get("ARCQUANT_BASE_EVAL_ENV"):
         env["ARCQUANT_BASE_EVAL_ENV"] = str(resolve_path(os.environ["ARCQUANT_BASE_EVAL_ENV"]))
+        if "CPU_PYTHON" not in env:
+            env["CPU_PYTHON"] = str(Path(env["ARCQUANT_BASE_EVAL_ENV"]) / "bin/python")
+    if os.environ.get("ARCQUANT_FFMPEG_BIN"):
+        ffmpeg_bin = resolve_path(os.environ["ARCQUANT_FFMPEG_BIN"])
+        env["PATH"] = f"{ffmpeg_bin}{os.pathsep}{os.environ.get('PATH', '')}"
     results_root = repository_root / "runs" / "baseline_results"
     limit = benchmark["profiles"][args.profile]["limit"]
     if args.model == "deepseek-v4-flash":
@@ -90,8 +96,12 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
         else:
             task = "longbench-v2" if args.benchmark == "longbench-v2" else "livecodebench"
             output_dir = results_root / model_path.name / task / tag
-            command = ["bash", str(backend_root / "scripts/run_all_deepseek_v4_extended.sh"),
-                       task, gpu_ids, "--limit", str(limit), "--out-dir", str(output_dir)]
+            # The pinned launcher hardcodes `source activate arcquant`.
+            # This repository-owned wrapper changes only that one line after
+            # checking its hash, preserving the pinned evaluator protocol.
+            command = [sys.executable, str(REPOSITORY_ROOT / "benchmarks/launch_deepseek_extended.py"),
+                       str(backend_root), task, gpu_ids, "--limit", str(limit),
+                       "--out-dir", str(output_dir)]
     else:
         if args.benchmark != "vbench":
             raise BaselineError("Video models currently use the VBench evaluator only.")
@@ -117,11 +127,15 @@ def build_baseline_plan(args, catalog: dict, repository_root: Path) -> dict:
         if args.profile == "tiny":
             output_dir /= "tiny"
 
+    external_launcher = (backend_root / "scripts/run_all_deepseek_v4_extended.sh"
+                         if args.model == "deepseek-v4-flash" and args.benchmark in (
+                             "longbench-v2", "livecodebench") else Path(command[1]))
     return {"backend": "base-eval", "backend_revision": _revision(backend_root),
             "backend_expected_revision": catalog["backends"]["base-eval"]["revision"],
             "protocol": "external BF16/W4A4 baseline; no ARCQuant residual channels or activation sparsity",
             "model": args.model, "model_path": str(model_path), "benchmark": args.benchmark,
             "dataset_path": str(data_root), "profile": args.profile, "method": args.method,
             "quant_type": args.quant_type, "gpu_ids": gpu_ids,
-            "command": command, "cwd": str(backend_root), "env": env,
+            "command": command, "evaluator_launcher": str(external_launcher),
+            "cwd": str(backend_root), "env": env,
             "result_path": str(output_dir)}

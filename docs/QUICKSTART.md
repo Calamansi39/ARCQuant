@@ -6,6 +6,8 @@
 
 **本阶段要评测的模型是 DeepSeek V4 Flash、MiniMax H3、MAGI-2。** 请先看 [目标模型进度](TARGET_MODELS.md)。下面的 Llama 章节解释已有方法原型，不能作为这三个目标模型已适配的证明。
 
+**换机器准备目标模型评测请优先读 [模型评测迁移指南](MIGRATION_EVALUATION.md)。** 它给出 `provision` 文件准备、`doctor` 环境/GPU 预检和每个模型的基线入口；本页后半部分主要解释已有的 Llama 方法原型。
+
 ## 先看能做什么
 
 | 入口 | 当前可运行范围 | 说明 |

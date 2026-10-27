@@ -60,11 +60,16 @@
         "longbench-v2",
         "livecodebench"
       ],
+      "source_signature": {
+        "config.json": "6c8f3d2d3b48707541b88f32f22ef3f0f8a6b57d8523281e2b8d3cdb0ae9a023",
+        "model.safetensors.index.json": "98efab455cf08dfbbbaaba6f570e1bf10bf927d2b4c3c453a59c2f6f0e3be92b",
+        "inference/model.py": "c0c19e6c9fa439bac7fbb1c5bc1868232dfd5aa2f439a548d0e33dcc2a9edd3f",
+        "inference/convert.py": "6efe65ebc66b18c9f2656816608f941cacfe20da79c2dee19040ecbee8b42bfe"
+      },
       "source": {
         "type": "hf_model",
         "repo_id": "deepseek-ai/DeepSeek-V4-Flash-0731",
-        "revision": "main",
-        "revision_policy": "resolve and record exact SHA at fetch time"
+        "revision": "7872f01b1d1fe23eabc4c98b48bffcef5a386062"
       }
     },
     "minimax-h3": {
@@ -76,6 +81,13 @@
         "vbench"
       ],
       "asset_scope": "T2VA/VBench; transformer_ref and original FL2VA/Ref2VA checkpoints are not required",
+      "source_signature": {
+        "model_index.json": "5a587fe13b2371427415ac892463142683aefcd8d322e274a3a095eac37ac7d2",
+        "transformer/config.json": "74c11bff524336576096993cbfcdcdc2ef4fa2fa4409df693bdcbc6c666282ae"
+      },
+      "required_file_sizes": {
+        "audio_vae/diffusion_pytorch_model.safetensors": 605429340
+      },
       "source": {
         "type": "hf_model",
         "repo_id": "MiniMaxAI/MiniMax-H3",
@@ -104,6 +116,16 @@
       "baseline_benchmarks": [
         "vbench"
       ],
+      "source_signature": {
+        "preview/model.safetensors.index.json": "1ae1259f181e33df1237331a57d7372487b5623757d280918c145f1d7420177c",
+        "refiner/model.safetensors.index.json": "bca7b9232333ccdc42903b841f7c9a68bb8fb115ac1ea91877002e6ccc0a01d7",
+        "text_encoder/config.json": "f8d190c5b89c1521220f935d2567a587d6e291ed69066a45a106560b05a2174c"
+      },
+      "required_file_sizes": {
+        "vae/Wan2.2_VAE.pth": 2818839170,
+        "stable-audio-open-1.0/model.safetensors": 4853889016,
+        "turbo_vae/checkpoint.ckpt": 1870398651
+      },
       "source": {
         "type": "hf_model",
         "repo_id": "sand-ai/MAGI-2-preview",
@@ -176,6 +198,7 @@
       "record_format": "json",
       "expected_records": 503,
       "expected_bytes": 465490535,
+      "data_sha256": "15d61c22d92c96900b3c4948b6aeea218d3214b676a65df48e7b8555604c7fe2",
       "dataset_revision": "2b48e494f2c7a2f0af81aae178e05c7e1dde0fe9",
       "baseline_models": [
         "deepseek-v4-flash"
@@ -202,6 +225,7 @@
       "record_format": "jsonl",
       "expected_records": 175,
       "expected_bytes": 134303240,
+      "data_sha256": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5",
       "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
       "baseline_models": [
         "deepseek-v4-flash"
@@ -231,6 +255,7 @@
       "record_format": "csv",
       "expected_records": 198,
       "expected_bytes": 1373492,
+      "data_sha256": "41d1213cd7a4998605a26c2798500652572007161b3a92817ba46b35befcd305",
       "dataset_revision": "633f5ee89ab8ad4522a9f850766b73f62147ffdd",
       "baseline_models": [
         "deepseek-v4-flash"
@@ -260,6 +285,7 @@
       "record_format": "jsonl",
       "expected_records": 500,
       "expected_bytes": 446564,
+      "data_sha256": "35dc41080a3680858b27fa7e0533d2d547825316fc5dafe5d316f4ccc5a06132",
       "dataset_revision": "6e4ed1a2a79af7d8630a6b768ec859cb5af4d3be",
       "baseline_models": [
         "deepseek-v4-flash"
@@ -301,7 +327,7 @@
       "status": "registered-only",
       "modality": "video",
       "data_env": "ARCQUANT_VBENCH_DATA",
-      "scorer_manifests": ["configs/vbench_download_manifest.json", "configs/vbench_bert_download_manifest.json"],
+      "scorer_manifests": ["configs/vbench_download_manifest.json", "configs/vbench_bert_download_manifest.json", "configs/vbench_aux_download_manifest.json"],
       "profiles": {
         "tiny": {
           "limit": 108
@@ -314,6 +340,7 @@
       "record_format": "unique_prompt_json",
       "expected_records": 944,
       "expected_bytes": 228118,
+      "data_sha256": "5dd2de80ee43cda750b2b72ea7023657c0b90d3702041c7e4608c65dbe50dccd",
       "baseline_models": [
         "minimax-h3",
         "magi-2-preview"
