@@ -281,6 +281,22 @@ def _parser() -> argparse.ArgumentParser:
     cal.add_argument("--output-dir")
     cal.add_argument("--dry-run", action="store_true")
 
+    probe = sub.add_parser("probe", help="run a short real DeepSeek forward and save activation diagnostics")
+    probe.add_argument("--model", default="deepseek-v4-flash")
+    probe.add_argument("--model-path")
+    probe.add_argument("--base-eval-root", required=True)
+    probe.add_argument("--converted-model", required=True)
+    probe.add_argument("--gpu-ids", required=True, help="two physical GPU IDs, e.g. 4,7")
+    probe.add_argument("--output", type=Path, default=ROOT / "runs" / "deepseek_activation_probe.json")
+    probe.add_argument("--text", default=None)
+    probe.add_argument("--max-length", type=int, default=128)
+    probe.add_argument("--sample-limit", type=int, default=32768)
+    probe.add_argument("--quant", choices=["bf16", "hifp4"], default="hifp4")
+    probe.add_argument("--cache-gib", type=float, default=2.0)
+    probe.add_argument("--method", choices=["none", "teal", "wina"], default="none")
+    probe.add_argument("--sparsity", type=float, default=0.5)
+    probe.add_argument("--seed", type=int, default=0)
+
     for action in ("plan", "run"):
         p = sub.add_parser(action, help="print a plan" if action == "plan" else "execute and record a run")
         p.add_argument("--backend", choices=["arcquant", "base-eval"], default="arcquant")
@@ -432,6 +448,36 @@ def main(argv: list[str] | None = None) -> int:
             if not Path(plan["model_path"]).is_dir():
                 raise PlanError(f"Model directory does not exist: {plan['model_path']}")
             return subprocess.run(plan["command"], cwd=ROOT, env=runtime_env(), check=False).returncode
+        if args.action == "probe":
+            if args.model != "deepseek-v4-flash":
+                raise PlanError("The real activation probe currently targets deepseek-v4-flash only.")
+            model_entry, model_path = resolve_model(args, catalog)
+            if not Path(model_path).is_dir():
+                raise PlanError(f"Model directory does not exist: {model_path}")
+            if not Path(args.base_eval_root).is_dir():
+                raise PlanError(f"base-eval directory does not exist: {args.base_eval_root}")
+            if not Path(args.converted_model).is_dir():
+                raise PlanError(f"Converted DeepSeek directory does not exist: {args.converted_model}")
+            if len([item for item in args.gpu_ids.split(",") if item.strip()]) != 2:
+                raise PlanError("DeepSeek TP2 activation probe needs exactly two GPU IDs.")
+            probe_python = os.environ.get("ARCQUANT_BASE_EVAL_ENV")
+            probe_python = str(Path(probe_python) / "bin" / "python") if probe_python else sys.executable
+            command = [
+                probe_python, "-m", "torch.distributed.run", "--standalone",
+                "--nproc-per-node=2", str(ROOT / "benchmarks" / "deepseek_activation_probe.py"),
+                "--base-eval-root", str(Path(args.base_eval_root).expanduser().resolve()),
+                "--source-model", str(Path(model_path).expanduser().resolve()),
+                "--converted-model", str(Path(args.converted_model).expanduser().resolve()),
+                "--output", str(args.output.expanduser().resolve()), "--max-length", str(args.max_length),
+                "--sample-limit", str(args.sample_limit), "--quant", args.quant,
+                "--cache-gib", str(args.cache_gib), "--method", args.method,
+                "--sparsity", str(args.sparsity), "--seed", str(args.seed),
+            ]
+            if args.text is not None:
+                command += ["--text", args.text]
+            env = {**runtime_env(), "CUDA_VISIBLE_DEVICES": args.gpu_ids}
+            print(json.dumps({"command": command, "output": str(args.output.resolve())}, indent=2))
+            return subprocess.run(command, cwd=ROOT, env=env, check=False).returncode
         plan = build_plan(args, catalog)
         if args.action == "plan":
             print(json.dumps(plan, indent=2, ensure_ascii=False))

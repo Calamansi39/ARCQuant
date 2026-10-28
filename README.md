@@ -100,6 +100,24 @@ python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpq
   --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
 ```
 
+想先看到真实模型里的激活分布，不必等待完整 benchmark，可以用两张卡跑一
+个短 prompt 的诊断探针。它只保存统计量，不保存完整激活张量：
+
+```bash
+python arc.py probe --model deepseek-v4-flash \
+  --base-eval-root /path/to/base_eval \
+  --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 \
+  --gpu-ids 0,1 --output runs/deepseek_activation_probe.json \
+  --quant hifp4 --max-length 64
+```
+
+在确认统计正常后，可直接让探针用同一批激活估计并应用一次稀疏掩码，查看
+logits 变化：加上 `--method teal` 或 `--method wina --sparsity 0.5`。
+
+探针会报告各投影的激活范围、零值比例，以及 TEAL/WINA 在几个目标稀疏率
+下的实际保留率和输入能量损失。它用于校准和 debug，不能替代正式精度结果；
+完整的实测记录见 [DeepSeek smoke run](docs/DEEPSEEK_SMOKE.md)。
+
 `assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型通过固定外部评测器提供 BF16/FP4 **基线**入口。DeepSeek 已有读取官方 FP8/FP4 权重并执行稀疏加 ARCQuant HiF4 的投影级代码，但目标模型的校准与整模型前向尚未接线；MiniMax H3 与 MAGI-2 尚无此类适配。仓库内已有的 Llama 稀疏代码不能作为目标模型完成的证据。方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
