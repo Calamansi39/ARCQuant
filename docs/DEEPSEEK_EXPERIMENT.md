@@ -1,5 +1,8 @@
 # DeepSeek：HiF4 + ARC + TEAL/WINA 正式评测
 
+当前机器已经跑完一组 198 题 GPQA Diamond 全量对照，结果表和边界说明见
+[DeepSeek 完整结果](DEEPSEEK_FORMAL_RESULTS.md)。
+
 `arc.py experiment` 是 DeepSeek V4 Flash 的完整实验入口。它把同一份
 官方 TP2 权重、同一份校准数据和同一份 benchmark 题目固定下来，分别运行：
 

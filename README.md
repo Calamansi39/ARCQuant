@@ -118,7 +118,7 @@ logits 变化：加上 `--method teal` 或 `--method wina --sparsity 0.5`。
 下的实际保留率和输入能量损失。它用于校准和 debug，不能替代正式精度结果；
 完整的实测记录见 [DeepSeek smoke run](docs/DEEPSEEK_SMOKE.md)。
 
-`assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型通过固定外部评测器提供 BF16/FP4 **基线**入口。DeepSeek 已有读取官方 FP8/FP4 权重并执行稀疏加 ARCQuant HiF4 的投影级代码，但目标模型的校准与整模型前向尚未接线；MiniMax H3 与 MAGI-2 尚无此类适配。仓库内已有的 Llama 稀疏代码不能作为目标模型完成的证据。方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
+`assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型通过固定外部评测器提供 BF16/FP4 **基线**入口。DeepSeek 已完成官方 TP2 权重的整模型校准、HiF4 W4A4、ARC、TEAL 和 WINA 精度评测入口；MiniMax H3 与 MAGI-2 仍需要按各自官方实现补齐整模型适配。仓库内已有的 Llama 稀疏代码不能作为目标模型完成的证据。DeepSeek 的可复现实验说明见 [DeepSeek 实验](docs/DEEPSEEK_EXPERIMENT.md)，当前完整 GPQA 对照见 [DeepSeek 结果](docs/DEEPSEEK_FORMAL_RESULTS.md)，方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
 ```
