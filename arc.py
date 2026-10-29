@@ -223,6 +223,10 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
+    from benchmarks.deepseek_experiment import parser as experiment_parser
+    experiment = sub.add_parser("experiment", parents=[experiment_parser()], add_help=False,
+                                help="calibrate/evaluate the complete DeepSeek HiF4 + ARC sparse path")
+    experiment.add_argument("--gpu-ids", required=True, help="two available physical GPU IDs")
     assets = sub.add_parser("assets", help="audit local model weights and benchmark data without GPU")
     assets.add_argument("--model", action="append", help="check only this model; may be repeated")
     assets.add_argument("--benchmark", action="append", help="check only this benchmark; may be repeated")
@@ -346,6 +350,19 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         catalog = read_catalog()
+        if args.action == "experiment":
+            gpu_ids = args.gpu_ids.split(',')
+            if len(gpu_ids) != 2 or len(set(gpu_ids)) != 2 or not all(i.isdecimal() for i in gpu_ids):
+                raise PlanError("experiment requires two distinct GPU IDs, e.g. --gpu-ids 2,3")
+            runtime_python = os.environ.get('ARCQUANT_BASE_EVAL_ENV')
+            runtime_python = str(Path(runtime_python)/'bin/python') if runtime_python else sys.executable
+            command = [runtime_python, '-m', 'torch.distributed.run', '--standalone', '--nproc-per-node=2',
+                       str(ROOT/'benchmarks/deepseek_experiment.py')]
+            for key, value in vars(args).items():
+                if key not in ('action', 'gpu_ids') and value is not None:
+                    command += ['--'+key.replace('_', '-'), str(value)]
+            return subprocess.run(command, cwd=ROOT,
+                env={**runtime_env(), 'CUDA_VISIBLE_DEVICES': args.gpu_ids}, check=False).returncode
         if args.action == "list":
             for key in ("methods", "models", "benchmarks"):
                 print(f"{key}:")
