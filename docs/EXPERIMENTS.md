@@ -27,9 +27,11 @@ python arc.py run --model llama-3.1-8b --method wina --sparsity 0.5 --quant-type
 | --- | --- | --- | --- |
 | Llama 3.1 8B | 原有适配代码 | 已接入 Llama 投影，需真实模型回归 | 无 |
 | Qwen 2.5 7B、Mixtral 8x7B | 原有适配代码 | 未接入 | 无 |
-| DeepSeek V4 Flash | 未接入 | 未接入 | GPQA、MATH-500、LongBench v2、LiveCodeBench |
-| MiniMax H3、MAGI-2 | 未接入 | 未接入 | VBench |
+| DeepSeek V4 Flash | GPQA 已有 HiF4 整模型实验入口 | GPQA 已接入 ARC/TEAL/WINA；其他 benchmark 尚未接入 | GPQA、MATH-500、LongBench v2、LiveCodeBench |
+| MiniMax H3、MAGI-2 | 尚未接入 ARCQuant 模型适配 | 尚未接入 | VBench 独立 BF16/FP4 基线 |
 
 Llama 的 `math500` 和 `gpqa-diamond` 使用 `lm-evaluation-harness` 任务；DeepSeek 的同名任务通过 `base-eval` 的生成式协议评测，不能直接并表。`terminal-bench` 目前只登记数据，尚无代理/容器评测入口。`model/eval_longbench.py` 是旧 LongBench，不是 LongBench v2。模型或 benchmark 状态可由 `python arc.py list` 查看，不能把“已登记”理解为“已跑通”。
+
+本轮各模型的题目规模、tiny 规模和已完成结果见 [当前评测状态](CURRENT_EVAL_STATUS.md)。
 
 外部基线的启动及多环境依赖见 [资产与基线](ASSETS_AND_BASELINES.md)。方法代码来源、离线/在线结构、WINA 可选变换尚未接入的原因见 [实现核查](METHOD_PROVENANCE.md)。需要卡时估计时看 [GPU 预算](GPU_BUDGET.md)。

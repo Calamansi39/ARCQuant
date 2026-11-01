@@ -1,16 +1,16 @@
 # 三个目标模型：现在到底做到哪一步
 
-更新于 2026-10-28。这里的“文件齐全”只表示清单中的文件、分片和数据条数通过检查；“已有基线结果”指这台服务器原有的 `base_eval` 实验。两者都不表示 ARCQuant 稀疏方法已经在目标模型上跑通。
+更新于 2026-11-01。这里的“文件齐全”只表示清单中的文件、分片和数据条数通过检查；“已有基线结果”指这台服务器原有的 `base_eval` 实验。当前完整题目规模、tiny 规模和方法结果见 [当前评测状态](CURRENT_EVAL_STATUS.md)。
 
 | 目标模型 | 本机权重 | 对应评测数据 | 已有独立基线 | ARCQuant HiF4 + TEAL/WINA |
 | --- | --- | --- | --- | --- |
-| DeepSeek V4 Flash | 原版 48 分片、两卡转换版均检查通过 | GPQA Diamond 198、MATH-500 500、LongBench v2 503、LiveCodeBench v6 175 题均检查通过 | BF16、NVFP4、MXFP4、HiFP4 的完整结果保存在服务器原有 `base_eval/results` | **投影级代码和 CPU 检查通过；未接入整模型，未运行评测** |
-| MiniMax H3 | 文生视频所需组件检查通过；参考视频组件不在本次范围 | VBench 的 944 条唯一英文提示词检查通过 | 原有 `base_eval` 的 VBench Tiny 四精度结果 | **未接入，未运行** |
-| MAGI-2 preview | preview、refiner、文本编码器、VAE 文件检查通过 | 同上 | 原有两卡、短步数生成记录；没有可称为完整 VBench 的分数 | **未接入，未运行** |
+| DeepSeek V4 Flash | 原版 48 分片、两卡转换版均检查通过 | GPQA Diamond 198、MATH-500 500、LongBench v2 503、LiveCodeBench v6 175 题均检查通过 | BF16、NVFP4、MXFP4、HiFP4 的完整结果保存在服务器原有 `base_eval/results` | **GPQA 已完成 HiF4、ARC、TEAL、WINA 整模型对照；其他 benchmark 尚为独立基线** |
+| MiniMax H3 | 文生视频所需组件检查通过；参考视频组件不在本次范围 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | 原有 `base_eval` 的 VBench Tiny 四精度结果 | **未接入 ARC/TEAL/WINA** |
+| MAGI-2 preview | preview、refiner、文本编码器、VAE 文件检查通过 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | BF16 Tiny 已评分；HiFP4 W4A4 生成任务尚无完整评分 | **未接入 ARC/TEAL/WINA** |
 
 Terminal-Bench core 0.1.1 的 86 个任务文件也检查通过，但模型服务、终端代理和容器评分还没有接线。VBench 的评分网络权重与 Python 环境另需按 [资产指南](ASSETS_AND_BASELINES.md) 检查；提示词齐全不代表评分环境可运行。
 
-DeepSeek 的投影级实现、官方 FP8/FP4 权重切片检查和后续接线步骤见 [DeepSeek 适配进度](DEEPSEEK_ADAPTER.md)。统一 CLI 仍会拒绝在 DeepSeek 上启动未完成的 ARCQuant 整模型评测。
+DeepSeek 的投影级实现和完整 GPQA 结果见 [DeepSeek 实验](DEEPSEEK_EXPERIMENT.md) 与 [当前评测状态](CURRENT_EVAL_STATUS.md)。统一 CLI 对尚未适配的其他目标模型仍会拒绝启动 ARCQuant 整模型评测。
 
 ## 已有结果是什么
 

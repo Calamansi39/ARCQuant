@@ -1,0 +1,80 @@
+# 当前模型、数据集和方法评测状态
+
+更新时间：2026-11-01。
+
+## 1. 模型和 benchmark 的对应关系
+
+| 模型 | 主要 benchmark | 完整规模 | tiny/smoke 规模 | 当前实际状态 |
+| --- | --- | ---: | ---: | --- |
+| DeepSeek V4 Flash | GPQA Diamond | 198 题 | smoke 8 题 | 独立基线已完成；ARCQuant 的 HiF4、ARC、TEAL、WINA 已完成 GPQA 全量 198 题 |
+| DeepSeek V4 Flash | MATH-500 | 500 题 | smoke 8 题 | 独立 BF16/FP4 基线已完成；ARC/TEAL/WINA 尚未接入该 benchmark |
+| DeepSeek V4 Flash | LongBench v2 | 503 条 | smoke 8 条 | 独立 BF16/FP4 基线已完成；ARC/TEAL/WINA 尚未接入 |
+| DeepSeek V4 Flash | LiveCodeBench v6 | 175 题 | smoke 2 题 | 独立 BF16/FP4 基线已完成；ARC/TEAL/WINA 尚未接入 |
+| DeepSeek V4 Flash | Terminal-Bench core 0.1.1 | 86 个任务 | smoke 1 个，small 5 个 | 数据已检查，代理、终端服务和容器评分尚未接入 |
+| MiniMax H3 | VBench | 944 个官方 prompt | tiny 108 个唯一 prompt，740 条视频/精度 | Tiny 的 BF16、NVFP4、MXFP4、HiFP4 独立基线已评分 |
+| MAGI-2 preview | VBench | 944 个官方 prompt | tiny 108 个唯一 prompt，740 条视频/精度 | BF16 Tiny 已评分；HiFP4 W4A4 生成任务有记录但尚无完整评分结果 |
+
+Terminal-Bench 按任务性质应归入 DeepSeek 这一类文本/代码模型评测，但它目前是
+额外登记的 benchmark，不在 DeepSeek 已完成的四项主表里。
+
+## 2. VBench tiny 到底有多少条
+
+`/mnt/kpfs_qyang/zhaolianchao/base_eval/vbench_tiny_manifest.json` 固定了本次
+tiny 子集：
+
+- 16 个 VBench 维度，每个维度选择 10 个长度分层 prompt；
+- 由于不同维度共享 prompt，最终是 **108 个唯一 prompt**，不是 160 个独立问题；
+- 普通维度每个 prompt 采样 5 条视频；
+- `temporal_flickering` 的 10 个 prompt 先生成每个 25 条候选，再按 VBench 的
+  静态筛选和选择规则保留；
+- 因而每种模型、每种精度的 tiny 任务量是 **740 条视频**。
+
+所以 VBench 的“108”是 prompt 数，“740”才是一次精度评测需要生成和评分的视频数。
+它不是语言模型那种 108 道题。
+
+## 3. 我们已经实际跑了什么
+
+### DeepSeek 的 ARCQuant 方法结果
+
+`runs/deepseek_formal/` 中已经完成同一份 GPQA Diamond 198 题的五组结果：
+
+| 变体 | 实际路径 | 数量 |
+| --- | --- | ---: |
+| BF16 | BF16 对照 | 198 |
+| HiF4 | HiF4 W4A4 | 198 |
+| ARC | HiF4 W4A4 + ARC 残差通道 | 198 |
+| TEAL | HiF4 W4A4 + ARC + 50% TEAL 输入掩码 | 198 |
+| WINA | HiF4 W4A4 + ARC + 50% WINA 输入掩码 | 198 |
+
+这是当前唯一已经完成“FP4 数值路径 + ARC/TEAL/WINA 方法”的整模型 benchmark
+对照。该入口使用 HiF4 值重建和 dense PyTorch GEMM，能验证精度路径，不能直接
+当作真实稀疏 kernel 的速度结果。WINA 当前也没有加入论文中的可选全模型
+`transform`。
+
+### 服务器已有的独立基线
+
+`/mnt/kpfs_qyang/zhaolianchao/base_eval/results/` 中已有：
+
+- DeepSeek 的 BF16、NVFP4 W4A4、MXFP4 W4A4、HiFP4 W4A4，覆盖 GPQA、MATH-500、
+  LongBench v2 和 LiveCodeBench；
+- MiniMax H3 的 VBench tiny 四种精度基线；
+- MAGI-2 的 BF16 Tiny 评分结果，以及一条尚未完成评分的 HiFP4 W4A4 生成任务。
+
+这些 `base_eval` 结果没有 ARC 残差通道，也没有 TEAL/WINA 激活稀疏。仓库的
+`base-eval` 后端明确只允许 `--method none`，因此不能把它们当作方法结果。
+
+## 4. 是否已经满足“FP4 + 对应方法”
+
+结论分模型看：
+
+- **DeepSeek × GPQA：已满足。** 已跑 `HiF4 W4A4 + ARC`、`+ TEAL`、`+ WINA`，并且
+  使用同一校准目录和同一 198 题数据。
+- **DeepSeek × MATH/LongBench/LiveCodeBench：尚未满足。** 目前只有独立 FP4
+  基线，方法整模型入口还没有接入这些生成式评测器。
+- **MiniMax H3 × VBench：尚未满足。** 已有 HiFP4 W4A4 基线，但没有 ARC/TEAL/WINA。
+- **MAGI-2 × VBench：尚未满足。** 目前没有完整的 FP4+方法结果；BF16 Tiny 已评分，
+  HiFP4 W4A4 任务仍未形成完整评分表。
+
+另外，DeepSeek 自定义入口的 GPQA 是四选项条件似然协议，而 `base_eval` 的
+DeepSeek GPQA 是生成式 Pass@1；两者题目数相同，但指标协议不同，不能直接把
+百分数放在同一列比较。
