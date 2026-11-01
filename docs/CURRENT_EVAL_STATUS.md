@@ -2,6 +2,8 @@
 
 更新时间：2026-11-01。
 
+已经完成的结果可直接下载为 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
+
 ## 1. 模型和 benchmark 的对应关系
 
 | 模型 | 主要 benchmark | 完整规模 | tiny/smoke 规模 | 当前实际状态 |
