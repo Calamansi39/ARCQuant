@@ -2,7 +2,7 @@
 
 更新时间：2026-11-01。
 
-已经完成的结果可直接下载为 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
+已经完成的结果可查看[彩色 HTML 表格](completed_benchmarks_colored.html)，也可下载为 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
 
 ## 1. 模型和 benchmark 的对应关系
 
