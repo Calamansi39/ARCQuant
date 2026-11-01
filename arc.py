@@ -60,9 +60,10 @@ def resolve_model(args: argparse.Namespace, catalog: dict) -> tuple[dict, Path]:
     return model, asset_path(model, args.model, "models", override=args.model_path)
 
 
-def cache_paths(model_path: Path, dataset: str, metric: str) -> list[Path]:
+def cache_paths(model_path: Path, dataset: str, metric: str, *, wina_transform: bool = False) -> list[Path]:
     prefix = f"{model_path.name.lower()}_"
-    return [ROOT / "saved" / f"{prefix}{suffix}_{dataset}_{metric}.pt" for suffix in
+    transform_suffix = "_wina_transform" if wina_transform else ""
+    return [ROOT / "saved" / f"{prefix}{name}_{dataset}_{metric}{transform_suffix}.pt" for name in
             ("reorder_index", "select_num", "act_scales")]
 
 
@@ -129,6 +130,11 @@ def build_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
         "--act_sort_metric", args.act_sort_metric,
         "--seed", str(args.seed),
     ]
+    wina_transform = bool(getattr(args, "wina_transform", False))
+    if wina_transform:
+        if args.method != "wina":
+            raise PlanError("--wina-transform requires --method wina.")
+        command += ["--wina_transform", "--wina_transform_device", str(getattr(args, "wina_transform_device", "cuda"))]
     if args.method in ("teal", "wina"):
         command += ["--sparsity", str(args.sparsity)]
         if args.method == "teal":
@@ -177,7 +183,9 @@ def build_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
         "histogram_path": str(histogram_path) if args.method == "teal" else None,
         "strategy_path": str(strategy_path) if args.method in ("teal", "wina") and allocation == "greedy" else None,
         "command": command,
-        "cache_paths": [str(path) for path in cache_paths(model_path, args.calibration_dataset, args.act_sort_metric)],
+        "wina_transform": wina_transform,
+        "cache_paths": [str(path) for path in cache_paths(model_path, args.calibration_dataset, args.act_sort_metric,
+                                                           wina_transform=wina_transform)],
     }
 
 
@@ -192,8 +200,13 @@ def prepare_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
         "--act_sort_metric", args.act_sort_metric,
         "--samples", str(args.samples), "--seqlen", str(args.seqlen),
     ]
+    if getattr(args, "wina_transform", False):
+        command += ["--wina_transform", "--wina_transform_device",
+                    str(getattr(args, "wina_transform_device", "cuda"))]
     return {"model": args.model, "model_path": str(model_path), "command": command,
-            "cache_paths": [str(path) for path in cache_paths(model_path, args.dataset, args.act_sort_metric)]}
+            "wina_transform": bool(getattr(args, "wina_transform", False)),
+            "cache_paths": [str(path) for path in cache_paths(model_path, args.dataset, args.act_sort_metric,
+                                                               wina_transform=bool(getattr(args, "wina_transform", False)))]}
 
 
 def calibration_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
@@ -213,6 +226,8 @@ def calibration_plan(args: argparse.Namespace, catalog: dict | None = None) -> d
                "--allocation", args.allocation, "--output-dir", str(output),
                "--dataset", args.dataset, "--samples", str(args.samples),
                "--seqlen", str(args.seqlen), "--sparsity", str(args.sparsity),
+               "--greedy-samples", str(args.greedy_samples),
+               "--histogram-sample-limit", str(args.histogram_sample_limit),
                "--step", str(args.step), "--last-fraction", str(args.last_fraction),
                "--device", args.device, "--seed", str(args.seed)]
     return {"model": args.model, "model_path": str(model_path), "method": args.method,
@@ -267,6 +282,9 @@ def _parser() -> argparse.ArgumentParser:
     prep.add_argument("--act-sort-metric", choices=["max", "mean", "frobenius", "hessian"], default="max")
     prep.add_argument("--samples", type=int, default=128)
     prep.add_argument("--seqlen", type=int, default=2048)
+    prep.add_argument("--wina-transform", action="store_true",
+                      help="Apply native WINA tensor transform before ARC calibration.")
+    prep.add_argument("--wina-transform-device", default="cuda")
     prep.add_argument("--dry-run", action="store_true")
     cal = sub.add_parser("calibrate", help="generate native TEAL histograms and optional TEAL/WINA greedy allocations")
     cal.add_argument("--model", required=True)
@@ -275,8 +293,10 @@ def _parser() -> argparse.ArgumentParser:
     cal.add_argument("--allocation", choices=["uniform", "greedy"], default="uniform")
     cal.add_argument("--sparsity", type=float, required=True)
     cal.add_argument("--dataset", choices=["wikitext2", "c4", "arc_mix"], default="wikitext2")
-    cal.add_argument("--samples", type=int, default=8)
-    cal.add_argument("--seqlen", type=int, default=256)
+    cal.add_argument("--samples", type=int, default=128)
+    cal.add_argument("--seqlen", type=int, default=512)
+    cal.add_argument("--greedy-samples", type=int, default=16)
+    cal.add_argument("--histogram-sample-limit", type=int, default=262144)
     cal.add_argument("--step", type=float, default=0.025,
                      help="greedy rate increment for a Q-sized weight matrix")
     cal.add_argument("--last-fraction", type=float, default=0.25)
@@ -326,6 +346,9 @@ def _parser() -> argparse.ArgumentParser:
         p.add_argument("--allocation", choices=["uniform", "greedy"], default="uniform")
         p.add_argument("--strategy", help="per-layer greedy strategy.json; defaults to assets/calibration/<model>/<method>/strategy.json")
         p.add_argument("--disable-prefill-sparsity", action="store_true")
+        p.add_argument("--wina-transform", action="store_true",
+                       help="Use WINA's optional fused-norm + sequential-SVD transform.")
+        p.add_argument("--wina-transform-device", default="cuda")
         p.add_argument("--kv-cache", action="store_true")
         p.add_argument("--seed", type=int, default=0)
         p.add_argument("--lm-eval-include-path")

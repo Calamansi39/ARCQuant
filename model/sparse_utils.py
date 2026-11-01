@@ -154,8 +154,12 @@ class WeightInformedTopKSparsifier(nn.Module):
     strategy. The top-k path does not need activation histograms.
     """
 
-    def __init__(self, column_norm, sparsity=0.0, apply_prefill=True):
+    def __init__(self, column_norm, sparsity=0.0, apply_prefill=True,
+                 prefill_fraction=0.99):
         super().__init__()
+        if not 0 < prefill_fraction <= 1:
+            raise ValueError("WINA prefill_fraction must be in (0, 1]")
+        self.prefill_fraction = float(prefill_fraction)
         self.apply_prefill = apply_prefill
         self.track_stats = True
         self.set_sparsity(sparsity)
@@ -184,10 +188,14 @@ class WeightInformedTopKSparsifier(nn.Module):
         if self.sparsity == 0 or (x.shape[1] > 1 and not self.apply_prefill):
             out = x
         else:
-            start = x.shape[1] - max(1, int(0.99 * x.shape[1]))
+            # The native WINA release uses the final 99% of a prefill.  The
+            # explicit flag is an ARCQuant extension that permits decode-only
+            # ablations without changing the native default.
+            tail_len = max(1, int(self.prefill_fraction * x.shape[1]))
+            start = x.shape[1] - tail_len
             tail = x[:, start:, :]
             score = tail.float().abs() * self.column_norm
-            keep = int(tail.shape[-1] * (1 - self.sparsity))
+            keep = max(1, int(tail.shape[-1] * (1 - self.sparsity)))
             indices = score.topk(keep, dim=-1).indices
             mask = torch.zeros_like(tail, dtype=torch.bool).scatter_(-1, indices, True)
             out = x.clone()

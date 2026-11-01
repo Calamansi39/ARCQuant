@@ -23,6 +23,7 @@ outputs/*
 *.sh
 saved/
 runs/
+validation/
 assets/
 external/
 *.png

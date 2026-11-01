@@ -81,8 +81,18 @@ def forward_layer(layer, state: torch.Tensor, device: torch.device) -> torch.Ten
     return result[0]
 
 
+def _bounded_sample(x: torch.Tensor, limit: int) -> torch.Tensor:
+    """Keep a deterministic spread of values without retaining full activations."""
+    flat = x.detach().reshape(-1).to("cpu", dtype=torch.float32)
+    if flat.numel() <= limit:
+        return flat
+    index = torch.linspace(0, flat.numel() - 1, limit).floor().long()
+    return flat[index]
+
+
 def dense_layer_pass(layer, states: list[torch.Tensor], device: torch.device,
-                     *, collect_histograms: bool = False):
+                     *, collect_histograms: bool = False,
+                     histogram_sample_limit: int = 262_144):
     captured = {part: {name: [] for name in groups} for part, groups in HISTOGRAM_HOOKS.items()}
     hooks = []
     if collect_histograms:
@@ -90,7 +100,8 @@ def dense_layer_pass(layer, states: list[torch.Tensor], device: torch.device,
             module = getattr(layer, part)
             for name, projection in groups.items():
                 def save_input(_module, inputs, *, part=part, name=name):
-                    captured[part][name].append(inputs[0].detach().to("cpu", dtype=torch.float32))
+                    per_event = max(1, histogram_sample_limit // max(1, len(states)))
+                    captured[part][name].append(_bounded_sample(inputs[0], per_event))
                 hooks.append(getattr(module, projection).register_forward_pre_hook(save_input))
     try:
         outputs = [forward_layer(layer, state, device).detach().cpu() for state in states]
@@ -188,8 +199,12 @@ def main(argv=None) -> int:
     parser.add_argument("--allocation", choices=["uniform", "greedy"], required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--dataset", choices=["wikitext2", "c4", "arc_mix"], default="wikitext2")
-    parser.add_argument("--samples", type=int, default=8)
-    parser.add_argument("--seqlen", type=int, default=256)
+    parser.add_argument("--samples", type=int, default=128)
+    parser.add_argument("--seqlen", type=int, default=512)
+    parser.add_argument("--greedy-samples", type=int, default=16,
+                        help="Number of calibration sequences used by greedy error search.")
+    parser.add_argument("--histogram-sample-limit", type=int, default=262144,
+                        help="Bounded signed activation values retained per projection/layer.")
     parser.add_argument("--sparsity", type=float, required=True)
     parser.add_argument("--step", type=float, default=0.025,
                         help="Greedy rate increment for a Q-sized weight matrix (reference default: 0.025)")
@@ -197,8 +212,9 @@ def main(argv=None) -> int:
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args(argv)
-    if args.samples < 1 or args.seqlen < 2 or not 0 < args.sparsity < 1 or not 0 < args.step < 1:
-        parser.error("samples >= 1, seqlen >= 2, sparsity and step in (0, 1) are required")
+    if (args.samples < 1 or args.seqlen < 2 or args.greedy_samples < 1 or
+            args.histogram_sample_limit < 1024 or not 0 < args.sparsity < 1 or not 0 < args.step < 1):
+        parser.error("samples >= 1, seqlen >= 2, greedy-samples >= 1, histogram-sample-limit >= 1024, sparsity and step in (0, 1) are required")
     if not 0 < args.last_fraction <= 1:
         parser.error("--last-fraction must be in (0, 1]")
     if args.method == "wina" and args.allocation != "greedy":
@@ -236,7 +252,8 @@ def main(argv=None) -> int:
             ("allocation", args.allocation), ("dataset", args.dataset),
             ("samples", args.samples), ("seqlen", args.seqlen), ("seed", args.seed),
             ("target_sparsity", args.sparsity), ("step", args.step),
-            ("last_fraction", args.last_fraction),
+            ("last_fraction", args.last_fraction), ("greedy_samples", args.greedy_samples),
+            ("histogram_sample_limit", args.histogram_sample_limit),
         )):
             parser.error(f"{output_dir} contains artifacts from a different calibration; choose another --output-dir")
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -245,14 +262,18 @@ def main(argv=None) -> int:
         for index, layer in enumerate(model.model.layers):
             layer.to(device)
             print(f"Calibrating layer {index + 1}/{len(model.model.layers)}", flush=True)
-            outputs, captured = dense_layer_pass(layer, states, device,
-                                                 collect_histograms=args.method == "teal")
+            outputs, captured = dense_layer_pass(
+                layer, states, device, collect_histograms=args.method == "teal",
+                histogram_sample_limit=args.histogram_sample_limit)
             if args.method == "teal":
                 save_layer_histograms(captured, output_dir, index)
             if args.allocation == "greedy":
                 masks = build_layer_masks(layer, args.method, index, output_dir / "histograms")
+                greedy_states = states[:args.greedy_samples]
+                greedy_targets = outputs[:args.greedy_samples]
                 strategy_layers[str(index)] = greedy_allocate_layer(
-                    layer, states, outputs, masks, args.sparsity, args.step, args.last_fraction, device
+                    layer, greedy_states, greedy_targets, masks, args.sparsity,
+                    args.step, args.last_fraction, device
                 )
                 print(f"  allocation: {strategy_layers[str(index)]}", flush=True)
                 del masks
@@ -264,6 +285,8 @@ def main(argv=None) -> int:
                   "target_sparsity": args.sparsity, "model_name": model_path.name,
                   "model_config_sha256": config_hash,
                   "dataset": args.dataset, "samples": args.samples, "seqlen": args.seqlen,
+                  "greedy_samples": args.greedy_samples,
+                  "histogram_sample_limit": args.histogram_sample_limit,
                   "seed": args.seed, "step": args.step,
                   "step_unit": "q_projection_weight_count", "last_fraction": args.last_fraction}
     (output_dir / "calibration.json").write_text(

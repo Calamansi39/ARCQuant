@@ -25,6 +25,10 @@ parser.add_argument(
 parser.add_argument("--act_sort_metric", type=str, help="the metric used to sort the activations.")
 parser.add_argument("--samples", type=int, default=128)
 parser.add_argument("--seqlen", type=int, default=2048)
+parser.add_argument("--wina_transform", action="store_true",
+                    help="Apply the native WINA tensor transform before collecting ARC statistics.")
+parser.add_argument("--wina_transform_device", default="cuda",
+                    help="Device used by WINA SVDs (default: cuda).")
 
 
 args = parser.parse_args()
@@ -162,6 +166,12 @@ def main():
     folder_path = "./saved"
     path = args.model.rstrip('/')
     model_name = path.split('/')[-1]
+    transform_suffix = "_wina_transform" if args.wina_transform else ""
+    if args.wina_transform:
+        from model.wina_transform import apply_wina_transform
+        print(f"Applying native WINA tensor transform on {args.wina_transform_device} ...")
+        manifest = apply_wina_transform(model, device=args.wina_transform_device)
+        print(f"WINA transform manifest: {manifest}")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
@@ -172,7 +182,7 @@ def main():
     get_dataset = DATASET_LOADERS[args.dataset]
 
     dataset_name = args.dataset.lower()
-    act_scales_filename = f'./saved/{model_name.lower()}_act_scales_{dataset_name}_{args.act_sort_metric}.pt'
+    act_scales_filename = f'./saved/{model_name.lower()}_act_scales_{dataset_name}_{args.act_sort_metric}{transform_suffix}.pt'
     act_scores_filename = f'./saved/{model_name.lower()}_act_scores_{dataset_name}_{args.act_sort_metric}.pt'
 
     print("Getting activation stats...")
@@ -205,9 +215,9 @@ def main():
     end_time = time.time()
     print(f"Total time taken: {end_time - start_time:.2f} seconds")
 
-    reorder_filename = f'./saved/{model_name.lower()}_reorder_index_{dataset_name}_{args.act_sort_metric}.pt'
-    select_num_filename = f'./saved/{model_name.lower()}_select_num_{dataset_name}_{args.act_sort_metric}.pt'
-    avg_bits_filename = f'./saved/{model_name.lower()}_average_bits_{dataset_name}_{args.act_sort_metric}.pt'
+    reorder_filename = f'./saved/{model_name.lower()}_reorder_index_{dataset_name}_{args.act_sort_metric}{transform_suffix}.pt'
+    select_num_filename = f'./saved/{model_name.lower()}_select_num_{dataset_name}_{args.act_sort_metric}{transform_suffix}.pt'
+    avg_bits_filename = f'./saved/{model_name.lower()}_average_bits_{dataset_name}_{args.act_sort_metric}{transform_suffix}.pt'
 
     print(f"Saving reorder index to {reorder_filename}")
     torch.save(reorder_index, reorder_filename)

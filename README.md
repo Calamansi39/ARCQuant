@@ -87,7 +87,7 @@ We will release our vLLM evaluation very soon.
 
 **当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 换机器先按 [模型评测迁移指南](docs/MIGRATION_EVALUATION.md) 准备文件和环境，再用 `arc.py doctor` 查看逐项状态。[当前评测状态](docs/CURRENT_EVAL_STATUS.md) 汇总模型对应 benchmark、题目规模、tiny 规模和已完成方法；[已完成结果表](docs/COMPLETED_BENCHMARKS.md) 提供彩色 HTML、CSV 和 TSV 长表；[目标模型进度](docs/TARGET_MODELS.md) 区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态。DeepSeek 的投影级代码与未完成部分见 [适配进度](docs/DEEPSEEK_ADAPTER.md)。来源与固定版本保存在 [实验清单](configs/experiments.json)。
 
-外行读法：`provision` 准备模型权重、题库、评分器和源码；`doctor` 逐项检查能否启动；`plan` 展示将执行的命令；`run` 才真正占用 GPU。大文件在 Git 忽略的 `assets/`，本机专用环境路径在 `external/local_env.sh`，新机器可按 [`configs/runtime.example.sh`](configs/runtime.example.sh) 填写。TEAL/WINA 是先离线确定稀疏规则、再在线稀疏投影输入；三个新目标目前只有**独立量化基线**可经统一 CLI 启动，目标模型的 ARCQuant + 稀疏整模型方法还在适配中。
+外行读法：`provision` 准备模型权重、题库、评分器和源码；`doctor` 逐项检查能否启动；`plan` 展示将执行的命令；`run` 才真正占用 GPU。大文件在 Git 忽略的 `assets/`，本机专用环境路径在 `external/local_env.sh`，新机器可按 [`configs/runtime.example.sh`](configs/runtime.example.sh) 填写。TEAL/WINA 是先离线确定稀疏规则、再在线稀疏投影输入；DeepSeek 已有 GPQA 正式整模型结果和 MATH/LongBench/LiveCodeBench 的生成式方法入口，视频模型仍只有独立 VBench 基线。
 
 ```bash
 python arc.py list
@@ -99,6 +99,30 @@ python arc.py doctor --model deepseek-v4-flash --benchmark gpqa-diamond --gpu-id
 python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpqa-diamond \
   --profile smoke --method none --quant-type HiF4 --gpu-ids 0,1
 ```
+
+DeepSeek 的生成式稀疏入口（LongBench-v2、LiveCodeBench、MATH-500）直接沿用
+`base_eval` 的原生 tokenizer、thinking、生成和评分协议。先用少量题目检查：
+
+```bash
+torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_extended.py \
+  --base-eval-root /path/to/base_eval --sparse-method wina --sparsity 0.5 \
+  --benchmark longbench-v2 --source-model /path/to/DeepSeek-V4-Flash-0731 \
+  --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 --quant hifp4 --mode w4a4 \
+  --limit 1 --max-new-tokens 4 --out-dir validation/longbench-wina
+
+torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_math.py \
+  --base-eval-root /path/to/base_eval --sparse-method wina --sparsity 0.5 \
+  --source-model /path/to/DeepSeek-V4-Flash-0731 \
+  --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 --quant hifp4 --mode w4a4 \
+  --limit 8 --out-dir validation/math-wina
+```
+
+TEAL 还要加入与 TP rank 对应的 `--calibration runs/.../rank*.pt`。输出中的
+`runtime.sparse_masked_elements` 是真实掩码计数；smoke 结果只用于检查链路，不能
+填入正式 benchmark 表。MiniMax H3 也提供可迁移的 DiT WINA 启动器：
+`benchmarks/run_minimax_sparse.py`，它不会改动文本编码器和 VAE。MAGI-2 也提供
+`benchmarks/run_magi2_sparse.py`，当前覆盖 dense 与 routed preview 层；分组 refiner
+层仍会在报告中明确列为待校准，不会把 DeepSeek 的统计套过去。
 
 想先看到真实模型里的激活分布，不必等待完整 benchmark，可以用两张卡跑一
 个短 prompt 的诊断探针。它只保存统计量，不保存完整激活张量：
@@ -118,7 +142,7 @@ logits 变化：加上 `--method teal` 或 `--method wina --sparsity 0.5`。
 下的实际保留率和输入能量损失。它用于校准和 debug，不能替代正式精度结果；
 完整的实测记录见 [DeepSeek smoke run](docs/DEEPSEEK_SMOKE.md)。
 
-`assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型通过固定外部评测器提供 BF16/FP4 **基线**入口。DeepSeek 已完成官方 TP2 权重的整模型校准、HiF4 W4A4、ARC、TEAL 和 WINA 精度评测入口；MiniMax H3 与 MAGI-2 仍需要按各自官方实现补齐整模型适配。仓库内已有的 Llama 稀疏代码不能作为目标模型完成的证据。DeepSeek 的可复现实验说明见 [DeepSeek 实验](docs/DEEPSEEK_EXPERIMENT.md)，当前完整 GPQA 对照见 [DeepSeek 结果](docs/DEEPSEEK_FORMAL_RESULTS.md)，方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
+`assets` 只检查文件，`plan` 只生成启动计划；两者都不运行 GPU。当前三个目标模型都能通过固定外部评测器生成 BF16/FP4 **基线**。DeepSeek 已完成官方 TP2 权重的整模型校准、HiF4 W4A4、ARC、TEAL 和 WINA 的 GPQA 对照；MATH-500、LongBench-v2、LiveCodeBench 已有沿用原生评分协议的 TEAL/WINA 启动器，完整结果仍需实际跑满。MiniMax H3 与 MAGI-2 仍需要按各自官方视频生成实现补齐整模型稀疏适配。仓库内已有的 Llama 稀疏代码不能作为目标模型完成的证据。DeepSeek 的可复现实验说明见 [DeepSeek 实验](docs/DEEPSEEK_EXPERIMENT.md)，当前完整 GPQA 对照见 [DeepSeek 结果](docs/DEEPSEEK_FORMAL_RESULTS.md)，方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)，卡时估计见 [GPU 预算](docs/GPU_BUDGET.md)。
 
 ## 4. Citation
 ```

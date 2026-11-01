@@ -1,6 +1,6 @@
-# DeepSeek V4 Flash 投影适配：第一阶段
+# DeepSeek V4 Flash 投影适配：整模型 GPQA 与生成入口
 
-本页记录已经写进仓库并通过 CPU 检查的代码，以及继续跑完整实验所需的工作。**当前不能通过 `arc.py run --backend arcquant` 在 DeepSeek 上评分**；CLI 会拒绝，避免把外部基线误当成我们的方法。
+本页记录已经写进仓库并通过 CPU 检查的代码，以及仍然需要 GPU 复核的部分。DeepSeek 的专用 `arc.py experiment` 已可在 TP2 reference model 上运行 HiF4、ARC、TEAL、WINA 的 GPQA 198 题；通用 `arc.py run --backend arcquant` 仍然只面向 Llama/Qwen/Mixtral，因此不会把 DeepSeek 当成旧模型路径加载。
 
 ## 代码做了什么
 
@@ -15,7 +15,7 @@
 
 增强残差通道需要该投影自己的重排索引和通道数。代码要求传入目标模型实测的校准结果；缺失或错误的索引会报错，不会临时套用旧模型的缓存。`wo_a` 在官方代码中直接参与分组 `einsum`，普通线性层钩子无法覆盖；适配器提供了单独的 `grouped_wo_a` 投影实现。
 
-路由专家收到的二维输入只包含被路由选中的 token，行号不再等于原序列位置。启用 TEAL/WINA 时，调用 `linear(..., sparse_rows=布尔掩码)` 必须明确选出允许稀疏的行；适配器不会猜测哪些是预填充或解码 token。这个掩码应由整模型路由代码根据原始位置生成，目前整模型接线尚未完成。
+路由专家收到的二维输入只包含被路由选中的 token，行号不再等于原序列位置。GPQA 整模型接线会由路由代码传入 `sparse_rows`，生成式入口也会在 MoE dispatch 时恢复这些行的位置，因此 prefill 和 decode 规则不会混用。生成式 LongBench/LiveCodeBench 通过 `benchmarks/run_deepseek_sparse_extended.py` 接入 WINA 或 TEAL；`wo_a` 的 grouped contraction 会在官方 quantize-activation 边界执行同样的逐组掩码，运行时会把每个投影的掩码数量写入结果。
 
 TEAL 使用校准得到的直方图阈值；WINA 根据当前输入绝对值与列范数选 top-k。DeepSeek 的层结构与原论文 Llama 不同，因此目前**没有**把 Llama 的 `h1/h2` 阈值文件或 K/gate 权重选择方案冒充 DeepSeek 的配置。调用者必须指定每个投影的 TEAL 直方图映射，或指定哪些 DeepSeek 投影使用 WINA 的列范数。
 
@@ -32,8 +32,9 @@ python -m unittest tests.test_deepseek_adapter -v
 
 ## 距离完整 DeepSeek 评测还差什么
 
-1. 用 DeepSeek 的校准样本捕获每个投影的输入，生成逐投影重排索引、增强残差通道数和 TEAL 直方图；还需确定 WINA 在 DeepSeek 结构上的加权投影选择及预算。旧 Llama 缓存不可直接复用。
-2. 在官方模型的实际前向中把这些投影接入适配器，包括 `wo_a` 分组调用、压缩注意力、路由专家和两卡张量并行；再接到统一 CLI 的生成式评测协议。
-3. 在显存足够时依次做小样本 GPU 前向、结果正确性、完整任务精度与耗时检查。当前本机 H20 的空闲显存不足以安全启动两卡 DeepSeek 大模型。
+1. 重新用正式规模（默认 128×512）校准并在目标机器复核每个投影的稀疏覆盖率；旧的 `calibration80` 只能作为 smoke 产物。
+2. MATH-500 已有同一 native thinking + Math-Verify 的 WINA/TEAL 启动器；先完成单题 smoke，再按 500 题协议续跑。Terminal-Bench 还要接入终端代理和沙箱。
+3. LongBench/LiveCodeBench 的短上下文 WINA smoke 已通过；正式任务仍需按完整上下文和题数运行，并记录显存、耗时与结果覆盖率。
+4. 在显存足够时依次做小样本 GPU 前向、结果正确性、完整任务精度与耗时检查；当前实现仍是 dense GEMM，稀疏统计不能直接解释成端到端加速。
 
-因此这次完成的是**真实权重格式和投影计算的适配切口**，还不是 DeepSeek 的端到端运行结果，更不是 MiniMax H3 或 MAGI-2 的适配结果。
+因此当前 DeepSeek 已有可复现的 GPQA 整模型方法结果和生成式 WINA 入口，但 MATH/Terminal-Bench 以及视频模型仍不是 ARCQuant 稀疏正式结果。

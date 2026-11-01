@@ -68,11 +68,10 @@ largest maximum of 98, with a median HiF4/BF16 RMS ratio of 1.00. These are
 reasonable diagnostics, but the prompt is too short to choose final TEAL
 histograms or claim an accuracy result.
 
-The JSON schema is deliberately independent of the external evaluator. The
-next implementation step is to replace these diagnostic thresholds with
-calibration files collected over a representative corpus, then install the
-same masks in the official DeepSeek projection calls and compare full-model
-logits against the BF16 control.
+The JSON schema is deliberately independent of the external evaluator. This
+short probe remains a diagnostic only; the official generation paths now load
+the representative signed calibration files where TEAL is requested and apply
+the method at the projection boundary.
 
 ## What the first sparse pass tells us
 
@@ -94,3 +93,22 @@ debug baseline, not as TEAL/WINA benchmark results. The next implementation
 must calibrate on representative prompts, reserve and reorder ARC channels, and
 then repeat this exact logit comparison before spending time on full
 benchmarks.
+
+## 2026-11-02 generation checks
+
+The sparse runtime is now connected to the native generation evaluator:
+
+- LongBench-v2, HiF4 W4A4 + WINA 50%, one question, with 1K and 8K prompt
+  limits: generation completed and wrote `runtime.sparse_masked_elements`.
+- The grouped MLA `wo_a` projection recorded four `#group` entries, so it is
+  covered by the runtime instead of silently bypassing the mask.
+- MATH-500, HiF4 W4A4 + WINA 50%, one question: native thinking and the
+  Math-Verify result writer completed; the 16-token diagnostic was correctly
+  marked as truncated.
+- MATH-500, HiF4 W4A4 + TEAL 50%, one question using the existing signed
+  calibration file: the same path completed and recorded a truncated diagnostic.
+
+These are smoke checks. Their prompts and generation limits are too small for a
+quality claim and they are excluded from the formal result tables. The full
+LongBench-v2 run still needs a machine with enough free memory for the original
+long-context protocol.

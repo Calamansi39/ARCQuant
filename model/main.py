@@ -125,6 +125,11 @@ if __name__ == '__main__':
         help='Offline greedy per-layer allocation in strategy.json format.')
     parser.add_argument('--disable_prefill_sparsity', action='store_true',
         help='Apply TEAL or WINA sparsity only during token decoding.')
+    parser.add_argument('--wina_transform', action='store_true',
+        help='Apply WINA native LayerNorm fusion + sequential SVD rotation. '
+             'Generate ARCQuant reorder caches after enabling this flag.')
+    parser.add_argument('--wina_transform_device', default='cuda',
+        help='Device used for WINA SVDs (default: cuda; CPU is valid for tiny tests).')
 
     # ---- activation 2:4 x-mask (FlatQuant-style switch_top2_hard) ----
     parser.add_argument(
@@ -195,6 +200,9 @@ if __name__ == '__main__':
     else:
         sparse_strategy = None
 
+    if args.wina_transform and args.sparse_method != 'wina':
+        parser.error('--wina_transform currently requires --sparse_method wina.')
+
     model_name = args.model.split('/')[-2] if len(args.model.split('/')[-1]) == 0 else args.model.split('/')[-1]
     assert model_name != None, "Please check the model path."
 
@@ -204,6 +212,8 @@ if __name__ == '__main__':
                              if family in args.model.lower()), None)
     if args.sparse_method != 'none' and model_family != 'llama':
         parser.error('TEAL and WINA currently require the Llama model adapter.')
+    if args.wina_transform and model_family != 'llama':
+        parser.error('--wina_transform currently requires the Llama model adapter.')
     if model_family == 'llama':
         model = get_llama(args.model)
         reorder_model_func = reorder_model_llama
@@ -217,7 +227,14 @@ if __name__ == '__main__':
         reorder_model_func = reorder_model_mixtral
     else:
         parser.error('Cannot infer model family; pass --model_family llama, qwen or mixtral.')
-       
+
+    transform_manifest = None
+    if args.wina_transform:
+        from wina_transform import apply_wina_transform
+        print(f'Applying native WINA tensor transform on {args.wina_transform_device} ...', flush=True)
+        transform_manifest = apply_wina_transform(model, device=args.wina_transform_device)
+        print(f'WINA transform ready: {transform_manifest}', flush=True)
+
     model.eval()
     if sparse_strategy is not None:
         try:
@@ -230,9 +247,10 @@ if __name__ == '__main__':
     import os
 
     dataset_name = args.dataset.lower()
-    index_filename = f'./saved/{model_name.lower()}_reorder_index_{dataset_name}_{args.act_sort_metric}.pt'
-    select_num_filename = f'./saved/{model_name.lower()}_select_num_{dataset_name}_{args.act_sort_metric}.pt'
-    act_scales_filename = f'./saved/{model_name.lower()}_act_scales_{dataset_name}_{args.act_sort_metric}.pt'
+    transform_suffix = '_wina_transform' if args.wina_transform else ''
+    index_filename = f'./saved/{model_name.lower()}_reorder_index_{dataset_name}_{args.act_sort_metric}{transform_suffix}.pt'
+    select_num_filename = f'./saved/{model_name.lower()}_select_num_{dataset_name}_{args.act_sort_metric}{transform_suffix}.pt'
+    act_scales_filename = f'./saved/{model_name.lower()}_act_scales_{dataset_name}_{args.act_sort_metric}{transform_suffix}.pt'
  
     
     assert os.path.isfile(index_filename), "reorder index file not found."
@@ -274,6 +292,8 @@ if __name__ == '__main__':
         **reorder_kwargs,
     )
     model.eval()
+    if transform_manifest is not None:
+        model._arcquant_wina_transform_manifest = transform_manifest
     end_time=time.time()
     peak_memory = torch.cuda.max_memory_allocated()
 

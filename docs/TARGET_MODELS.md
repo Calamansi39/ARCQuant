@@ -1,16 +1,16 @@
 # 三个目标模型：现在到底做到哪一步
 
-更新于 2026-11-01。这里的“文件齐全”只表示清单中的文件、分片和数据条数通过检查；“已有基线结果”指这台服务器原有的 `base_eval` 实验。当前完整题目规模、tiny 规模和方法结果见 [当前评测状态](CURRENT_EVAL_STATUS.md)。
+更新于 2026-11-02。这里的“文件齐全”只表示清单中的文件、分片和数据条数通过检查；“已有基线结果”指这台服务器原有的 `base_eval` 实验。当前完整题目规模、tiny 规模和方法结果见 [当前评测状态](CURRENT_EVAL_STATUS.md)。
 
 | 目标模型 | 本机权重 | 对应评测数据 | 已有独立基线 | ARCQuant HiF4 + TEAL/WINA |
 | --- | --- | --- | --- | --- |
-| DeepSeek V4 Flash | 原版 48 分片、两卡转换版均检查通过 | GPQA Diamond 198、MATH-500 500、LongBench v2 503、LiveCodeBench v6 175 题均检查通过 | BF16、NVFP4、MXFP4、HiFP4 的完整结果保存在服务器原有 `base_eval/results` | **GPQA 已完成 HiF4、ARC、TEAL、WINA 整模型对照；其他 benchmark 尚为独立基线** |
-| MiniMax H3 | 文生视频所需组件检查通过；参考视频组件不在本次范围 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | 原有 `base_eval` 的 VBench Tiny 四精度结果 | **未接入 ARC/TEAL/WINA** |
-| MAGI-2 preview | preview、refiner、文本编码器、VAE 文件检查通过 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | BF16 Tiny 已评分；HiFP4 W4A4 生成任务尚无完整评分 | **未接入 ARC/TEAL/WINA** |
+| DeepSeek V4 Flash | 原版 48 分片、两卡转换版均检查通过 | GPQA Diamond 198、MATH-500 500、LongBench v2 503、LiveCodeBench v6 175 题均检查通过 | BF16、NVFP4、MXFP4、HiFP4 的完整结果保存在服务器原有 `base_eval/results` | **GPQA 已完成 HiF4、ARC、TEAL、WINA 整模型对照；MATH/LongBench/LiveCodeBench 已有 TEAL/WINA 生成入口，尚无完整稀疏成绩** |
+| MiniMax H3 | 文生视频所需组件检查通过；参考视频组件不在本次范围 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | 原有 `base_eval` 的 VBench Tiny 四精度结果 | **DiT WINA 启动器已实现并通过 dry-run；尚无正式稀疏成绩** |
+| MAGI-2 preview | preview、refiner、文本编码器、VAE 文件检查通过 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | BF16 Tiny 已评分；HiFP4 W4A4 生成任务尚无完整评分 | **WINA 已接入 dense/routed preview 入口并通过 dry-run；grouped refiner 尚待校准** |
 
 Terminal-Bench core 0.1.1 的 86 个任务文件也检查通过，但模型服务、终端代理和容器评分还没有接线。VBench 的评分网络权重与 Python 环境另需按 [资产指南](ASSETS_AND_BASELINES.md) 检查；提示词齐全不代表评分环境可运行。
 
-DeepSeek 的投影级实现和完整 GPQA 结果见 [DeepSeek 实验](DEEPSEEK_EXPERIMENT.md) 与 [当前评测状态](CURRENT_EVAL_STATUS.md)。统一 CLI 对尚未适配的其他目标模型仍会拒绝启动 ARCQuant 整模型评测。
+DeepSeek 的投影级实现和完整 GPQA 结果见 [DeepSeek 实验](DEEPSEEK_EXPERIMENT.md) 与 [当前评测状态](CURRENT_EVAL_STATUS.md)。视频模型的稀疏入口暂以独立启动器提供，统一 CLI 仍会拒绝没有完成方法级校准的 ARCQuant 整模型评测。
 
 ## 已有结果是什么
 
@@ -48,6 +48,6 @@ python arc.py plan --backend base-eval --model deepseek-v4-flash \
 
 DeepSeek 使用 43 层、低秩 Q 与 O 投影、压缩注意力、超连接和 MoE；其官方路由专家权重是打包 FP4。TEAL 需要在各个实际投影的输入处采集直方图并确定阈值；WINA 若使用列范数，需要按真实权重解包和按张量并行切片计算。尤其 `wo_a` 通过分组 `einsum` 直接读取权重，普通线性层钩子覆盖不到。要保留 ARCQuant 的增强残差通道，还必须针对这些投影重新做通道选择、权重量化和校准，不能把独立基线的 HiFP4 改个名字。
 
-MiniMax H3 是 50 层 Diffusers 视频 Transformer；MAGI-2 还使用自己的分组线性层和 MoE。两者的扩散步、文本条件和视频评分协议与自回归语言模型不同。因此它们需要各自的投影映射、校准数据、推理入口和完整步数生成验证。当前仓库没有这两套适配器。
+MiniMax H3 是 50 层 Diffusers 视频 Transformer；MAGI-2 还使用自己的分组线性层和 MoE。两者的扩散步、文本条件和视频评分协议与自回归语言模型不同。因此它们需要各自的投影映射、校准数据、推理入口和完整步数生成验证。当前仓库已提供 MiniMax DiT 的 WINA 包装，TEAL 和 MAGI-2 的方法级校准仍需对应模型数据后再接入。
 
 2026-10-28 检查时 8 张 H20 各只剩约 2.7–12.2 GiB 空闲显存，无法在本仓库安全启动目标模型 GPU 冒烟测试。固定外部评测器的公开 URL 当天仍无法访问；换机器需获得授权的 Git 源。排期与卡时估计见 [GPU 预算](GPU_BUDGET.md)。

@@ -79,7 +79,7 @@ python arc.py plan --backend base-eval --model deepseek-v4-flash --benchmark gpq
 python arc.py plan --backend base-eval --model minimax-h3 --benchmark vbench --profile tiny --method none --quant-type HiF4 --gpu-ids auto
 ```
 
-DeepSeek 已有[投影级适配代码](DEEPSEEK_ADAPTER.md)，但尚无目标模型校准产物与整模型推理接线；视频模型仍未适配。因此不能把外部 `base-eval` 的 HiF4 结果称为 `ARCQuant + TEAL/WINA`。要在 DeepSeek 或视频模型上比较稀疏方法，还需完成校准、真实生成接线与 GPU 验证。
+DeepSeek 已有整模型 HiF4、ARC、TEAL、WINA 的 GPQA 似然评测入口；MATH-500、LongBench-v2、LiveCodeBench 仍沿用 `base-eval` 的生成式协议，当前表中的这些数字是独立基线，不会被错误标成稀疏结果。视频模型仍未接入 ARCQuant 稀疏层，只有外部 VBench 基线。正式比较前应先用 GPQA 路径验证稀疏覆盖率，再按各 benchmark 的生成协议接入对应解码器。
 
 ## 4. 已有的 Llama 方法原型
 
@@ -104,6 +104,16 @@ python arc.py calibrate --model llama-3.1-8b --method teal --allocation uniform 
 python arc.py plan --model llama-3.1-8b --method teal --sparsity 0.5 --quant-type HiF4 --benchmark math500 --profile smoke
 ```
 
+WINA 论文中的可选 `transform` 也已接入。变换会融合 RMSNorm、旋转投影和残差坐标，因此必须让 `prepare` 和 `run` 同时带这个开关；两者会使用带 `_wina_transform` 后缀的一套独立 ARC 缓存：
+
+```bash
+python arc.py prepare --model llama-3.1-8b --wina-transform
+python arc.py run --model llama-3.1-8b --method wina --wina-transform \
+  --sparsity 0.5 --quant-type HiF4 --benchmark gpqa-diamond --profile smoke
+```
+
+不带 `--wina-transform` 的缓存不能用于变换后的模型。该路径只改变坐标和权重表示，不会把稀疏 GEMM 自动变成真实稀疏内核。
+
 若想让不同投影使用不同稀疏率，再离线生成 `greedy` 策略。它比 `uniform` 慢得多，因为会反复试验七个投影的层输出误差：
 
 ```bash
@@ -125,3 +135,15 @@ TEAL 也可把两条命令中的 `wina` 改为 `teal`。默认直方图和策略
 例如四个输入 `[1,2,3,4]`，目标保留两个：TEAL 若离线阈值为 `2.5`，保留 `[0,0,3,4]`。WINA 若第一个通道的权重列范数是 `10`、其余是 `1`，分数是 `[10,2,3,4]`，会保留 `[1,0,0,4]`。两种掩码都不强制 2:4；仓库原有的 `xmask` 才是另一条 2:4 路径。当前乘法仍是密集计算，零值不自动带来速度提升。
 
 代码来源、与论文复现配置的区别和验证范围见 [`METHOD_PROVENANCE.md`](METHOD_PROVENANCE.md)。
+
+## 6. 测真实稀疏算子是否真的省时
+
+当前 HiF4 精度运行时使用 dense GEMM，即使输入有很多零也不会自动减少乘法。可用下面的单投影诊断同时测 dense、masked-dense 和 PyTorch CSR：
+
+```bash
+python benchmarks/sparse_latency.py --device cuda --dtype float16 \
+  --hidden 4096 --output 4096 --tokens 1 --sparsities 0.25 0.5 0.75 \
+  --json runs/sparse_latency_h20.json
+```
+
+其中 `masked_dense` 反映当前实现的零值开销，`torch_csr` 只是后端能力检查，不能当作 TEAL/WINA 专用 fused kernel 的最终加速数字。只有接入并验证专用稀疏 kernel 后，才应报告端到端 tokens/s。

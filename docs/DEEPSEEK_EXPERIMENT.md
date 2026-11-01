@@ -29,7 +29,7 @@ python arc.py experiment --stage calibrate \
   --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 \
   --calibration runs/deepseek_formal/calibration \
   --calibration-data /path/to/wikitext-2-raw-v1/train-00000-of-00001.parquet \
-  --samples 128 --calibration-length 256 \
+  --samples 128 --calibration-length 512 \
   --output runs/deepseek_formal/calibration_manifest_copy.json \
   --gpu-ids 0,1
 ```
@@ -79,6 +79,53 @@ python arc.py experiment --stage evaluate --variant wina --sparsity 0.5 \
   合并 score，再切回本 rank。
 - MoE 路由后的 token 行会保留原始 prefill 位置，因此不会把路由顺序误当成
   序列顺序；未被路由到的专家通过同一校准输入补齐。
-- 目前没有移植 WINA 的可选 `--transform` 全模型权重变换，也没有稀疏 fused
-  kernel。若论文需要完整 WINA transform 或真实 latency，必须单独增加实现和
-  速度实验，不能复用本页的精度数字。
+- WINA 的 `--transform` 是 Llama/ARCQuant 旧模型路径的坐标变换；DeepSeek MLA、压缩 KV 和 grouped `wo_a` 的坐标不同，当前 DeepSeek 结果不启用这个开关，不能把 Llama transform 的结果套到 DeepSeek 上。
+- 没有稀疏 fused kernel。当前 DeepSeek 结果用于方法精度和覆盖率核查；要报告速度，需运行 `benchmarks/sparse_latency.py` 的单投影诊断，并在目标 H20 上接入经过数值回归的稀疏 kernel。
+
+## 校准规模和结果状态
+
+仓库默认正式校准为 128 个 WikiText-2 片段、每段 512 token。TEAL 直方图对每个层/投影只保留确定性的有界样本（默认 262,144 个值），避免把整批激活长期堆在 CPU 内存；manifest 会记录样本数、长度、数据哈希、权重签名和代码哈希。旧的 `calibration80` 目录仍是 smoke 产物，不能覆盖正式校准目录。
+
+DeepSeek 已完成的整模型方法协议是 GPQA Diamond 198 题的四选一条件似然：BF16、HiF4、ARC、TEAL、WINA 都走相同题目和 TP2 权重。MATH-500（500 题）、LongBench-v2（503 题）、LiveCodeBench v6（175 题）目前在仓库中登记了数据版本和外部生成式基线入口；要得到 ARCQuant+TEAL/WINA 的正式表格，必须把同一个稀疏 runtime 接入它们各自的生成解码器后再运行，不能复用 GPQA 的选择题代码。
+
+LongBench-v2 和 LiveCodeBench 已提供 WINA/TEAL 生成入口。它通过本仓库的
+`benchmarks/run_deepseek_sparse_extended.py` 注入外部调度器，结果文件会带
+`arcquant-<method>-<sparsity>` 标签并把稀疏 runtime 哈希写入协议。普通
+`linear`、MoE 路由后的专家投影和 grouped `wo_a` 输入都会经过对应方法；输出中的
+`runtime.sparse_masked_elements` 可用于核查每个投影的实际覆盖率。
+
+```bash
+torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_extended.py \
+  --base-eval-root /path/to/base_eval --sparse-method wina --sparsity 0.5 \
+  --benchmark longbench-v2 --source-model /path/to/DeepSeek-V4-Flash-0731 \
+  --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 --quant hifp4 --mode w4a4 \
+  --limit 8 --out-dir runs/deepseek_sparse_longbench_smoke
+```
+
+TEAL 需要与 GPQA 校准使用同一个 TP rank 校准目录：
+
+```bash
+torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_extended.py \
+  --base-eval-root /path/to/base_eval --sparse-method teal --sparsity 0.5 \
+  --calibration runs/deepseek_formal/calibration \
+  --benchmark longbench-v2 --source-model /path/to/DeepSeek-V4-Flash-0731 \
+  --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 --quant hifp4 --mode w4a4 \
+  --limit 8 --out-dir runs/deepseek_sparse_longbench_teal_smoke
+```
+
+MATH-500 使用同一 native thinking 与 Math-Verify 协议，入口是
+`benchmarks/run_deepseek_sparse_math.py`：
+
+```bash
+torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_math.py \
+  --base-eval-root /path/to/base_eval --sparse-method wina --sparsity 0.5 \
+  --source-model /path/to/DeepSeek-V4-Flash-0731 \
+  --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 \
+  --quant hifp4 --mode w4a4 --limit 8 \
+  --out-dir validation/deepseek_math_wina_smoke
+```
+
+把 `--limit 8` 改为去掉 `--limit` 才是 500 题完整任务；正式任务应使用新的
+`runs/` 目录并保留 `protocol.json`、`outputs.jsonl`、`summary.json`。Terminal-Bench
+仍需要终端代理和执行沙箱，仓库只登记数据版本与题数，不把独立 `base-eval`
+成绩冒充 ARCQuant 稀疏结果。

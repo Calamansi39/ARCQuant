@@ -190,6 +190,15 @@ class QLlamaDecoderLayer(nn.Module):
             originalLayer.post_attention_layernorm, 
             
         )
+        # Copied from the source layer when the optional WINA tensor
+        # transform has been applied.  The rotations keep residual additions
+        # in the same coordinate system as the transformed projections.
+        self.attn_shortcut_Q = getattr(originalLayer, "attn_shortcut_Q", None)
+        self.mlp_shortcut_Q = getattr(originalLayer, "mlp_shortcut_Q", None)
+        if self.attn_shortcut_Q is not None:
+            self.register_buffer("_wina_attn_shortcut_Q", self.attn_shortcut_Q.detach().clone())
+        if self.mlp_shortcut_Q is not None:
+            self.register_buffer("_wina_mlp_shortcut_Q", self.mlp_shortcut_Q.detach().clone())
 
     def to(self, *args, **kwargs):
         super(QLlamaDecoderLayer, self).to(*args, **kwargs)
@@ -225,12 +234,16 @@ class QLlamaDecoderLayer(nn.Module):
             cache_position=cache_position,
             position_embeddings=position_embeddings,
         )
+        if self.attn_shortcut_Q is not None:
+            residual = torch.matmul(residual, self._wina_attn_shortcut_Q.to(residual.dtype))
         hidden_states = residual + hidden_states
 
         # Fully Connected
         residual = hidden_states
         hidden_states = self.post_attention_layernorm(hidden_states)
         hidden_states = self.mlp(hidden_states)
+        if self.mlp_shortcut_Q is not None:
+            residual = torch.matmul(residual, self._wina_mlp_shortcut_Q.to(residual.dtype))
         hidden_states = residual + hidden_states
 
         outputs = (hidden_states,)
