@@ -43,6 +43,36 @@ wait_for_gpus() {
   done
 }
 
+pair_available() {
+  local pair="$1" id apps line free util
+  IFS=, read -r -a ids <<<"$pair"
+  for id in "${ids[@]}"; do
+    apps="$(nvidia-smi -i "$id" --query-compute-apps=pid --format=csv,noheader 2>/dev/null | sed '/^[[:space:]]*$/d')"
+    [ -z "$apps" ] || return 1
+    line="$(nvidia-smi -i "$id" --query-gpu=memory.free,utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -n 1)"
+    free="${line%%,*}"
+    util="${line##*,}"
+    free="${free//[[:space:]]/}"
+    util="${util//[[:space:]]/}"
+    [ -n "$free" ] && [ -n "$util" ] || return 1
+    [ "$free" -ge "$MIN_FREE_MIB" ] && [ "$util" -le 5 ] || return 1
+  done
+  return 0
+}
+
+reserve_pair() {
+  local pair
+  while :; do
+    pair="$(wait_for_gpus 2)"
+    if pair_available "$pair"; then
+      printf '%s\n' "$pair"
+      return 0
+    fi
+    echo "[$(date -Is)] candidate pair $pair was occupied before launch; retrying" | tee -a "$LOG_DIR/queue.log" >&2
+    sleep 2
+  done
+}
+
 run_method() {
   local method="$1"
   local pair="$2" tag="${SPARSITY#0.}"
@@ -76,7 +106,7 @@ done
 # torchrun startup.  The caller should set ARCQUANT_GPU_IDS only after checking
 # that the pair has no compute processes.
 if [ -n "$FIXED_GPU_IDS" ]; then
-  if [ "$(nvidia-smi -i "$FIXED_GPU_IDS" --query-compute-apps=pid --format=csv,noheader 2>/dev/null | sed '/^[[:space:]]*$/d' | wc -l)" != 0 ]; then
+  if ! pair_available "$FIXED_GPU_IDS"; then
     echo "requested ARCQUANT_GPU_IDS=$FIXED_GPU_IDS is already occupied" >&2
     exit 3
   fi
@@ -91,13 +121,21 @@ fi
 PAIRS="$(wait_for_gpus 4 10)" || true
 if [ "$(printf '%s\n' "$PAIRS" | awk -F, 'END {print NF}')" = 4 ]; then
   IFS=, read -r g0 g1 g2 g3 <<<"$PAIRS"
-  run_method wina "$g0,$g1" & p1=$!
-  run_method teal "$g2,$g3" & p2=$!
-  wait "$p1" "$p2"
+  if pair_available "$g0,$g1" && pair_available "$g2,$g3"; then
+    run_method wina "$g0,$g1" & p1=$!
+    run_method teal "$g2,$g3" & p2=$!
+    wait "$p1" "$p2"
+  else
+    echo "[$(date -Is)] four-card candidate was occupied before launch; falling back to reserved pairs" | tee -a "$LOG_DIR/queue.log"
+    pair="$(reserve_pair)"
+    run_method wina "$pair"
+    pair="$(reserve_pair)"
+    run_method teal "$pair"
+  fi
 else
-  pair="$(wait_for_gpus 2)"
+  pair="$(reserve_pair)"
   run_method wina "$pair"
-  pair="$(wait_for_gpus 2)"
+  pair="$(reserve_pair)"
   run_method teal "$pair"
 fi
 echo "[$(date -Is)] both MATH-500 sparse methods finished" | tee -a "$LOG_DIR/queue.log"
