@@ -27,6 +27,8 @@ bash benchmarks/queue_deepseek_sparse_math.sh
 该命令会依次检查 WINA 65% 和 TEAL 65%，输出目录带有 `sparsity_65`。它用于检查
 生成是否正常结束和实际 mask 比例，不能直接作为全量成绩。队列会过滤有 compute
 进程的卡，并在启动前再次观察；可用 `ARCQUANT_GPU_SETTLE_SECONDS=5` 延长二次观察窗口。
+默认只等待一个轮询周期来凑齐四张卡，凑不齐就立即退化为两卡顺序运行；可用
+`ARCQUANT_FOUR_GPU_WAIT_POLLS` 延长四卡并发等待。
 这个机制只能降低启动竞态，不能阻止其他用户在检查后立即抢占同一张卡。
 
 ## VBench 的真实任务量

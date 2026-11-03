@@ -22,6 +22,7 @@ POLL_SECONDS="${ARCQUANT_GPU_POLL_SECONDS:-60}"
 # GPUs from unrelated users, so the launch is still checked immediately before
 # each method.
 SETTLE_SECONDS="${ARCQUANT_GPU_SETTLE_SECONDS:-3}"
+FOUR_GPU_WAIT_POLLS="${ARCQUANT_FOUR_GPU_WAIT_POLLS:-1}"
 LOG_DIR="${ARCQUANT_SPARSE_LOG_DIR:-$ROOT/runs/deepseek_sparse_queue}"
 FIXED_GPU_IDS="${ARCQUANT_GPU_IDS:-}"
 mkdir -p "$LOG_DIR"
@@ -138,7 +139,7 @@ fi
 
 # Use four cards concurrently when available; fall back to two cards and run
 # the methods sequentially when only one TP2 pair is free.
-PAIRS="$(wait_for_gpus 4 10)" || true
+PAIRS="$(wait_for_gpus 4 "$FOUR_GPU_WAIT_POLLS")" || true
 if [ "$(printf '%s\n' "$PAIRS" | awk -F, 'END {print NF}')" = 4 ]; then
   IFS=, read -r g0 g1 g2 g3 <<<"$PAIRS"
   [ "$SETTLE_SECONDS" -gt 0 ] && sleep "$SETTLE_SECONDS"
