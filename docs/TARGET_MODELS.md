@@ -1,10 +1,10 @@
 # 三个目标模型：现在到底做到哪一步
 
-更新于 2026-11-02。这里的“文件齐全”只表示清单中的文件、分片和数据条数通过检查；“已有基线结果”指这台服务器原有的 `base_eval` 实验。当前完整题目规模、tiny 规模和方法结果见 [当前评测状态](CURRENT_EVAL_STATUS.md)。
+更新于 2026-11-03。这里的“文件齐全”只表示清单中的文件、分片和数据条数通过检查；“已有基线结果”指这台服务器原有的 `base_eval` 实验。当前完整题目规模、tiny 规模和方法结果见 [当前评测状态](CURRENT_EVAL_STATUS.md)。
 
 | 目标模型 | 本机权重 | 对应评测数据 | 已有独立基线 | ARCQuant HiF4 + TEAL/WINA |
 | --- | --- | --- | --- | --- |
-| DeepSeek V4 Flash | 原版 48 分片、两卡转换版均检查通过 | GPQA Diamond 198、MATH-500 500、LongBench v2 503、LiveCodeBench v6 175 题均检查通过 | BF16、NVFP4、MXFP4、HiFP4 的完整结果保存在服务器原有 `base_eval/results` | **GPQA 已完成 HiF4、ARC、TEAL、WINA 整模型对照；MATH/LongBench/LiveCodeBench 已有 TEAL/WINA 生成入口，尚无完整稀疏成绩** |
+| DeepSeek V4 Flash | 原版 48 分片、两卡转换版均检查通过 | GPQA Diamond 198、MATH-500 500、LongBench v2 503、LiveCodeBench v6 175 题均检查通过 | BF16、NVFP4、MXFP4、HiFP4 的完整结果保存在服务器原有 `base_eval/results` | **GPQA 已完成 HiF4、ARC、TEAL、WINA 整模型对照；MATH-500 的 WINA 50% 已在单题和 20 题试跑中退化，TEAL/LongBench/LiveCodeBench 尚无完整稀疏成绩** |
 | MiniMax H3 | 文生视频所需组件检查通过；参考视频组件不在本次范围 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | 原有 `base_eval` 的 VBench Tiny 四精度结果 | **DiT WINA 启动器已实现并通过 dry-run；尚无正式稀疏成绩** |
 | MAGI-2 preview | preview、refiner、文本编码器、VAE 文件检查通过 | VBench 官方 944 个 prompt；tiny 108 个唯一 prompt、740 条视频/精度 | BF16 Tiny 已评分；HiFP4 W4A4 生成任务尚无完整评分 | **WINA 已接入 dense/routed preview 入口并通过 dry-run；grouped refiner 尚待校准** |
 
