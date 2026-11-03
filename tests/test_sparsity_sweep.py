@@ -14,6 +14,7 @@ class SparsitySweepTests(unittest.TestCase):
             profile="formal_candidate", methods="wina,teal", benchmark="math500",
             base_eval_root="/tmp/base", source_model="/tmp/source",
             converted_model="/tmp/tp2", calibration="/tmp/calibration",
+            data=None,
             gpu_ids="2,3", limit=1, max_new_tokens=128,
             out_root="/tmp/sweep",
         )
@@ -22,6 +23,21 @@ class SparsitySweepTests(unittest.TestCase):
                          [("wina", 0.5), ("wina", 0.65), ("teal", 0.5), ("teal", 0.65)])
         self.assertTrue(all("sparsity_" not in item["output_dir"] for item in plan["runs"]))
         self.assertTrue(any("--sparsity 0.65" in item["shell_command"] for item in plan["runs"]))
+
+    def test_gpqa_plan_uses_unified_experiment_entrypoint(self):
+        args = argparse.Namespace(
+            profile="high_sparsity", methods="wina", benchmark="gpqa-diamond",
+            base_eval_root="/tmp/base", source_model="/tmp/source",
+            converted_model="/tmp/tp2", calibration="/tmp/calibration",
+            data="/tmp/gpqa.csv", gpu_ids="2,3", limit=8, max_new_tokens=128,
+            out_root="/tmp/sweep",
+        )
+        plan = build_deepseek_plan(args)
+        self.assertEqual(len(plan["runs"]), 1)
+        command = plan["runs"][0]["command"]
+        self.assertIn("experiment", command)
+        self.assertIn("--variant", command)
+        self.assertIn("wina", command)
 
 
 if __name__ == "__main__":

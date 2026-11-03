@@ -45,8 +45,8 @@ def rates_for(profile: str, method: str, *, path: Path = PROFILE_FILE) -> list[f
 
 
 def build_deepseek_plan(args: argparse.Namespace) -> dict:
-    if args.benchmark not in ("math500", "longbench-v2", "livecodebench"):
-        raise ValueError("DeepSeek sparse sweep supports math500, longbench-v2, and livecodebench")
+    if args.benchmark not in ("gpqa-diamond", "math500", "longbench-v2", "livecodebench"):
+        raise ValueError("DeepSeek sparse sweep supports gpqa-diamond, math500, longbench-v2, and livecodebench")
     methods = tuple(dict.fromkeys(item.strip() for item in args.methods.split(",") if item.strip()))
     if not methods or any(method not in ("teal", "wina") for method in methods):
         raise ValueError("--methods must contain teal and/or wina")
@@ -54,27 +54,44 @@ def build_deepseek_plan(args: argparse.Namespace) -> dict:
         raise ValueError("--base-eval-root, --source-model, and --converted-model are required")
     if "teal" in methods and not args.calibration:
         raise ValueError("TEAL requires --calibration")
-    runner = (ROOT / "benchmarks" /
-              ("run_deepseek_sparse_math.py" if args.benchmark == "math500"
-               else "run_deepseek_sparse_extended.py"))
+    if args.benchmark == "gpqa-diamond" and not args.data:
+        raise ValueError("GPQA sparse plan requires --data")
     runs = []
     for method in methods:
         for sparsity in rates_for(args.profile, method):
             tag = f"{sparsity:g}"
-            output = Path(args.out_root).expanduser().resolve() / args.benchmark / f"{method}-{tag}"
-            command = [
-                "torchrun", "--standalone", "--nproc-per-node=2", str(runner),
-                "--base-eval-root", str(Path(args.base_eval_root).expanduser().resolve()),
-                "--sparse-method", method, "--sparsity", tag,
-                "--model", "deepseek", "--benchmark", args.benchmark,
-                "--source-model", str(Path(args.source_model).expanduser().resolve()),
-                "--converted-model", str(Path(args.converted_model).expanduser().resolve()),
-                "--quant", "hifp4", "--mode", "w4a4",
-                "--limit", str(args.limit), "--max-new-tokens", str(args.max_new_tokens),
-                "--out-dir", str(output),
-            ]
-            if method == "teal" and args.calibration:
-                command += ["--calibration", str(Path(args.calibration).expanduser().resolve())]
+            if args.benchmark == "gpqa-diamond":
+                output = Path(args.out_root).expanduser().resolve() / args.benchmark / f"{method}-{tag}.json"
+                command = [
+                    "python", str(ROOT / "arc.py"), "experiment", "--stage", "evaluate",
+                    "--gpu-ids", args.gpu_ids, "--base-eval-root",
+                    str(Path(args.base_eval_root).expanduser().resolve()),
+                    "--source-model", str(Path(args.source_model).expanduser().resolve()),
+                    "--converted-model", str(Path(args.converted_model).expanduser().resolve()),
+                    "--calibration", str(Path(args.calibration).expanduser().resolve()),
+                    "--benchmark", args.benchmark, "--data",
+                    str(Path(args.data).expanduser().resolve()), "--variant", method,
+                    "--sparsity", tag, "--limit", str(args.limit), "--max-length", "4096",
+                    "--output", str(output),
+                ]
+            else:
+                runner = (ROOT / "benchmarks" /
+                          ("run_deepseek_sparse_math.py" if args.benchmark == "math500"
+                           else "run_deepseek_sparse_extended.py"))
+                output = Path(args.out_root).expanduser().resolve() / args.benchmark / f"{method}-{tag}"
+                command = [
+                    "torchrun", "--standalone", "--nproc-per-node=2", str(runner),
+                    "--base-eval-root", str(Path(args.base_eval_root).expanduser().resolve()),
+                    "--sparse-method", method, "--sparsity", tag,
+                    "--model", "deepseek", "--benchmark", args.benchmark,
+                    "--source-model", str(Path(args.source_model).expanduser().resolve()),
+                    "--converted-model", str(Path(args.converted_model).expanduser().resolve()),
+                    "--quant", "hifp4", "--mode", "w4a4",
+                    "--limit", str(args.limit), "--max-new-tokens", str(args.max_new_tokens),
+                    "--out-dir", str(output),
+                ]
+                if method == "teal" and args.calibration:
+                    command += ["--calibration", str(Path(args.calibration).expanduser().resolve())]
             runs.append({
                 "method": method,
                 "sparsity": sparsity,
@@ -103,11 +120,13 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(add_help=False)
     p.add_argument("--profile", default="formal_candidate")
     p.add_argument("--methods", default="wina,teal", help="comma-separated methods")
-    p.add_argument("--benchmark", required=True, choices=("math500", "longbench-v2", "livecodebench"))
+    p.add_argument("--benchmark", required=True,
+                   choices=("gpqa-diamond", "math500", "longbench-v2", "livecodebench"))
     p.add_argument("--base-eval-root", required=True)
     p.add_argument("--source-model", required=True)
     p.add_argument("--converted-model", required=True)
     p.add_argument("--calibration")
+    p.add_argument("--data", help="GPQA CSV when --benchmark=gpqa-diamond")
     p.add_argument("--gpu-ids", default="0,1")
     p.add_argument("--limit", type=int, default=1)
     p.add_argument("--max-new-tokens", type=int, default=128)
