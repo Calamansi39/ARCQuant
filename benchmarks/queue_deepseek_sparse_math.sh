@@ -17,13 +17,28 @@ MAX_NEW_TOKENS="${ARCQUANT_MAX_NEW_TOKENS:-8192}"
 BATCH_SIZE="${ARCQUANT_BATCH_SIZE:-20}"
 MIN_FREE_MIB="${ARCQUANT_MIN_FREE_MIB:-138000}"
 POLL_SECONDS="${ARCQUANT_GPU_POLL_SECONDS:-60}"
+# A short second observation reduces the chance that a newly starting external
+# process wins the race between nvidia-smi and torchrun.  It cannot reserve
+# GPUs from unrelated users, so the launch is still checked immediately before
+# each method.
+SETTLE_SECONDS="${ARCQUANT_GPU_SETTLE_SECONDS:-3}"
 LOG_DIR="${ARCQUANT_SPARSE_LOG_DIR:-$ROOT/runs/deepseek_sparse_queue}"
 FIXED_GPU_IDS="${ARCQUANT_GPU_IDS:-}"
 mkdir -p "$LOG_DIR"
 
 free_gpus() {
-  nvidia-smi --query-gpu=index,memory.free,utilization.gpu --format=csv,noheader,nounits |
-    awk -F, -v min="$MIN_FREE_MIB" '{gsub(/[[:space:]]/,"",$1); gsub(/[[:space:]]/,"",$2); gsub(/[[:space:]]/,"",$3); if ($2 >= min && $3 <= 5) print $1}'
+  local id free util apps
+  while IFS=, read -r id free util; do
+    id="${id//[[:space:]]/}"
+    free="${free//[[:space:]]/}"
+    util="${util//[[:space:]]/}"
+    [ -n "$id" ] && [ -n "$free" ] && [ -n "$util" ] || continue
+    # A card can briefly report high free memory while a process is creating
+    # its CUDA context.  Exclude cards with any compute process explicitly.
+    apps="$(nvidia-smi -i "$id" --query-compute-apps=pid --format=csv,noheader 2>/dev/null | sed '/^[[:space:]]*$/d')"
+    [ -z "$apps" ] || continue
+    [ "$free" -ge "$MIN_FREE_MIB" ] && [ "$util" -le 5 ] && echo "$id"
+  done < <(nvidia-smi --query-gpu=index,memory.free,utilization.gpu --format=csv,noheader,nounits)
 }
 
 wait_for_gpus() {
@@ -64,6 +79,11 @@ reserve_pair() {
   local pair
   while :; do
     pair="$(wait_for_gpus 2)"
+    # Observe twice so a process that appeared just after wait_for_gpus is
+    # caught before model construction allocates tens of GiB.
+    if pair_available "$pair"; then
+      [ "$SETTLE_SECONDS" -gt 0 ] && sleep "$SETTLE_SECONDS"
+    fi
     if pair_available "$pair"; then
       printf '%s\n' "$pair"
       return 0
@@ -121,6 +141,7 @@ fi
 PAIRS="$(wait_for_gpus 4 10)" || true
 if [ "$(printf '%s\n' "$PAIRS" | awk -F, 'END {print NF}')" = 4 ]; then
   IFS=, read -r g0 g1 g2 g3 <<<"$PAIRS"
+  [ "$SETTLE_SECONDS" -gt 0 ] && sleep "$SETTLE_SECONDS"
   if pair_available "$g0,$g1" && pair_available "$g2,$g3"; then
     run_method wina "$g0,$g1" & p1=$!
     run_method teal "$g2,$g3" & p2=$!
