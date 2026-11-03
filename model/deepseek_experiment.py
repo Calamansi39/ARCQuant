@@ -13,6 +13,7 @@ import torch
 import torch.nn.functional as F
 
 from .deepseek_adapter import projection_kind
+from .sparse_utils import topk_keep_count, validate_sparsity
 
 
 def reference_histogram(values, bins=10000):
@@ -104,8 +105,9 @@ class ExperimentRuntimeMixin:
     """Mix into the external, version-recorded DeepSeek quantization runtime."""
     def configure(self, ds, model, *, calibration=None, method='none', sparsity=0.,
                   arc=False, collect=False):
-        if method not in ('none', 'teal', 'wina') or not 0 <= sparsity < 1:
+        if method not in ('none', 'teal', 'wina'):
             raise ValueError('Invalid method/sparsity')
+        sparsity = validate_sparsity(sparsity)
         self.ds, self.model = ds, model
         self.method, self.sparsity, self.arc, self.collect = method, sparsity, arc, collect
         self.calibration = calibration or {}
@@ -182,7 +184,7 @@ class ExperimentRuntimeMixin:
                 chunks = [torch.empty_like(scores) for _ in range(self.ds.world_size)]
                 torch.distributed.all_gather(chunks, scores)
                 scores = torch.cat(chunks, -1)
-            indices = scores.topk(int(scores.shape[-1] * (1-self.sparsity)), dim=-1).indices
+            indices = scores.topk(topk_keep_count(scores.shape[-1], self.sparsity), dim=-1).indices
             keep = torch.zeros_like(scores, dtype=torch.bool).scatter_(-1, indices, True)
             if is_row and self.ds.world_size > 1:
                 keep = keep.chunk(self.ds.world_size, -1)[self.ds.rank]
@@ -257,6 +259,7 @@ class ExperimentRuntimeMixin:
         return dict(expected=len(self.expected), executed=len(set(self.calls) & self.expected),
                     unexecuted=sorted(self.expected-set(self.calls)),
                     calls=dict(self.calls), arc=self.arc, method=self.method,
+                    target_sparsity=float(self.sparsity),
                     sparse_counts={k: v.tolist() for k, v in self.sparse_counts.items()},
                     sparse_count_columns=['masked_elements', 'zero_elements', 'total_elements'])
 

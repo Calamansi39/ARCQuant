@@ -1,3 +1,4 @@
+import math
 import os
 
 import torch
@@ -7,6 +8,22 @@ import torch.nn as nn
 PROJECTIONS = ("q", "k", "v", "o", "gate", "up", "down")
 
 
+def validate_sparsity(sparsity, *, name="sparsity"):
+    """Return a finite zeroed fraction in the half-open interval [0, 1)."""
+    value = float(sparsity)
+    if not math.isfinite(value) or not 0 <= value < 1:
+        raise ValueError(f"{name} must be a finite number in [0, 1)")
+    return value
+
+
+def topk_keep_count(width, sparsity):
+    """Return the number of input channels retained by a WINA top-k mask."""
+    if width <= 0:
+        raise ValueError("activation width must be positive")
+    value = validate_sparsity(sparsity)
+    return max(1, min(int(width), int(width * (1.0 - value))))
+
+
 def projection_sparsities(sparsity, projections):
     if isinstance(sparsity, dict):
         if not set(projections).issubset(sparsity):
@@ -14,8 +31,8 @@ def projection_sparsities(sparsity, projections):
         result = {name: float(sparsity[name]) for name in projections}
     else:
         result = {name: float(sparsity) for name in projections}
-    if any(not 0 <= value < 1 for value in result.values()):
-        raise ValueError("Each projection sparsity must be in [0, 1)")
+    result = {name: validate_sparsity(value, name=f"{name} sparsity")
+              for name, value in result.items()}
     return result
 
 
@@ -70,7 +87,7 @@ class ThresholdSparsifier(nn.Module):
         self.set_sparsity(sparsity)
 
     def set_sparsity(self, sparsity):
-        self.sparsity = float(sparsity)
+        self.sparsity = validate_sparsity(sparsity)
         if self.sparsity <= 0.0:
             self.threshold.zero_()
             return
@@ -168,9 +185,7 @@ class WeightInformedTopKSparsifier(nn.Module):
         self.register_buffer("total_count", torch.tensor(0.0, dtype=torch.float64))
 
     def set_sparsity(self, sparsity):
-        if not 0 <= sparsity < 1:
-            raise ValueError("WINA sparsity must be in [0, 1)")
-        self.sparsity = float(sparsity)
+        self.sparsity = validate_sparsity(sparsity, name="WINA sparsity")
 
     @torch.no_grad()
     def reset_stats(self):
@@ -195,7 +210,7 @@ class WeightInformedTopKSparsifier(nn.Module):
             start = x.shape[1] - tail_len
             tail = x[:, start:, :]
             score = tail.float().abs() * self.column_norm
-            keep = max(1, int(tail.shape[-1] * (1 - self.sparsity)))
+            keep = topk_keep_count(tail.shape[-1], self.sparsity)
             indices = score.topk(keep, dim=-1).indices
             mask = torch.zeros_like(tail, dtype=torch.bool).scatter_(-1, indices, True)
             out = x.clone()

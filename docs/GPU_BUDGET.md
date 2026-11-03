@@ -16,6 +16,17 @@
 
 CLI 的 `smoke` 档分别取 GPQA Diamond 8 题、MATH-500 8 题、LongBench v2 8 题和 LiveCodeBench v6 2 题。DeepSeek 使用 2 卡，卡时应按 **2 × 实测墙钟小时**计算。GPQA 和 MATH 的已有协议最多生成 8192 token；LongBench v2 有 128K 长输入，LiveCodeBench v6 还有长代码生成与执行评分。题目数相同也不能用同一单题耗时估算。先用 `python arc.py plan --backend base-eval ... --profile smoke` 检查参数，再记录实际加载时间、每题耗时和峰值显存。
 
+高稀疏率 smoke 可以加入等待队列，不会终止已有进程：
+
+```bash
+ARCQUANT_SPARSITY=0.65 ARCQUANT_LIMIT=1 \
+ARCQUANT_MAX_NEW_TOKENS=128 ARCQUANT_BATCH_SIZE=1 \
+bash benchmarks/queue_deepseek_sparse_math.sh
+```
+
+该命令会依次检查 WINA 65% 和 TEAL 65%，输出目录带有 `sparsity_65`。它用于检查
+生成是否正常结束和实际 mask 比例，不能直接作为全量成绩。
+
 ## VBench 的真实任务量
 
 VBench `tiny` 是 **108 条唯一提示词，但每种精度需生成 740 条视频**；`official` 是 944 条提示词、每种精度 **6220 条视频**。原因是大部分提示词每条采样 5 次，闪烁维度还需 25 个候选并按官方 RAFT 规则筛选。Tiny 视频能复用于 official，同一种精度从 tiny 扩充时再补 5480 条。评分、失败重跑与模型加载另计。

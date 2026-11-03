@@ -9,12 +9,24 @@ except ImportError:
 
 if torch is not None:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "model"))
-    from sparse_utils import WeightInformedTopKSparsifier
+    from sparse_utils import WeightInformedTopKSparsifier, topk_keep_count
     from qLlamaLayer import quantize_sparse_branch_input
 
 
 @unittest.skipIf(torch is None, "PyTorch is not installed in this Python environment")
 class WinaSparsifierTests(unittest.TestCase):
+    def test_native_high_sparsity_keeps_the_expected_number_of_channels(self):
+        self.assertEqual(topk_keep_count(20, 0.65), 7)
+        x = torch.arange(1.0, 21.0).reshape(1, 1, 20)
+        sparse = WeightInformedTopKSparsifier(torch.ones(20), 0.65)
+        out = sparse(x)
+        self.assertEqual(out.count_nonzero().item(), 7)
+        self.assertAlmostEqual(sparse.get_zero_ratio(), 0.65)
+
+    def test_sparsity_rejects_non_finite_values(self):
+        with self.assertRaisesRegex(ValueError, r"finite number"):
+            WeightInformedTopKSparsifier(torch.ones(4), float("nan"))
+
     def test_weight_norm_changes_which_activation_is_kept(self):
         x = torch.tensor([[[1.0, 2.0, 3.0, 4.0]]])
         informed = WeightInformedTopKSparsifier(torch.tensor([10.0, 1.0, 1.0, 1.0]), 0.5)

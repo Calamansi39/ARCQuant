@@ -305,6 +305,10 @@ def _parser() -> argparse.ArgumentParser:
     cal.add_argument("--output-dir")
     cal.add_argument("--dry-run", action="store_true")
 
+    from benchmarks.sparse_sweep import parser as sparse_sweep_parser
+    sub.add_parser("sparse-plan", parents=[sparse_sweep_parser()], add_help=False,
+                   help="write a DeepSeek TEAL/WINA 50%%/65%% sweep plan")
+
     probe = sub.add_parser("probe", help="run a short real DeepSeek forward and save activation diagnostics")
     probe.add_argument("--model", default="deepseek-v4-flash")
     probe.add_argument("--model-path")
@@ -393,6 +397,10 @@ def main(argv: list[str] | None = None) -> int:
                     baseline = entry.get("baseline_benchmarks") or entry.get("baseline_models")
                     extra = "  base-eval: " + ", ".join(baseline) if baseline else ""
                     print(f"  {name:<22} {entry['status']}{extra}")
+            return 0
+        if args.action == "sparse-plan":
+            from benchmarks.sparse_sweep import build_deepseek_plan
+            print(json.dumps(build_deepseek_plan(args), indent=2, ensure_ascii=False))
             return 0
         if args.action == "assets":
             if args.model or args.benchmark:

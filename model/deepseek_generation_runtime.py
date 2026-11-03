@@ -19,6 +19,8 @@ import textwrap
 
 import torch
 
+from .sparse_utils import topk_keep_count, validate_sparsity
+
 
 class DeepSeekGenerationWinaMixin:
     """Mixin placed before the external quant runtime in the MRO."""
@@ -26,13 +28,13 @@ class DeepSeekGenerationWinaMixin:
     def configure_sparse(self, ds, model, sparsity: float) -> None:
         import torch
 
-        if not 0 <= sparsity < 1:
-            raise ValueError("WINA sparsity must be in [0, 1)")
+        sparsity = validate_sparsity(sparsity, name="WINA sparsity")
         self.ds = ds
         self.sparse_sparsity = float(sparsity)
         self.sparse_modules = {}
         self.sparse_norms = {}
         self.sparse_counts = Counter()
+        self.sparse_eligible = Counter()
         self.sparse_row_mask = None
         self.sparse_row_chunk = 4096
         self.sparse_group_norms = {}
@@ -143,7 +145,7 @@ class DeepSeekGenerationWinaMixin:
                 self.sparse_norms[key] = numeric.norm(dim=0)
             else:
                 self.sparse_norms[key] = torch.ones(flat.shape[-1], device=x.device)
-        keep = max(1, int(flat.shape[-1] * (1 - self.sparse_sparsity)))
+        keep = topk_keep_count(flat.shape[-1], self.sparse_sparsity)
         # A 128K-token prefill can make ``score`` several GiB for a single
         # projection.  Process rows in bounded chunks so top-k and mask
         # temporaries do not overlap across the whole prompt.  The result is
@@ -162,6 +164,7 @@ class DeepSeekGenerationWinaMixin:
             block_mask = block_mask | ~block_rows[:, None]
             pieces.append(block * block_mask)
             masked += int((~block_mask).sum().item())
+            self.sparse_eligible[key] += int(block_rows.sum().item()) * flat.shape[-1]
         self.sparse_counts[key] += masked
         return torch.cat(pieces, dim=0).view(shape)
 
@@ -197,9 +200,16 @@ class DeepSeekGenerationWinaMixin:
 
     def stats(self):
         base = super().stats()
+        eligible = {key: int(value) for key, value in self.sparse_eligible.items()}
+        masked = {key: int(value) for key, value in self.sparse_counts.items()}
         base.update({"sparse_method": "wina" if hasattr(self, "sparse_sparsity") else "none",
                      "sparse_sparsity": getattr(self, "sparse_sparsity", 0.0),
-                     "sparse_masked_elements": dict(self.sparse_counts)})
+                     "sparse_masked_elements": masked,
+                     "sparse_eligible_elements": eligible,
+                     "sparse_observed_zero_fraction": {
+                         key: (masked[key] / value if value else 0.0)
+                         for key, value in eligible.items()},
+                     "sparse_target_zero_fraction": getattr(self, "sparse_sparsity", 0.0)})
         return base
 
 
@@ -270,6 +280,7 @@ class DeepSeekGenerationTealMixin(DeepSeekGenerationWinaMixin):
         mask = mask | ~rows[:, None]
         out = (flat * mask).view(shape)
         self.sparse_counts[key] += int((~mask).sum().item())
+        self.sparse_eligible[key] += int(rows.sum().item()) * flat.shape[-1]
         return out
 
     def stats(self):

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Wait for genuinely free H20s, then run the two missing DeepSeek MATH-500
-# ARCQuant methods.  It never kills or shares an existing CUDA process.
+# Wait for genuinely free H20s, then run DeepSeek MATH-500 ARCQuant methods at
+# one explicit sparsity point. It never kills or shares an existing CUDA process.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,6 +11,10 @@ TP_MODEL="${ARCQUANT_DEEPSEEK_TP2:-/mnt/kpfs_qyang/zhaolianchao/models/DeepSeek-
 PYTHON="${ARCQUANT_BASE_EVAL_ENV:-/mnt/kpfs_qyang/zhaolianchao/miniconda3/envs/arcquant}/bin/python"
 TORCHRUN="${ARCQUANT_BASE_EVAL_ENV:-/mnt/kpfs_qyang/zhaolianchao/miniconda3/envs/arcquant}/bin/torchrun"
 CALIBRATION="${ARCQUANT_TEAL_CALIBRATION:-$ROOT/runs/deepseek_formal/calibration80}"
+SPARSITY="${ARCQUANT_SPARSITY:-0.5}"
+LIMIT="${ARCQUANT_LIMIT:--1}"
+MAX_NEW_TOKENS="${ARCQUANT_MAX_NEW_TOKENS:-8192}"
+BATCH_SIZE="${ARCQUANT_BATCH_SIZE:-20}"
 MIN_FREE_MIB="${ARCQUANT_MIN_FREE_MIB:-138000}"
 POLL_SECONDS="${ARCQUANT_GPU_POLL_SECONDS:-60}"
 LOG_DIR="${ARCQUANT_SPARSE_LOG_DIR:-$ROOT/runs/deepseek_sparse_queue}"
@@ -41,19 +45,22 @@ wait_for_gpus() {
 
 run_method() {
   local method="$1"
-  local pair="$2"
+  local pair="$2" tag="${SPARSITY#0.}"
   local out="$ROOT/runs/deepseek_formal/math500_arcquant_${method}"
-  echo "[$(date -Is)] starting MATH-500 method=$method CUDA_VISIBLE_DEVICES=$pair" | tee -a "$LOG_DIR/queue.log"
+  if [ "$SPARSITY" != "0.5" ]; then
+    out="${out}_sparsity_${tag}"
+  fi
+  echo "[$(date -Is)] starting MATH-500 method=$method sparsity=$SPARSITY CUDA_VISIBLE_DEVICES=$pair" | tee -a "$LOG_DIR/queue.log"
   CUDA_VISIBLE_DEVICES="$pair" "$TORCHRUN" --standalone --nproc-per-node=2 -- \
     "$ROOT/benchmarks/run_deepseek_sparse_math.py" \
-    --base-eval-root "$BASE_EVAL_ROOT" --sparse-method "$method" --sparsity 0.5 \
+    --base-eval-root "$BASE_EVAL_ROOT" --sparse-method "$method" --sparsity "$SPARSITY" \
     --calibration "$CALIBRATION" --model deepseek --benchmark math500 \
     --source-model "$SOURCE_MODEL" --converted-model "$TP_MODEL" \
-    --quant hifp4 --mode w4a4 --batch-size 20 --max-new-tokens 8192 \
+    --quant hifp4 --mode w4a4 --batch-size "$BATCH_SIZE" --max-new-tokens "$MAX_NEW_TOKENS" \
     --temperature 1.0 --top-p 0.95 --top-k 20 --n 1 --seed 20261011 \
-    --limit -1 --out-dir "$out" \
-    >"$LOG_DIR/math500_${method}.log" 2>&1
-  echo "[$(date -Is)] finished MATH-500 method=$method" | tee -a "$LOG_DIR/queue.log"
+    --limit "$LIMIT" --out-dir "$out" \
+    >"$LOG_DIR/math500_${method}_s${tag}.log" 2>&1
+  echo "[$(date -Is)] finished MATH-500 method=$method sparsity=$SPARSITY" | tee -a "$LOG_DIR/queue.log"
 }
 
 if [ ! -x "$TORCHRUN" ] || [ ! -x "$PYTHON" ]; then

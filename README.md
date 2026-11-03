@@ -117,6 +117,22 @@ torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_math.py \
   --limit 8 --out-dir validation/math-wina
 ```
 
+要一次生成 50% 和 65% 的可复现命令，不要手工改四处参数。`sparse-plan` 只写
+计划，不占用 GPU；默认输出 WINA/TEAL 各自的 50% 和 65% smoke 命令：
+
+```bash
+python arc.py sparse-plan --benchmark math500 \
+  --base-eval-root /path/to/base_eval \
+  --source-model /path/to/DeepSeek-V4-Flash-0731 \
+  --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 \
+  --calibration runs/deepseek_formal/calibration \
+  --limit 1 --max-new-tokens 128 --gpu-ids 0,1
+```
+
+稀疏运行时会把目标稀疏率、可掩码元素数、实际置零元素数和实际零值比例写入
+`runtime`。这样 65% 的目标值和真实观测值会同时保留，不会把 prefill 中未处理的
+前缀或模型原有零值误报成精确的 65%。
+
 TEAL 还要加入与 TP rank 对应的 `--calibration runs/.../rank*.pt`。输出中的
 `runtime.sparse_masked_elements` 是真实掩码计数；smoke 结果只用于检查链路，不能
 填入正式 benchmark 表。MiniMax H3 也提供可迁移的 DiT WINA 启动器：

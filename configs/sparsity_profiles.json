@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "definition": "sparsity is the fraction of projection input elements set to zero",
+  "profiles": {
+    "wina_native": {
+      "description": "Sparsity points used by the native WINA reproduction scripts",
+      "rates": {
+        "wina": [0.25, 0.4, 0.5, 0.65]
+      }
+    },
+    "teal_native": {
+      "description": "Main model-wide points reported by native TEAL",
+      "rates": {
+        "teal": [0.4, 0.5]
+      }
+    },
+    "formal_candidate": {
+      "description": "Candidate matrix for the ARCQuant target experiment; 65% remains a separate point",
+      "rates": {
+        "teal": [0.5, 0.65],
+        "wina": [0.5, 0.65]
+      }
+    },
+    "high_sparsity": {
+      "description": "High sparsity smoke or formal run",
+      "rates": {
+        "teal": [0.65],
+        "wina": [0.65]
+      }
+    }
+  }
+}
