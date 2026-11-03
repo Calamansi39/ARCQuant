@@ -306,7 +306,7 @@ def _parser() -> argparse.ArgumentParser:
     cal.add_argument("--dry-run", action="store_true")
 
     from benchmarks.sparse_sweep import parser as sparse_sweep_parser
-    sub.add_parser("sparse-plan", parents=[sparse_sweep_parser()], add_help=False,
+    sub.add_parser("sparse-plan", parents=[sparse_sweep_parser()],
                    help="write a DeepSeek TEAL/WINA 50%%/65%% sweep plan")
 
     probe = sub.add_parser("probe", help="run a short real DeepSeek forward and save activation diagnostics")
