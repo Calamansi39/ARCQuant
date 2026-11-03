@@ -14,6 +14,7 @@ CALIBRATION="${ARCQUANT_TEAL_CALIBRATION:-$ROOT/runs/deepseek_formal/calibration
 MIN_FREE_MIB="${ARCQUANT_MIN_FREE_MIB:-138000}"
 POLL_SECONDS="${ARCQUANT_GPU_POLL_SECONDS:-60}"
 LOG_DIR="${ARCQUANT_SPARSE_LOG_DIR:-$ROOT/runs/deepseek_sparse_queue}"
+FIXED_GPU_IDS="${ARCQUANT_GPU_IDS:-}"
 mkdir -p "$LOG_DIR"
 
 free_gpus() {
@@ -39,9 +40,11 @@ wait_for_gpus() {
 }
 
 run_method() {
-  local method="$1" pair="$2" out="$ROOT/runs/deepseek_formal/math500_arcquant_${method}"
+  local method="$1"
+  local pair="$2"
+  local out="$ROOT/runs/deepseek_formal/math500_arcquant_${method}"
   echo "[$(date -Is)] starting MATH-500 method=$method CUDA_VISIBLE_DEVICES=$pair" | tee -a "$LOG_DIR/queue.log"
-  CUDA_VISIBLE_DEVICES="$pair" "$TORCHRUN" --standalone --nproc-per-node=2 \
+  CUDA_VISIBLE_DEVICES="$pair" "$TORCHRUN" --standalone --nproc-per-node=2 -- \
     "$ROOT/benchmarks/run_deepseek_sparse_math.py" \
     --base-eval-root "$BASE_EVAL_ROOT" --sparse-method "$method" --sparsity 0.5 \
     --calibration "$CALIBRATION" --model deepseek --benchmark math500 \
@@ -60,6 +63,21 @@ fi
 for required in "$SOURCE_MODEL" "$TP_MODEL" "$CALIBRATION/rank0.pt" "$CALIBRATION/rank1.pt"; do
   [ -e "$required" ] || { echo "missing required asset: $required" >&2; exit 2; }
 done
+
+# If a caller has reserved a known pair, use it sequentially.  This avoids a
+# race with another scheduler between nvidia-smi's free-memory check and
+# torchrun startup.  The caller should set ARCQUANT_GPU_IDS only after checking
+# that the pair has no compute processes.
+if [ -n "$FIXED_GPU_IDS" ]; then
+  if [ "$(nvidia-smi -i "$FIXED_GPU_IDS" --query-compute-apps=pid --format=csv,noheader 2>/dev/null | sed '/^[[:space:]]*$/d' | wc -l)" != 0 ]; then
+    echo "requested ARCQUANT_GPU_IDS=$FIXED_GPU_IDS is already occupied" >&2
+    exit 3
+  fi
+  run_method wina "$FIXED_GPU_IDS"
+  run_method teal "$FIXED_GPU_IDS"
+  echo "[$(date -Is)] both MATH-500 sparse methods finished" | tee -a "$LOG_DIR/queue.log"
+  exit 0
+fi
 
 # Use four cards concurrently when available; fall back to two cards and run
 # the methods sequentially when only one TP2 pair is free.
