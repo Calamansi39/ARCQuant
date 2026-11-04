@@ -1,6 +1,12 @@
 # 当前模型、数据集和方法评测状态
 
-更新时间：2026-11-03。
+更新时间：2026-11-04。
+
+新增普通 2:4 路径：`structured-plan` / `structured-run` 已接 DeepSeek 的 HiF4 W4A4
+运行时和四个文本 benchmark 入口，四项 CPU dry-run 通过；真实权重的单卡投影测试
+6/6 输出有限，55,296 个四元组结构检查无违规。当前仍无该路径的整模型正式分数，
+share index 和硬件加速也未实现。详情见[结构化稀疏指南](STRUCTURED_SPARSITY.md)。
+下表历史 TEAL/WINA 分数属于非结构化方法对照，不能表示 2:4 或层覆盖验收已完成。
 
 已经完成的结果可查看[彩色 HTML 表格](completed_benchmarks_colored.html)，也可下载为 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
 

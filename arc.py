@@ -84,6 +84,8 @@ def missing_teal_histograms(root: Path, model_path: Path) -> list[Path]:
 
 def build_plan(args: argparse.Namespace, catalog: dict | None = None) -> dict:
     catalog = catalog or read_catalog()
+    if args.method == "structured24":
+        raise PlanError("Use 'arc.py structured-plan' or 'structured-run' for the DeepSeek 2:4 path.")
     if getattr(args, "backend", "arcquant") == "base-eval":
         return build_baseline_plan(args, catalog, ROOT)
     if args.quant_type == "BF16":
@@ -238,6 +240,10 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
+    from benchmarks.structured_plan import parser as structured_parser
+    for action in ("structured-plan", "structured-run"):
+        sub.add_parser(action, parents=[structured_parser()],
+                       help="plan/run DeepSeek strict 2:4 + HiF4 W4A4")
     from benchmarks.deepseek_experiment import parser as experiment_parser
     experiment = sub.add_parser("experiment", parents=[experiment_parser()], add_help=False,
                                 help="calibrate/evaluate the complete DeepSeek HiF4 + ARC sparse path")
@@ -377,6 +383,22 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         catalog = read_catalog()
+        if args.action in ("structured-plan", "structured-run"):
+            from benchmarks.structured_plan import build_plan as structured_plan
+            try:
+                plan = structured_plan(args)
+            except ValueError as exc:
+                raise PlanError(str(exc)) from exc
+            print(json.dumps(plan, indent=2, ensure_ascii=False), flush=True)
+            if args.action == "structured-plan":
+                return 0
+            if args.wait_for_gpus and not args.dry_run:
+                from benchmarks.gpu_wait import wait_for_idle_pair
+                with wait_for_idle_pair(args.min_free_mib, args.poll_seconds) as gpu_ids:
+                    return subprocess.run(plan["command"], cwd=ROOT,
+                        env={**runtime_env(), **plan["env"], "CUDA_VISIBLE_DEVICES": gpu_ids}, check=False).returncode
+            return subprocess.run(plan["command"], cwd=ROOT,
+                env={**runtime_env(), **plan["env"]}, check=False).returncode
         if args.action == "experiment":
             gpu_ids = args.gpu_ids.split(',')
             if len(gpu_ids) != 2 or len(set(gpu_ids)) != 2 or not all(i.isdecimal() for i in gpu_ids):
@@ -396,6 +418,8 @@ def main(argv: list[str] | None = None) -> int:
                 for name, entry in catalog[key].items():
                     baseline = entry.get("baseline_benchmarks") or entry.get("baseline_models")
                     extra = "  base-eval: " + ", ".join(baseline) if baseline else ""
+                    if entry.get("entrypoints"):
+                        extra += "  CLI: " + ", ".join(entry["entrypoints"])
                     print(f"  {name:<22} {entry['status']}{extra}")
             return 0
         if args.action == "sparse-plan":

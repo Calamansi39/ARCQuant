@@ -15,17 +15,24 @@
       }
     },
     "formal_candidate": {
-      "description": "Candidate matrix for the ARCQuant target experiment; 65% remains a separate point",
+      "description": "Legacy alias for baseline_sweep; unstructured element-rate comparison, not a structured coverage requirement",
       "rates": {
         "teal": [0.5, 0.65],
         "wina": [0.5, 0.65]
       }
     },
     "high_sparsity": {
-      "description": "High sparsity smoke or formal run",
+      "description": "Unstructured 65% diagnostic/ablation; does not imply 2:4 or layer coverage",
       "rates": {
         "teal": [0.65],
         "wina": [0.65]
+      }
+    },
+    "baseline_sweep": {
+      "description": "Native TEAL/WINA unstructured element-rate comparisons; distinct from structured24 experiments",
+      "rates": {
+        "teal": [0.5, 0.65],
+        "wina": [0.5, 0.65]
       }
     }
   }

@@ -368,6 +368,11 @@
     "xmask": {
       "status": "llama-cli",
       "description": "Existing ARCQuant 2:4 x_mask checkpoint path through the unified CLI"
+    },
+    "structured24": {
+      "status": "deepseek-projection-validated",
+      "entrypoints": ["structured-plan", "structured-run"],
+      "description": "Strict magnitude 2:4 + HiF4 W4A4 with per-area projection coverage audit; no share index or model-quality claim"
     }
   },
   "backends": {

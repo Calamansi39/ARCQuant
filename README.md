@@ -85,6 +85,12 @@ We will release our vLLM evaluation very soon.
 
 ## 中文快速指南：方法整合与迁移
 
+**普通 2:4 结构化路径：** 新增 `arc.py structured-plan` / `structured-run`，将
+HiF4 W4A4 与每组四取二的激活掩码组合，并单独统计线性投影覆盖率。它与原生
+TEAL/WINA 元素稀疏率扫描是不同的实验。当前完成了 CPU 测试及真实权重的单卡
+投影验证；整模型质量、share index 和硬件加速仍待验证。使用方法与边界见
+[结构化稀疏指南](docs/STRUCTURED_SPARSITY.md)。
+
 **当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 换机器先按 [模型评测迁移指南](docs/MIGRATION_EVALUATION.md) 准备文件和环境，再用 `arc.py doctor` 查看逐项状态。[当前评测状态](docs/CURRENT_EVAL_STATUS.md) 汇总模型对应 benchmark、题目规模、tiny 规模和已完成方法；[已完成结果表](docs/COMPLETED_BENCHMARKS.md) 提供可直接打开的彩色 Excel 工作簿、HTML、CSV 和 TSV 长表；[目标模型进度](docs/TARGET_MODELS.md) 区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态；[稀疏率要求核查](docs/SPARSITY_REQUIREMENT_AUDIT.md) 说明 50%、65% 和 greedy 目标的区别。DeepSeek 的投影级代码与未完成部分见 [适配进度](docs/DEEPSEEK_ADAPTER.md)。来源与固定版本保存在 [实验清单](configs/experiments.json)。
 
 外行读法：`provision` 准备模型权重、题库、评分器和源码；`doctor` 逐项检查能否启动；`plan` 展示将执行的命令；`run` 才真正占用 GPU。大文件在 Git 忽略的 `assets/`，本机专用环境路径在 `external/local_env.sh`，新机器可按 [`configs/runtime.example.sh`](configs/runtime.example.sh) 填写。TEAL/WINA 是先离线确定稀疏规则、再在线稀疏投影输入；DeepSeek 已有 GPQA 正式整模型结果和 MATH/LongBench/LiveCodeBench 的生成式方法入口，视频模型仍只有独立 VBench 基线。
@@ -117,7 +123,8 @@ torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_math.py \
   --limit 8 --out-dir validation/math-wina
 ```
 
-要一次生成 50% 和 65% 的可复现命令，不要手工改四处参数。`sparse-plan` 只写
+要一次生成原生 TEAL/WINA 的 50% 和 65% 元素稀疏率对照命令，可用 `sparse-plan`；
+这些点不保证 2:4，也不表示稀疏层覆盖率。`sparse-plan` 只写
 计划，不占用 GPU；默认输出 WINA/TEAL 各自的 50% 和 65% smoke 命令：
 
 ```bash

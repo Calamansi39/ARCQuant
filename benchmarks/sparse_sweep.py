@@ -118,7 +118,7 @@ def build_deepseek_plan(args: argparse.Namespace) -> dict:
 
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(add_help=False)
-    p.add_argument("--profile", default="formal_candidate")
+    p.add_argument("--profile", default="baseline_sweep")
     p.add_argument("--methods", default="wina,teal", help="comma-separated methods")
     p.add_argument("--benchmark", required=True,
                    choices=("gpqa-diamond", "math500", "longbench-v2", "livecodebench"))
