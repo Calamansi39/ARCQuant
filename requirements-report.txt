@@ -1,0 +1,2 @@
+# Optional: only for generating the shared results workbook, not model inference.
+openpyxl>=3.1.5,<4

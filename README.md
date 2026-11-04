@@ -1,5 +1,7 @@
 # ARCQuant: Boosting NVFP4 Quantization with Augmented Residual Channels for LLMs
 
+**实验结果展示：** [已核查结果与说明](docs/RESULTS_PRESENTATION.md) · [下载彩色 Excel](docs/completed_benchmarks.xlsx?raw=true)。完整文本评测与视频 Tiny 参考分别展示，包含待补全清单和来源核查记录。
+
 <h5 align="center">
 
 [![arXiv](https://img.shields.io/badge/ARCQuant-2601.07475-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2601.07475)
@@ -91,7 +93,7 @@ TEAL/WINA 元素稀疏率扫描是不同的实验。当前完成了 CPU 测试�
 投影验证；整模型质量、share index 和硬件加速仍待验证。使用方法与边界见
 [结构化稀疏指南](docs/STRUCTURED_SPARSITY.md)。
 
-**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 换机器先按 [模型评测迁移指南](docs/MIGRATION_EVALUATION.md) 准备文件和环境，再用 `arc.py doctor` 查看逐项状态。[当前评测状态](docs/CURRENT_EVAL_STATUS.md) 汇总模型对应 benchmark、题目规模、tiny 规模和已完成方法；[已完成结果表](docs/COMPLETED_BENCHMARKS.md) 提供可直接打开的彩色 Excel 工作簿、HTML、CSV 和 TSV 长表；[目标模型进度](docs/TARGET_MODELS.md) 区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态；[稀疏率要求核查](docs/SPARSITY_REQUIREMENT_AUDIT.md) 说明 50%、65% 和 greedy 目标的区别。DeepSeek 的投影级代码与未完成部分见 [适配进度](docs/DEEPSEEK_ADAPTER.md)。来源与固定版本保存在 [实验清单](configs/experiments.json)。
+**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 换机器先按 [模型评测迁移指南](docs/MIGRATION_EVALUATION.md) 准备文件和环境，再用 `arc.py doctor` 查看逐项状态。[当前评测状态](docs/CURRENT_EVAL_STATUS.md) 汇总模型对应 benchmark、题目规模、tiny 规模和已完成方法；[实验结果展示](docs/RESULTS_PRESENTATION.md) 提供可共享文档、彩色 Excel、CSV 和 TSV，以及题数、协议和来源证据；[目标模型进度](docs/TARGET_MODELS.md) 区分权重、已有基线结果、ARCQuant HiF4 和 TEAL/WINA 的完成状态；[稀疏率要求核查](docs/SPARSITY_REQUIREMENT_AUDIT.md) 说明 50%、65% 和 greedy 目标的区别。DeepSeek 的投影级代码与未完成部分见 [适配进度](docs/DEEPSEEK_ADAPTER.md)。来源与固定版本保存在 [实验清单](configs/experiments.json)。
 
 外行读法：`provision` 准备模型权重、题库、评分器和源码；`doctor` 逐项检查能否启动；`plan` 展示将执行的命令；`run` 才真正占用 GPU。大文件在 Git 忽略的 `assets/`，本机专用环境路径在 `external/local_env.sh`，新机器可按 [`configs/runtime.example.sh`](configs/runtime.example.sh) 填写。TEAL/WINA 是先离线确定稀疏规则、再在线稀疏投影输入；DeepSeek 已有 GPQA 正式整模型结果和 MATH/LongBench/LiveCodeBench 的生成式方法入口，视频模型仍只有独立 VBench 基线。
 

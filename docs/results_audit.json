@@ -1,0 +1,2215 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-11-04T05:55:17+00:00",
+  "code_revision": "f259f6cf5d8bf2ab3ce876ad583c29505a6b93d4",
+  "scope": "Existing complete text evaluations; video Tiny reference appendix; no new inference or re-grading",
+  "rows": [
+    {
+      "result_id": "R01",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "GPQA Diamond",
+      "profile": "full",
+      "variant": "BF16",
+      "precision": "BF16 reference",
+      "method": "none",
+      "evaluated_count": 198,
+      "correct": 172,
+      "metric": "Pass@1",
+      "score": 86.86868686868688,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; gpqa_final_letter_v4",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/bf16/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/bf16/summary.json",
+          "sha256": "c1417adaa8fcb9ebc0be97d52b422cc30687fe7a2707081e2c1fdf64d09a239e",
+          "bytes": 1843
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/bf16/outputs.jsonl",
+          "sha256": "0d1b801ae88731fdeb8b62a4a85d7e41f9ab8e5e093ba724d89a0964abf446b4",
+          "bytes": 2714147
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/bf16/protocol.json",
+          "sha256": "98343aa10920435a31d3a5df5bc9654889ad8bbee81fbd9193727e3370f32988",
+          "bytes": 384900
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/bf16/cases.json",
+          "sha256": "ed517723f548a47eae6f367de18bc51d162f403baa57a8ccb6e4d211db586e71",
+          "bytes": 2301759
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/bf16/rescored/gpqa_final_letter_v4/862c5bb33e8f55c7b17400f596c4db3df72db993e8eac16674a4665ba0298a54/scoring.json",
+          "sha256": "1cf34a536e341cba6e8b17fa2261c409d1d61192656ebed2d6992e2360b42cce",
+          "bytes": 2532
+        }
+      ],
+      "truncated": 3,
+      "ids_sha256": "77f9e7d44d8d717d78f2b1edd09328d8f2437bc0d625aa8cbabd6644462ca727",
+      "dataset_sha256": "bc17e7977a810b12ffc78787f2701435990e4caa154c73fa477592f646438c02",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": 0.0
+    },
+    {
+      "result_id": "R02",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "GPQA Diamond",
+      "profile": "full",
+      "variant": "NVFP4",
+      "precision": "NVFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 198,
+      "correct": 163,
+      "metric": "Pass@1",
+      "score": 82.32323232323232,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; gpqa_final_letter_v4",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/nvfp4/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/nvfp4/summary.json",
+          "sha256": "5fc55e7f4b83dc4715a031f00e468b657833b3c0ee3e4f6e547b675b685af57f",
+          "bytes": 1937
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/nvfp4/outputs.jsonl",
+          "sha256": "0a17b59f696c5b7d4590b392fb7cafecbfc6f7359194f250ebcff14262d2cf8a",
+          "bytes": 3078942
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/nvfp4/protocol.json",
+          "sha256": "8cb59d9acbef52d9003f432be92e3ccdc7acbfd81cd771d37418cf685563e212",
+          "bytes": 384901
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/nvfp4/cases.json",
+          "sha256": "ed517723f548a47eae6f367de18bc51d162f403baa57a8ccb6e4d211db586e71",
+          "bytes": 2301759
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/nvfp4/rescored/gpqa_final_letter_v4/303b0773d7eabca7b79ba36af3bb4158d386844ccf7fb6580c9482bf39656eb9/scoring.json",
+          "sha256": "b0fa8920dd5948f7e9853f6caad7cacb2bf795f559556d0ab169eabd0b6d1405",
+          "bytes": 2534
+        }
+      ],
+      "truncated": 6,
+      "ids_sha256": "77f9e7d44d8d717d78f2b1edd09328d8f2437bc0d625aa8cbabd6644462ca727",
+      "dataset_sha256": "bc17e7977a810b12ffc78787f2701435990e4caa154c73fa477592f646438c02",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": -4.545454545454561
+    },
+    {
+      "result_id": "R03",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "GPQA Diamond",
+      "profile": "full",
+      "variant": "MXFP4",
+      "precision": "MXFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 198,
+      "correct": 158,
+      "metric": "Pass@1",
+      "score": 79.7979797979798,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; gpqa_final_letter_v4",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/mxfp4/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/mxfp4/summary.json",
+          "sha256": "afa582ae791cf182c58a21058a988abea0ba2a189a5fa9e5b1d2bd3ff9b9309f",
+          "bytes": 1922
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/mxfp4/outputs.jsonl",
+          "sha256": "571df26bd5c4c566c33f2591a0ad9fa04c1bd311da77e62452f0ec84aeef1e18",
+          "bytes": 3171404
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/mxfp4/protocol.json",
+          "sha256": "a596ce924994fd440c180fde30a8c90aedd702e9adfb44a54257031dc23806c7",
+          "bytes": 384901
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/mxfp4/cases.json",
+          "sha256": "ed517723f548a47eae6f367de18bc51d162f403baa57a8ccb6e4d211db586e71",
+          "bytes": 2301759
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/mxfp4/rescored/gpqa_final_letter_v4/9dbcf52f2c35cacb4cb0b8f2fac14005e16f5b4010c0749ff048e4b648234235/scoring.json",
+          "sha256": "2431c7a3d985dbdf181837328b4ecb0524f40d3656ad982a1c183cc9893767d1",
+          "bytes": 2534
+        }
+      ],
+      "truncated": 12,
+      "ids_sha256": "77f9e7d44d8d717d78f2b1edd09328d8f2437bc0d625aa8cbabd6644462ca727",
+      "dataset_sha256": "bc17e7977a810b12ffc78787f2701435990e4caa154c73fa477592f646438c02",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": -7.070707070707073
+    },
+    {
+      "result_id": "R04",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "GPQA Diamond",
+      "profile": "full",
+      "variant": "HiFP4",
+      "precision": "HiFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 198,
+      "correct": 156,
+      "metric": "Pass@1",
+      "score": 78.78787878787878,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; gpqa_final_letter_v4",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/hifp4/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/hifp4/summary.json",
+          "sha256": "3b880b25f8415cd718784f4f847f65d5d62f997af449fec21bbec74112098dff",
+          "bytes": 1863
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/hifp4/outputs.jsonl",
+          "sha256": "3cc68b62779cd25a8de3f84b57dff0694db0d9e17d228e8c935864f0f6edb0a5",
+          "bytes": 3014450
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/hifp4/protocol.json",
+          "sha256": "1597a9e0238780a8b79a0508fe12a53f8ed06f38306842b50168496f766975f0",
+          "bytes": 384901
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/hifp4/cases.json",
+          "sha256": "ed517723f548a47eae6f367de18bc51d162f403baa57a8ccb6e4d211db586e71",
+          "bytes": 2301759
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/hifp4/rescored/gpqa_final_letter_v4/62b9d7794fe1325c1fac4fa289a25f2b1304238492a0e907ea7ae55007c4515c/scoring.json",
+          "sha256": "3b57c376c8dbe3611d9bb37fbfdb486c6ca1bb08b70c31587e9586991b4d83e8",
+          "bytes": 2534
+        }
+      ],
+      "truncated": 10,
+      "ids_sha256": "77f9e7d44d8d717d78f2b1edd09328d8f2437bc0d625aa8cbabd6644462ca727",
+      "dataset_sha256": "bc17e7977a810b12ffc78787f2701435990e4caa154c73fa477592f646438c02",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": -8.080808080808097
+    },
+    {
+      "result_id": "R05",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "MATH-500",
+      "profile": "full",
+      "variant": "BF16",
+      "precision": "BF16 reference",
+      "method": "none",
+      "evaluated_count": 500,
+      "correct": 493,
+      "metric": "Pass@1",
+      "score": 98.6,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; math500_format_v3",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/bf16/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/bf16/summary.json",
+          "sha256": "c58da308667bcd42ae1a24994418d19f580d30682e1bc1c18ba8824583a90ce3",
+          "bytes": 1747
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/bf16/outputs.jsonl",
+          "sha256": "59bfb7f3f316006c0db11a0d1d542c34a857110363e8b6bd85993b3ef2de700f",
+          "bytes": 2130391
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/bf16/protocol.json",
+          "sha256": "bd07f2db9b812db5c8a22a9bb38b27a97353cb0a4479f91727198e421b2d3942",
+          "bytes": 472157
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/bf16/cases.json",
+          "sha256": "22a62e89114646a87625f2993706bb8a20777af7e69c2622a5a17620beba37fd",
+          "bytes": 632249
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/bf16/rescored/math500_format_v3/de2f42ce222fdf6084d4cd5fdd59d5929c8e784ff4a2f9d8f5a31237d40d8b5b/scoring.json",
+          "sha256": "4b7135218cf2179d53068a278aa1b4d7bca97488469bb3bc09a246835958324e",
+          "bytes": 2808
+        }
+      ],
+      "truncated": 4,
+      "ids_sha256": "1402be1c8badc465b6fe3d45833d9fcf1dcb4efbea2e7698e2eb33a5666190d8",
+      "dataset_sha256": "79d9fb276c4794e1de6caa04a46ac0a259afdb94d56ed6375d8c0ed4200a9392",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": 0.0
+    },
+    {
+      "result_id": "R06",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "MATH-500",
+      "profile": "full",
+      "variant": "NVFP4",
+      "precision": "NVFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 500,
+      "correct": 494,
+      "metric": "Pass@1",
+      "score": 98.8,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; math500_format_v3",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/nvfp4/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/nvfp4/summary.json",
+          "sha256": "df861b7d0370bf3f0d2bb571179cc04923e38f1d88f4d63d1779fa8c0b00d4c8",
+          "bytes": 1655
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/nvfp4/outputs.jsonl",
+          "sha256": "bc68a953208db30d5b6b358af4eea6156ab952a3217f8626dba0171e6abb78d6",
+          "bytes": 2600213
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/nvfp4/protocol.json",
+          "sha256": "d66c5b09d618800639761c4d2b471eca56400ddb741a89ff24e0d1c596a6d533",
+          "bytes": 473318
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/nvfp4/cases.json",
+          "sha256": "22a62e89114646a87625f2993706bb8a20777af7e69c2622a5a17620beba37fd",
+          "bytes": 632249
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/nvfp4/rescored/math500_format_v3/e91fdb242a507ed6fde15a4c74554b8cf46b44504195f3d5478ecc1cb216ffcc/scoring.json",
+          "sha256": "7b30ed969e1e5a6dff4cc4417d07870585a4094309eb82d49754f562cd97ecc2",
+          "bytes": 2810
+        }
+      ],
+      "truncated": 5,
+      "ids_sha256": "1402be1c8badc465b6fe3d45833d9fcf1dcb4efbea2e7698e2eb33a5666190d8",
+      "dataset_sha256": "79d9fb276c4794e1de6caa04a46ac0a259afdb94d56ed6375d8c0ed4200a9392",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": 0.20000000000000284
+    },
+    {
+      "result_id": "R07",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "MATH-500",
+      "profile": "full",
+      "variant": "MXFP4",
+      "precision": "MXFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 500,
+      "correct": 486,
+      "metric": "Pass@1",
+      "score": 97.2,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; math500_format_v3",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/mxfp4/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/mxfp4/summary.json",
+          "sha256": "040c091e8c2b89afe9929ec97f31565ef146fbb68a2c4f4db699905686dd7618",
+          "bytes": 1619
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/mxfp4/outputs.jsonl",
+          "sha256": "44266d1fa097c08fb4732d7a2e162c70ffb44414be5736d6e6e6dd075d3ca948",
+          "bytes": 2596787
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/mxfp4/protocol.json",
+          "sha256": "50093941c9065cfe7591d2deb675f37c09259942084f9d5343b37d171e4f2c89",
+          "bytes": 473318
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/mxfp4/cases.json",
+          "sha256": "22a62e89114646a87625f2993706bb8a20777af7e69c2622a5a17620beba37fd",
+          "bytes": 632249
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/mxfp4/rescored/math500_format_v3/7b9075f03e499c662fbfcfd13121dfdd5084e892b3c6608f04e46329b8a113b4/scoring.json",
+          "sha256": "7a9871c2517d30c36d90f5157a39feab91898a1aa1a1c3e5b691d045600a342f",
+          "bytes": 2810
+        }
+      ],
+      "truncated": 11,
+      "ids_sha256": "1402be1c8badc465b6fe3d45833d9fcf1dcb4efbea2e7698e2eb33a5666190d8",
+      "dataset_sha256": "79d9fb276c4794e1de6caa04a46ac0a259afdb94d56ed6375d8c0ed4200a9392",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": -1.3999999999999915
+    },
+    {
+      "result_id": "R08",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "MATH-500",
+      "profile": "full",
+      "variant": "HiFP4",
+      "precision": "HiFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 500,
+      "correct": 493,
+      "metric": "Pass@1",
+      "score": 98.6,
+      "score_unit": "percent",
+      "protocol": "generative_8k_v1; math500_format_v3",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/hifp4/summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/hifp4/summary.json",
+          "sha256": "8c572372805cb560c33851f4183b592dfe96bea1ad6be48bac2183e62a07a5a3",
+          "bytes": 1637
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/hifp4/outputs.jsonl",
+          "sha256": "abaa66ae314c3a4878ae463190b2f4112939a5d934eb6c7edcfcb16bd7c6565a",
+          "bytes": 2431151
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/hifp4/protocol.json",
+          "sha256": "0e04229de0a88d12a67c78f4cb3ffb4e12017635ed236fd1a51c878af747880e",
+          "bytes": 473318
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/hifp4/cases.json",
+          "sha256": "22a62e89114646a87625f2993706bb8a20777af7e69c2622a5a17620beba37fd",
+          "bytes": 632249
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/hifp4/rescored/math500_format_v3/3dcdd8f7f18fbcb7b81e029115d31fdb248443cfa4b2bd73b9ed3de97761ef08/scoring.json",
+          "sha256": "20e481d825671a3880c24543edd6ee3852e87a790cc837bbbf2084bf36c57d4c",
+          "bytes": 2810
+        }
+      ],
+      "truncated": 6,
+      "ids_sha256": "1402be1c8badc465b6fe3d45833d9fcf1dcb4efbea2e7698e2eb33a5666190d8",
+      "dataset_sha256": "79d9fb276c4794e1de6caa04a46ac0a259afdb94d56ed6375d8c0ed4200a9392",
+      "notes": "0-shot thinking；8192 生成 tokens；截断计错并保留分母；非官方榜单复现",
+      "generation": {
+        "max_new_tokens": 8192,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20,
+        "seed": 20261011
+      },
+      "delta_bf16_pp": 0.0
+    },
+    {
+      "result_id": "R09",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LongBench v2",
+      "profile": "full",
+      "variant": "BF16",
+      "precision": "BF16 reference",
+      "method": "none",
+      "evaluated_count": 503,
+      "correct": 253,
+      "metric": "Accuracy",
+      "score": 50.29821073558648,
+      "score_unit": "percent",
+      "protocol": "longbench_explicit_answer_v2",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/bf16.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/bf16.jsonl.summary.json",
+          "sha256": "7abf1659f7e180e7019499b6a1b86ecdb263e0b8d2079a52c8763bf5735cf2f1",
+          "bytes": 663
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/bf16.jsonl",
+          "sha256": "32fae52c480899a7be8310cb77b359b575126a71b4ea83d4d43783e1beba060d",
+          "bytes": 1222888
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/rescored/longbench_explicit_answer_v2/bf16.jsonl.scores.jsonl",
+          "sha256": "7467b164b5d2ef61d2020dbcd90d76396283fb50b8848ea4039276ae3a5eab3d",
+          "bytes": 63376
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/bf16.jsonl.config.json",
+          "sha256": "b33e469be0e3ef4400d041e8b8ef73f21549e34c275de4628a5a463a7c694e34",
+          "bytes": 2502
+        }
+      ],
+      "ids_sha256": "e030907aac4e3bc7f9b2be605026da3d54bb31492f13f50db9d1bb192c49a22d",
+      "truncated": 0,
+      "notes": "503 题；输入上限 131072 tokens，中间截断；输出上限 8192；chat 模式",
+      "generation": {
+        "max_input_tokens": 131072,
+        "max_new_tokens": 8192,
+        "temperature": 0.1,
+        "top_p": 0.95,
+        "top_k": 20,
+        "input_truncation": "raw-prompt-middle-before-chat-template"
+      },
+      "delta_bf16_pp": 0.0
+    },
+    {
+      "result_id": "R10",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LongBench v2",
+      "profile": "full",
+      "variant": "NVFP4",
+      "precision": "NVFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 503,
+      "correct": 243,
+      "metric": "Accuracy",
+      "score": 48.31013916500994,
+      "score_unit": "percent",
+      "protocol": "longbench_explicit_answer_v2",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/nvfp4-w4a4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/nvfp4-w4a4.jsonl.summary.json",
+          "sha256": "dc3f4c82713a57a6b399a14913639486a56e804e1d5ebfd263a6ca4ed108edf1",
+          "bytes": 670
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/nvfp4-w4a4.jsonl",
+          "sha256": "de944c543824421ca4f9eba6e0f7da2e16fb99fcb3d43369d4b0b36c14338b59",
+          "bytes": 1342440
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/rescored/longbench_explicit_answer_v2/nvfp4-w4a4.jsonl.scores.jsonl",
+          "sha256": "448fdddb4cc5080ec4169f34318ee82d1e28739aa42db1a5f11af1252f5ecd4e",
+          "bytes": 63408
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/nvfp4-w4a4.jsonl.config.json",
+          "sha256": "891a4d74a933b27e181e6c1ad9b163296c292d01f5833ddc84eb30c4d82ab265",
+          "bytes": 2506
+        }
+      ],
+      "ids_sha256": "e030907aac4e3bc7f9b2be605026da3d54bb31492f13f50db9d1bb192c49a22d",
+      "truncated": 1,
+      "notes": "503 题；输入上限 131072 tokens，中间截断；输出上限 8192；chat 模式",
+      "generation": {
+        "max_input_tokens": 131072,
+        "max_new_tokens": 8192,
+        "temperature": 0.1,
+        "top_p": 0.95,
+        "top_k": 20,
+        "input_truncation": "raw-prompt-middle-before-chat-template"
+      },
+      "delta_bf16_pp": -1.9880715705765368
+    },
+    {
+      "result_id": "R11",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LongBench v2",
+      "profile": "full",
+      "variant": "MXFP4",
+      "precision": "MXFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 503,
+      "correct": 224,
+      "metric": "Accuracy",
+      "score": 44.53280318091451,
+      "score_unit": "percent",
+      "protocol": "longbench_explicit_answer_v2",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/mxfp4-w4a4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/mxfp4-w4a4.jsonl.summary.json",
+          "sha256": "5896a3817c9bc3de95ba188587db55f0ea0430df25cd7a7cd2319ed3256d49ff",
+          "bytes": 670
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/mxfp4-w4a4.jsonl",
+          "sha256": "88dfe4ea756fedc1d9df53caefb6814d91dcf90470465f6e8f6ff2c47636c0d2",
+          "bytes": 1288661
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/rescored/longbench_explicit_answer_v2/mxfp4-w4a4.jsonl.scores.jsonl",
+          "sha256": "725f58756d0700c6c94eb077c04d2b9d3226b0398ecb92a533b336f0baa31d1b",
+          "bytes": 63436
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/mxfp4-w4a4.jsonl.config.json",
+          "sha256": "c0fedc77a8ef58aacfe2ac247cb0b4c58ccc662a3a680aa1d99c119f5314b567",
+          "bytes": 2507
+        }
+      ],
+      "ids_sha256": "e030907aac4e3bc7f9b2be605026da3d54bb31492f13f50db9d1bb192c49a22d",
+      "truncated": 1,
+      "notes": "503 题；输入上限 131072 tokens，中间截断；输出上限 8192；chat 模式",
+      "generation": {
+        "max_input_tokens": 131072,
+        "max_new_tokens": 8192,
+        "temperature": 0.1,
+        "top_p": 0.95,
+        "top_k": 20,
+        "input_truncation": "raw-prompt-middle-before-chat-template"
+      },
+      "delta_bf16_pp": -5.765407554671967
+    },
+    {
+      "result_id": "R12",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LongBench v2",
+      "profile": "full",
+      "variant": "HiFP4",
+      "precision": "HiFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 503,
+      "correct": 239,
+      "metric": "Accuracy",
+      "score": 47.514910536779325,
+      "score_unit": "percent",
+      "protocol": "longbench_explicit_answer_v2",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/hifp4-w4a4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/hifp4-w4a4.jsonl.summary.json",
+          "sha256": "cf3ef5df5555bebf9fa18e643ed7d9aa7537300927d389ba9d52a169970352b6",
+          "bytes": 671
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/hifp4-w4a4.jsonl",
+          "sha256": "5b0785e3f09a20b98c81b602f22fa684b00cd1801be4fb7e89f092d7e717801f",
+          "bytes": 1229158
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/rescored/longbench_explicit_answer_v2/hifp4-w4a4.jsonl.scores.jsonl",
+          "sha256": "9a9045e724f15e83702706e0a930c80d028ba248097a7f0746e31138d90c5bcc",
+          "bytes": 63404
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/hifp4-w4a4.jsonl.config.json",
+          "sha256": "b9a347cc499bc2cc91e7fd5ac01ab53d8e1d08fd25eac3d5fabac355e4274096",
+          "bytes": 2506
+        }
+      ],
+      "ids_sha256": "e030907aac4e3bc7f9b2be605026da3d54bb31492f13f50db9d1bb192c49a22d",
+      "truncated": 0,
+      "notes": "503 题；输入上限 131072 tokens，中间截断；输出上限 8192；chat 模式",
+      "generation": {
+        "max_input_tokens": 131072,
+        "max_new_tokens": 8192,
+        "temperature": 0.1,
+        "top_p": 0.95,
+        "top_k": 20,
+        "input_truncation": "raw-prompt-middle-before-chat-template"
+      },
+      "delta_bf16_pp": -2.7833001988071544
+    },
+    {
+      "result_id": "R13",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 64K",
+      "profile": "full",
+      "variant": "BF16",
+      "precision": "BF16 reference",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 148,
+      "metric": "Pass@1",
+      "score": 84.57142857142857,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; independent-64k",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/bf16.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/bf16.jsonl.summary.json",
+          "sha256": "e903f3bb4ee11308a1ea91ab3ae5bb62a6aadf539b7b70d1e259f9b000b7d9a3",
+          "bytes": 135451
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/bf16.jsonl",
+          "sha256": "0d785343a9700eb76d6c946fdff7662e5fb282c7da682b7938aea6803daf559d",
+          "bytes": 15296901
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/bf16.jsonl.config.json",
+          "sha256": "9f5f943cb554e0b099e97b58597a7b3656b87de652d4a0319e853134f2bc8c58",
+          "bytes": 10065
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 21,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；独立采样；生成预算 65536 tokens",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 65536,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": 0.0
+    },
+    {
+      "result_id": "R14",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 64K",
+      "profile": "full",
+      "variant": "NVFP4",
+      "precision": "NVFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 136,
+      "metric": "Pass@1",
+      "score": 77.71428571428571,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; independent-64k",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/nvfp4-w4a4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/nvfp4-w4a4.jsonl.summary.json",
+          "sha256": "d535da7a67ab0f337e867042ddcdbbd8fd996aa193b9ca1d9208f5025714b437",
+          "bytes": 126432
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/nvfp4-w4a4.jsonl",
+          "sha256": "2ecb824ef09e547290987e9003cd2aea01d81c947428dc1767294d64188dd0ba",
+          "bytes": 20940747
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/nvfp4-w4a4.jsonl.config.json",
+          "sha256": "8df063abfb8f200253edc3d52ed26f61a5998ec4de6a54af6bb7b6bd02f9c3b8",
+          "bytes": 10491
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 36,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；独立采样；生成预算 65536 tokens",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 65536,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": -6.857142857142861
+    },
+    {
+      "result_id": "R15",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 64K",
+      "profile": "full",
+      "variant": "MXFP4",
+      "precision": "MXFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 152,
+      "metric": "Pass@1",
+      "score": 86.85714285714286,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; independent-64k",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/mxfp4-w4a4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/mxfp4-w4a4.jsonl.summary.json",
+          "sha256": "c8a23a0374f4ac63b9fa33ca6c7f9314b8ec1653724e0f566060f2065bdac582",
+          "bytes": 138494
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/mxfp4-w4a4.jsonl",
+          "sha256": "feaf198dfb611240db10075a1de4e805242781bf7a34c9867677c0827bbdaf6f",
+          "bytes": 17717477
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/mxfp4-w4a4.jsonl.config.json",
+          "sha256": "2e54db3716ee380f0383aeb904a269e22415f9445f9d42be782aaf36bc14a404",
+          "bytes": 10480
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 16,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；独立采样；生成预算 65536 tokens",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 65536,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": 2.285714285714292
+    },
+    {
+      "result_id": "R16",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 64K",
+      "profile": "full",
+      "variant": "HiFP4",
+      "precision": "HiFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 128,
+      "metric": "Pass@1",
+      "score": 73.14285714285714,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; independent-64k",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/hifp4-w4a4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/hifp4-w4a4.jsonl.summary.json",
+          "sha256": "0d2cfdae645f48a2ac2aacfce69661166040e81776e35e1b1e19d4071c36769d",
+          "bytes": 123524
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/hifp4-w4a4.jsonl",
+          "sha256": "2d9dfeecd88e78dcebd8d9e8a06d0b25901bc47a6e894b1d0ceeb322c218593e",
+          "bytes": 20872234
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/hifp4-w4a4.jsonl.config.json",
+          "sha256": "9e071ba0034add77bcfa8e55865056bddb0e79805f977e7451ca9ffa72e632fb",
+          "bytes": 10479
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 44,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；独立采样；生成预算 65536 tokens",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 65536,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": -11.42857142857143
+    },
+    {
+      "result_id": "R17",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 128K 续写",
+      "profile": "full",
+      "variant": "BF16",
+      "precision": "BF16 reference",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 165,
+      "metric": "Pass@1",
+      "score": 94.28571428571428,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; natural-prefix-continuation",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/bf16.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/bf16.jsonl.summary.json",
+          "sha256": "35395dccf87d25d921a52888b917ef0c11fe5fc1b944d133c96018c56c721cec",
+          "bytes": 165725
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/bf16.jsonl",
+          "sha256": "f8b70de994ffd801b42f6d1b8da05ae8c141b025b001e2edfc840743cbc8efff",
+          "bytes": 18581796
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/bf16.jsonl.config.json",
+          "sha256": "fa0f91c74c8a3f346d491b8cb95c3ddcda7f562758e847c43a27afd45da344c2",
+          "bytes": 29596
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 1,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；64K 到限题继续生成，已结束答案复用；不是独立 128K 采样",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 131072,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": 0.0
+    },
+    {
+      "result_id": "R18",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 128K 续写",
+      "profile": "full",
+      "variant": "NVFP4",
+      "precision": "NVFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 153,
+      "metric": "Pass@1",
+      "score": 87.42857142857143,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; natural-prefix-continuation",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/nvfp4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/nvfp4.jsonl.summary.json",
+          "sha256": "0ec635db327e2f4661bf70bcfee8bc6893bc5b12ad9db402a50cb20db4a0b68e",
+          "bytes": 164398
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/nvfp4.jsonl",
+          "sha256": "e263ac9f8505a2f2e1fc52370a7c652c6480f2998608a2288e5d97114dc02d91",
+          "bytes": 32100097
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/nvfp4.jsonl.config.json",
+          "sha256": "218deef2edb0a4f237da25d509edc60179ad9ba804d85a35cce961be4f9e9aaf",
+          "bytes": 34403
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 11,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；64K 到限题继续生成，已结束答案复用；不是独立 128K 采样",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 131072,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": -6.857142857142847
+    },
+    {
+      "result_id": "R19",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 128K 续写",
+      "profile": "full",
+      "variant": "MXFP4",
+      "precision": "MXFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 156,
+      "metric": "Pass@1",
+      "score": 89.14285714285714,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; natural-prefix-continuation",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/mxfp4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/mxfp4.jsonl.summary.json",
+          "sha256": "3dfdae8985bd62f30115dec1c83d0ba4ca60bcd813f4e2b0fe90e2d01e3c6cfe",
+          "bytes": 162800
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/mxfp4.jsonl",
+          "sha256": "46b7a113d947e1c2f288885470e560d2063c956f4c91a7f82bba68db345aba7e",
+          "bytes": 21356782
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/mxfp4.jsonl.config.json",
+          "sha256": "eef4a57bea4f4a773d9313f38b2a0ff8d1e5ade6708bfc4b45a789e7ac0256d8",
+          "bytes": 28680
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 2,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；64K 到限题继续生成，已结束答案复用；不是独立 128K 采样",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 131072,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": -5.142857142857139
+    },
+    {
+      "result_id": "R20",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "baseline",
+      "benchmark": "LiveCodeBench v6 128K 续写",
+      "profile": "full",
+      "variant": "HiFP4",
+      "precision": "HiFP4 W4A4",
+      "method": "none",
+      "evaluated_count": 175,
+      "correct": 163,
+      "metric": "Pass@1",
+      "score": 93.14285714285714,
+      "score_unit": "percent",
+      "protocol": "lcb-grading-v2; natural-prefix-continuation",
+      "status": "已核查完整",
+      "source": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/hifp4.jsonl.summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/hifp4.jsonl.summary.json",
+          "sha256": "f03e0e9907c4586ab63445c9708f27a7d4ac028c5bc85bb9e283d38428cd4f01",
+          "bytes": 169739
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/hifp4.jsonl",
+          "sha256": "3b49c1480f4a44b99d57c7d961e7029e77ad7d0782dac7436bac9d7267cc2200",
+          "bytes": 29787658
+        },
+        {
+          "path": "base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_128k_n1_continued_batch8/hifp4.jsonl.config.json",
+          "sha256": "1022eef29fbf991e46667d19a8f6dde109e372a0013ed71ab61545fec3250e04",
+          "bytes": 36213
+        }
+      ],
+      "ids_sha256": "f47ed8a95d2d7696d8af1f6b7b6a7c2bba0a2b93bb4f327075ca28187d669a02",
+      "truncated": 4,
+      "notes": "固定 release-v6 test6 分片 175 题；public+private 执行；64K 到限题继续生成，已结束答案复用；不是独立 128K 采样",
+      "dataset_revision": "0fe84c3912ea0c4d4a78037083943e8f0c4dd505",
+      "dataset_files": {
+        "test6.jsonl": "bb4c364f71921c4495a6ad15abe1a927350b720009f4933e2e71f8af0f6fd1f5"
+      },
+      "generation": {
+        "n": 1,
+        "max_new_tokens": 131072,
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "top_k": 20
+      },
+      "delta_bf16_pp": -1.1428571428571388
+    },
+    {
+      "result_id": "R21",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "methods",
+      "benchmark": "GPQA Diamond（条件似然）",
+      "profile": "full",
+      "variant": "BF16",
+      "precision": "BF16 reference",
+      "method": "none",
+      "evaluated_count": 198,
+      "correct": 99,
+      "metric": "Accuracy",
+      "score": 50.0,
+      "score_unit": "percent",
+      "protocol": "gpqa_diamond_zeroshot_likelihood_v1",
+      "status": "已核查完整",
+      "source": "runs/deepseek_formal/gpqa_bf16_full.json",
+      "evidence": [
+        {
+          "path": "runs/deepseek_formal/gpqa_bf16_full.json",
+          "sha256": "99309e298c1d290b78316d899ba8b73d5bcaeb7013e2e99097c167510db1c724",
+          "bytes": 95430
+        }
+      ],
+      "ids_sha256": "b317bccd1cdabb3801b949c1f70f3b511e67f9b853f530e9e3d31ab13b4a670e",
+      "dataset_sha256": "41d1213cd7a4998605a26c2798500652572007161b3a92817ba46b35befcd305",
+      "question_set_sha256": "b49c1776bd5aa2d5c95acd1d5970f9020bdf215b0a5d7ccb06583d7c5719a23c",
+      "runtime_revision": "77c77a4631241f6c4ef92c9acafd5045051434a0",
+      "implementation_sha256": {
+        "benchmarks/deepseek_experiment.py": "6a6913d70c0dd1b1076b6240f06c15efc572cb320e879883dbd1578d0755fc17",
+        "model/deepseek_experiment.py": "480dfe9cc3f36d6efeca4d953a15b04cdbfaa5a9d899e6a42de4b7614f29b192"
+      },
+      "sparsity": 0.0,
+      "notes": "历史实现快照；dense GEMM 精度实验；条件似然非生成式；非 2:4 结构化稀疏成绩",
+      "delta_bf16_pp": 0.0
+    },
+    {
+      "result_id": "R22",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "methods",
+      "benchmark": "GPQA Diamond（条件似然）",
+      "profile": "full",
+      "variant": "HiF4 W4A4",
+      "precision": "HiF4 W4A4",
+      "method": "none",
+      "evaluated_count": 198,
+      "correct": 92,
+      "metric": "Accuracy",
+      "score": 46.464646464646464,
+      "score_unit": "percent",
+      "protocol": "gpqa_diamond_zeroshot_likelihood_v1",
+      "status": "已核查完整",
+      "source": "runs/deepseek_formal/gpqa_hif4_full.json",
+      "evidence": [
+        {
+          "path": "runs/deepseek_formal/gpqa_hif4_full.json",
+          "sha256": "8c067a522210e551186e6295c4c53bd05aa9268d5989986568024ca1b8b0e676",
+          "bytes": 95361
+        }
+      ],
+      "ids_sha256": "b317bccd1cdabb3801b949c1f70f3b511e67f9b853f530e9e3d31ab13b4a670e",
+      "dataset_sha256": "41d1213cd7a4998605a26c2798500652572007161b3a92817ba46b35befcd305",
+      "question_set_sha256": "b49c1776bd5aa2d5c95acd1d5970f9020bdf215b0a5d7ccb06583d7c5719a23c",
+      "runtime_revision": "77c77a4631241f6c4ef92c9acafd5045051434a0",
+      "implementation_sha256": {
+        "benchmarks/deepseek_experiment.py": "6a6913d70c0dd1b1076b6240f06c15efc572cb320e879883dbd1578d0755fc17",
+        "model/deepseek_experiment.py": "480dfe9cc3f36d6efeca4d953a15b04cdbfaa5a9d899e6a42de4b7614f29b192"
+      },
+      "sparsity": 0.0,
+      "notes": "历史实现快照；dense GEMM 精度实验；条件似然非生成式；非 2:4 结构化稀疏成绩",
+      "delta_bf16_pp": -3.5353535353535364
+    },
+    {
+      "result_id": "R23",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "methods",
+      "benchmark": "GPQA Diamond（条件似然）",
+      "profile": "full",
+      "variant": "HiF4 + ARC",
+      "precision": "HiF4 W4A4",
+      "method": "ARC",
+      "evaluated_count": 198,
+      "correct": 102,
+      "metric": "Accuracy",
+      "score": 51.515151515151516,
+      "score_unit": "percent",
+      "protocol": "gpqa_diamond_zeroshot_likelihood_v1",
+      "status": "已核查完整",
+      "source": "runs/deepseek_formal/gpqa_arc_full.json",
+      "evidence": [
+        {
+          "path": "runs/deepseek_formal/gpqa_arc_full.json",
+          "sha256": "c4f41db999e05b47907061dc158da26ae1bf25fcdded54cc14e4dfd4f65f4694",
+          "bytes": 95489
+        }
+      ],
+      "ids_sha256": "b317bccd1cdabb3801b949c1f70f3b511e67f9b853f530e9e3d31ab13b4a670e",
+      "dataset_sha256": "41d1213cd7a4998605a26c2798500652572007161b3a92817ba46b35befcd305",
+      "question_set_sha256": "b49c1776bd5aa2d5c95acd1d5970f9020bdf215b0a5d7ccb06583d7c5719a23c",
+      "runtime_revision": "77c77a4631241f6c4ef92c9acafd5045051434a0",
+      "implementation_sha256": {
+        "benchmarks/deepseek_experiment.py": "6a6913d70c0dd1b1076b6240f06c15efc572cb320e879883dbd1578d0755fc17",
+        "model/deepseek_experiment.py": "480dfe9cc3f36d6efeca4d953a15b04cdbfaa5a9d899e6a42de4b7614f29b192"
+      },
+      "sparsity": 0.0,
+      "notes": "历史实现快照；dense GEMM 精度实验；条件似然非生成式；非 2:4 结构化稀疏成绩",
+      "delta_bf16_pp": 1.5151515151515156
+    },
+    {
+      "result_id": "R24",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "methods",
+      "benchmark": "GPQA Diamond（条件似然）",
+      "profile": "full",
+      "variant": "HiF4 + ARC + TEAL 50%",
+      "precision": "HiF4 W4A4",
+      "method": "ARC + TEAL 50%",
+      "evaluated_count": 198,
+      "correct": 87,
+      "metric": "Accuracy",
+      "score": 43.93939393939394,
+      "score_unit": "percent",
+      "protocol": "gpqa_diamond_zeroshot_likelihood_v1",
+      "status": "已核查完整",
+      "source": "runs/deepseek_formal/gpqa_teal_full.json",
+      "evidence": [
+        {
+          "path": "runs/deepseek_formal/gpqa_teal_full.json",
+          "sha256": "05e5e91db90bd6ff0341e5d8ccf76752884472060bda64dc8fdc2fffd0184745",
+          "bytes": 95537
+        }
+      ],
+      "ids_sha256": "b317bccd1cdabb3801b949c1f70f3b511e67f9b853f530e9e3d31ab13b4a670e",
+      "dataset_sha256": "41d1213cd7a4998605a26c2798500652572007161b3a92817ba46b35befcd305",
+      "question_set_sha256": "b49c1776bd5aa2d5c95acd1d5970f9020bdf215b0a5d7ccb06583d7c5719a23c",
+      "runtime_revision": "77c77a4631241f6c4ef92c9acafd5045051434a0",
+      "implementation_sha256": {
+        "benchmarks/deepseek_experiment.py": "6a6913d70c0dd1b1076b6240f06c15efc572cb320e879883dbd1578d0755fc17",
+        "model/deepseek_experiment.py": "480dfe9cc3f36d6efeca4d953a15b04cdbfaa5a9d899e6a42de4b7614f29b192"
+      },
+      "sparsity": 0.5,
+      "notes": "历史实现快照；dense GEMM 精度实验；条件似然非生成式；非 2:4 结构化稀疏成绩",
+      "delta_bf16_pp": -6.060606060606062
+    },
+    {
+      "result_id": "R25",
+      "model": "DeepSeek-V4-Flash-0731",
+      "group": "methods",
+      "benchmark": "GPQA Diamond（条件似然）",
+      "profile": "full",
+      "variant": "HiF4 + ARC + WINA mask-only 50%",
+      "precision": "HiF4 W4A4",
+      "method": "ARC + WINA mask-only 50%",
+      "evaluated_count": 198,
+      "correct": 81,
+      "metric": "Accuracy",
+      "score": 40.909090909090914,
+      "score_unit": "percent",
+      "protocol": "gpqa_diamond_zeroshot_likelihood_v1",
+      "status": "已核查完整",
+      "source": "runs/deepseek_formal/gpqa_wina_full.json",
+      "evidence": [
+        {
+          "path": "runs/deepseek_formal/gpqa_wina_full.json",
+          "sha256": "de766c63c54b37c624d9d3007c2f67ad6155c355eb30bf677fed5fa4a917345c",
+          "bytes": 95557
+        }
+      ],
+      "ids_sha256": "b317bccd1cdabb3801b949c1f70f3b511e67f9b853f530e9e3d31ab13b4a670e",
+      "dataset_sha256": "41d1213cd7a4998605a26c2798500652572007161b3a92817ba46b35befcd305",
+      "question_set_sha256": "b49c1776bd5aa2d5c95acd1d5970f9020bdf215b0a5d7ccb06583d7c5719a23c",
+      "runtime_revision": "323751fde79f61e701320cad9984a88e3db7f5d2",
+      "implementation_sha256": {
+        "benchmarks/deepseek_experiment.py": "6a6913d70c0dd1b1076b6240f06c15efc572cb320e879883dbd1578d0755fc17",
+        "model/deepseek_experiment.py": "480dfe9cc3f36d6efeca4d953a15b04cdbfaa5a9d899e6a42de4b7614f29b192"
+      },
+      "sparsity": 0.5,
+      "notes": "历史实现快照；dense GEMM 精度实验；条件似然非生成式；WINA mask-only，无 optional transform",
+      "delta_bf16_pp": -9.090909090909086
+    }
+  ],
+  "video_reference": [
+    {
+      "result_id": "V01",
+      "model": "MiniMax-H3",
+      "variant": "bf16",
+      "benchmark": "VBench Tiny",
+      "profile": "tiny",
+      "total": 81.25044269977863,
+      "quality": 84.99526862035499,
+      "semantic": 66.27113901747315,
+      "prompts": 108,
+      "planned_videos": 740,
+      "flicker_scored": 46,
+      "flicker_expected": 50,
+      "status": "Tiny 覆盖不足；仅参考",
+      "dimensions": [
+        {
+          "dimension": "aesthetic_quality",
+          "score": 0.6266746574640274,
+          "scored_records": 50
+        },
+        {
+          "dimension": "appearance_style",
+          "score": 0.20485761088709645,
+          "scored_records": 50
+        },
+        {
+          "dimension": "background_consistency",
+          "score": 0.9475682005843495,
+          "scored_records": 50
+        },
+        {
+          "dimension": "color",
+          "score": 0.8661449296317719,
+          "scored_records": 38
+        },
+        {
+          "dimension": "dynamic_degree",
+          "score": 0.86,
+          "scored_records": 50
+        },
+        {
+          "dimension": "human_action",
+          "score": 0.98,
+          "scored_records": 50
+        },
+        {
+          "dimension": "imaging_quality",
+          "score": 0.700057157928713,
+          "scored_records": 50
+        },
+        {
+          "dimension": "motion_smoothness",
+          "score": 0.9877165537458508,
+          "scored_records": 50
+        },
+        {
+          "dimension": "multiple_objects",
+          "score": 0.5375,
+          "scored_records": 50
+        },
+        {
+          "dimension": "object_class",
+          "score": 0.57125,
+          "scored_records": 50
+        },
+        {
+          "dimension": "overall_consistency",
+          "score": 0.23341242730617523,
+          "scored_records": 50
+        },
+        {
+          "dimension": "scene",
+          "score": 0.17375,
+          "scored_records": 50
+        },
+        {
+          "dimension": "spatial_relationship",
+          "score": 0.7430051410153793,
+          "scored_records": 50
+        },
+        {
+          "dimension": "subject_consistency",
+          "score": 0.9350030271708966,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_flickering",
+          "score": 0.9809636137001246,
+          "scored_records": 46
+        },
+        {
+          "dimension": "temporal_style",
+          "score": 0.2538134399056435,
+          "scored_records": 50
+        }
+      ],
+      "subset_manifest_sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+      "notes": "16 维报告已核对；视频生成文件未逐个验证；color 维度可能按检测结果筛选；不声称完整官方 benchmark",
+      "source": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/vbench_summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/vbench_summary.json",
+          "sha256": "ee0c87ca944e51cfbe708a4f00373d8507aa3c7b50acde8928125cfcc99e1055",
+          "bytes": 29755
+        },
+        {
+          "path": "base_eval/vbench_tiny_manifest.json",
+          "sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+          "bytes": 29040
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/aesthetic_quality/results_eval_results.json",
+          "sha256": "8d7ec27faaf4828ce9b20e80ae58b1af8505fee17deff8a1f975f1f746fc756b",
+          "bytes": 13266
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/appearance_style/results_eval_results.json",
+          "sha256": "6a3bb36721a0848f0754ce72e8fa5b6cc900aec24b169360ced99591e399461f",
+          "bytes": 211905
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/background_consistency/results_eval_results.json",
+          "sha256": "4e9b94029d400b65cbdd16bc625c6c411447102eaceff924cebf7c4b77cdd799",
+          "bytes": 15283
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/color/results_eval_results.json",
+          "sha256": "5fd18afc4c18580bf87dc4a5cd68dd810c4db043c5de7c9a7b9d786f69bd0386",
+          "bytes": 10033
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/dynamic_degree/results_eval_results.json",
+          "sha256": "edf78f20a3db6d08047979b37db6efbc78e9624da9ed07c2bfd91fedca0119e9",
+          "bytes": 11618
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/human_action/results_eval_results.json",
+          "sha256": "2280c1dbae20708e3f5191d933ac829153c2e57abf5ff4be114abff9c6c66370",
+          "bytes": 13205
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/imaging_quality/results_eval_results.json",
+          "sha256": "d5b1d9d96e2443d238a539767b707f18c41062ca3cae39d1c758cd5366bfb1ff",
+          "bytes": 13210
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/motion_smoothness/results_eval_results.json",
+          "sha256": "212114bdaa6639dfab4e123a96863b09ad341a137bf8daec59bbaea0d11778f0",
+          "bytes": 12325
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/multiple_objects/results_eval_results.json",
+          "sha256": "b29b335ac8daa6b9b7689dcb4a38713964535a8297569038791dea8f211eed4c",
+          "bytes": 14986
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/object_class/results_eval_results.json",
+          "sha256": "c84fa00c837a607f3b47afd8bade90f32411b9ef08fc675a6f66c9123ba69166",
+          "bytes": 14223
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/overall_consistency/results_eval_results.json",
+          "sha256": "e4c89b7ae47172511d3219c86ad0bb22225be5b7a320ab3f9aa8caaf8de56391",
+          "bytes": 13300
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/scene/results_eval_results.json",
+          "sha256": "51624f135730a236e75c75d7ae44bd5f183ab6491748aa42740bc8d126a36af3",
+          "bytes": 14206
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/spatial_relationship/results_eval_results.json",
+          "sha256": "ca85836bd5379e69cea68b42f6578ff742a665684cd24d3d3b7f9b6bf9ed829d",
+          "bytes": 35405
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/subject_consistency/results_eval_results.json",
+          "sha256": "86fecbffb2a1a20076ddf6abbefdf53bacb145487ba9fe63ede5e28693bd6586",
+          "bytes": 12326
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/temporal_flickering/results_eval_results.json",
+          "sha256": "f68cfb22cfa50c6d8f3a8b31c989f6967cfd4b7e8a3b882da5b6742ef105c39f",
+          "bytes": 14673
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/bf16/tiny/scoring/static-coverage-v2/eval/temporal_style/results_eval_results.json",
+          "sha256": "764dc4de5a97db2b5d1112c110cd252afc0885cd58ba7d5e34e791f9c7d8269c",
+          "bytes": 14399
+        }
+      ]
+    },
+    {
+      "result_id": "V02",
+      "model": "MiniMax-H3",
+      "variant": "nvfp4-w4a4",
+      "benchmark": "VBench Tiny",
+      "profile": "tiny",
+      "total": 80.45959675264893,
+      "quality": 83.98012166169971,
+      "semantic": 66.37749711644581,
+      "prompts": 108,
+      "planned_videos": 740,
+      "flicker_scored": 50,
+      "flicker_expected": 50,
+      "status": "仅 Tiny 参考；非全量",
+      "dimensions": [
+        {
+          "dimension": "aesthetic_quality",
+          "score": 0.5992351466417313,
+          "scored_records": 50
+        },
+        {
+          "dimension": "appearance_style",
+          "score": 0.20418441280241936,
+          "scored_records": 50
+        },
+        {
+          "dimension": "background_consistency",
+          "score": 0.9547765418572155,
+          "scored_records": 50
+        },
+        {
+          "dimension": "color",
+          "score": 0.9343877551020409,
+          "scored_records": 35
+        },
+        {
+          "dimension": "dynamic_degree",
+          "score": 0.86,
+          "scored_records": 50
+        },
+        {
+          "dimension": "human_action",
+          "score": 0.98,
+          "scored_records": 50
+        },
+        {
+          "dimension": "imaging_quality",
+          "score": 0.667440314695912,
+          "scored_records": 50
+        },
+        {
+          "dimension": "motion_smoothness",
+          "score": 0.982586373882075,
+          "scored_records": 50
+        },
+        {
+          "dimension": "multiple_objects",
+          "score": 0.49875,
+          "scored_records": 50
+        },
+        {
+          "dimension": "object_class",
+          "score": 0.58,
+          "scored_records": 50
+        },
+        {
+          "dimension": "overall_consistency",
+          "score": 0.2345940263569355,
+          "scored_records": 50
+        },
+        {
+          "dimension": "scene",
+          "score": 0.16125,
+          "scored_records": 50
+        },
+        {
+          "dimension": "spatial_relationship",
+          "score": 0.7140727723320874,
+          "scored_records": 50
+        },
+        {
+          "dimension": "subject_consistency",
+          "score": 0.9300499443164686,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_flickering",
+          "score": 0.9838222596645355,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_style",
+          "score": 0.25912207156419753,
+          "scored_records": 50
+        }
+      ],
+      "subset_manifest_sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+      "notes": "16 维报告已核对；视频生成文件未逐个验证；color 维度可能按检测结果筛选；不声称完整官方 benchmark",
+      "source": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/vbench_summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/vbench_summary.json",
+          "sha256": "b4f3f4b129d35de12fd07bff935ed3deccacebafe7d433251bac89aaebe0f247",
+          "bytes": 31719
+        },
+        {
+          "path": "base_eval/vbench_tiny_manifest.json",
+          "sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+          "bytes": 29040
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/aesthetic_quality/results_eval_results.json",
+          "sha256": "08b2e9e2797452ec6f604eed37524aa4f7998d3119bad7d893136bb0f34f155c",
+          "bytes": 13567
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/appearance_style/results_eval_results.json",
+          "sha256": "059848ae1accebe6f03fbb658b825dd4c277ab867277e34c45d7fdf57f9ce0b9",
+          "bytes": 212356
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/background_consistency/results_eval_results.json",
+          "sha256": "dfdabf6aa2ea95c9b2282224632512e89a7010f78d7bc31239ed8c4953fae0a0",
+          "bytes": 15619
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/color/results_eval_results.json",
+          "sha256": "32e33d5bac1cf8595ed8414b983f5e212622b6aa6a28ffcbfe31f74d9abf2925",
+          "bytes": 9285
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/dynamic_degree/results_eval_results.json",
+          "sha256": "5d4329288f34fde2e78b417e7bbe39d58c4648a2ae6854ae487e72210ede7c8c",
+          "bytes": 11918
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/human_action/results_eval_results.json",
+          "sha256": "80423f9541df7d180abf4a642a87a7aaa978f0dd24e5acfd0737297e5c60ef21",
+          "bytes": 13505
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/imaging_quality/results_eval_results.json",
+          "sha256": "a166c5ea37566bf7dbba7e724f2c6c957c4da58c800f9663b59a1462cfd10818",
+          "bytes": 13514
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/motion_smoothness/results_eval_results.json",
+          "sha256": "1d1dddbd541acd90dbc8d216354d0a2c5198861da4104492e7550caedecfdcf9",
+          "bytes": 12613
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/multiple_objects/results_eval_results.json",
+          "sha256": "bcc143f9a07cb99bdefe58345221d47926da2c7978e1f14fb93d27775775bf22",
+          "bytes": 15313
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/object_class/results_eval_results.json",
+          "sha256": "42c8185e9621e2ab09fa6fdfbe230b08aa6752477ab1c5d25f9ee4a8b7fb66f4",
+          "bytes": 14510
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/overall_consistency/results_eval_results.json",
+          "sha256": "336c4ecf4fbff1574dec5454c1ca48ac086ee28c5eba316255b20e9022c12125",
+          "bytes": 13596
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/scene/results_eval_results.json",
+          "sha256": "ddff97abd100c4eda2c2d8f486f9b24816140f6d3384fb0984035b367cde96a2",
+          "bytes": 14505
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/spatial_relationship/results_eval_results.json",
+          "sha256": "62e8c9bcc6d858b360ade7cd27c0e602b7ae734e9f00ea1ac78b563d76eb2307",
+          "bytes": 34987
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/subject_consistency/results_eval_results.json",
+          "sha256": "3b556f817f9bb71f6bf0d5e7fa26492572a4e70545768312c7cfe86ef1455643",
+          "bytes": 12623
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/temporal_flickering/results_eval_results.json",
+          "sha256": "e2ecef6812bbf3cfd00525d03e943d9f8030a264fbb207d6cb2588f605aa7705",
+          "bytes": 16166
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/nvfp4-w4a4/tiny/scoring/static-coverage-v2/eval/temporal_style/results_eval_results.json",
+          "sha256": "8560467a841ef01a280051e1ed76470d44f656d21ea97148fe6f0bfc5077d964",
+          "bytes": 14700
+        }
+      ]
+    },
+    {
+      "result_id": "V03",
+      "model": "MiniMax-H3",
+      "variant": "mxfp4-w4a4",
+      "benchmark": "VBench Tiny",
+      "profile": "tiny",
+      "total": 77.26813181115124,
+      "quality": 81.52722924800278,
+      "semantic": 60.231742063744974,
+      "prompts": 108,
+      "planned_videos": 740,
+      "flicker_scored": 50,
+      "flicker_expected": 50,
+      "status": "仅 Tiny 参考；非全量",
+      "dimensions": [
+        {
+          "dimension": "aesthetic_quality",
+          "score": 0.5836810421943665,
+          "scored_records": 50
+        },
+        {
+          "dimension": "appearance_style",
+          "score": 0.20381893901209716,
+          "scored_records": 50
+        },
+        {
+          "dimension": "background_consistency",
+          "score": 0.9605428655360773,
+          "scored_records": 50
+        },
+        {
+          "dimension": "color",
+          "score": 0.7528235653235652,
+          "scored_records": 33
+        },
+        {
+          "dimension": "dynamic_degree",
+          "score": 0.64,
+          "scored_records": 50
+        },
+        {
+          "dimension": "human_action",
+          "score": 0.9,
+          "scored_records": 50
+        },
+        {
+          "dimension": "imaging_quality",
+          "score": 0.597362325652953,
+          "scored_records": 50
+        },
+        {
+          "dimension": "motion_smoothness",
+          "score": 0.9861972815993427,
+          "scored_records": 50
+        },
+        {
+          "dimension": "multiple_objects",
+          "score": 0.385,
+          "scored_records": 50
+        },
+        {
+          "dimension": "object_class",
+          "score": 0.50625,
+          "scored_records": 50
+        },
+        {
+          "dimension": "overall_consistency",
+          "score": 0.22040874242782593,
+          "scored_records": 50
+        },
+        {
+          "dimension": "scene",
+          "score": 0.1475,
+          "scored_records": 50
+        },
+        {
+          "dimension": "spatial_relationship",
+          "score": 0.699258371206264,
+          "scored_records": 50
+        },
+        {
+          "dimension": "subject_consistency",
+          "score": 0.9302727131472855,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_flickering",
+          "score": 0.9896562183511024,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_style",
+          "score": 0.24737899035215377,
+          "scored_records": 50
+        }
+      ],
+      "subset_manifest_sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+      "notes": "16 维报告已核对；视频生成文件未逐个验证；color 维度可能按检测结果筛选；不声称完整官方 benchmark",
+      "source": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/vbench_summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/vbench_summary.json",
+          "sha256": "c55e27a0db6853f280e91ee862fa34129802d3c0448fcc0070b582a83a176f94",
+          "bytes": 31716
+        },
+        {
+          "path": "base_eval/vbench_tiny_manifest.json",
+          "sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+          "bytes": 29040
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/aesthetic_quality/results_eval_results.json",
+          "sha256": "39f5f5921d11298e035d0cee7fcec0318e0d815f17c5a07484a5194cc9fba21f",
+          "bytes": 13563
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/appearance_style/results_eval_results.json",
+          "sha256": "c3256588bcea0048decd3dcfbd6428538b66c3e2a1d188698898c97c8ec43efa",
+          "bytes": 212117
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/background_consistency/results_eval_results.json",
+          "sha256": "98e242929ce22ae969a32156e4ba30090b386d4a7b8f1032fcac7731db9de771",
+          "bytes": 15591
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/color/results_eval_results.json",
+          "sha256": "bb3aa3a80b1d3f6bb86c01048014f18d761ec75a2f306351b341745a47c0a866",
+          "bytes": 8896
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/dynamic_degree/results_eval_results.json",
+          "sha256": "1a9b31e5a9ea15d5f3b03f5f297a6ac41e9d8c9d2301f3efc572dce2e200c537",
+          "bytes": 11929
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/human_action/results_eval_results.json",
+          "sha256": "6b87f8cde905836360f074671d1b60727a918b19ec876e97c9d044f9b8f5b92d",
+          "bytes": 13508
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/imaging_quality/results_eval_results.json",
+          "sha256": "796ead02a047d84ea2ddbfd5466e02364788c80bdbf852f54fa7e50348313598",
+          "bytes": 13522
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/motion_smoothness/results_eval_results.json",
+          "sha256": "3780e5375b35e5cdb452b21339417c0e61ae3a9cad5dd4bebfcea29890c8444b",
+          "bytes": 12617
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/multiple_objects/results_eval_results.json",
+          "sha256": "f8f4cf38311add7b9c461c4a97bf2f1101397dfb56c5242b8e7d1349605084ce",
+          "bytes": 15274
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/object_class/results_eval_results.json",
+          "sha256": "ff92e894788181716263b9585f00502599e66e8206b9044c9cff3e6e4613d6ea",
+          "bytes": 14525
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/overall_consistency/results_eval_results.json",
+          "sha256": "39b84e2d494e0e0419fceacc33fa64579204836019300c90e5dd2d5c826efc89",
+          "bytes": 13607
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/scene/results_eval_results.json",
+          "sha256": "09ce984039ea7a7a1fa0e863be8e3459c6a5f080c351dfb302a985f1dd2c39f4",
+          "bytes": 14503
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/spatial_relationship/results_eval_results.json",
+          "sha256": "f7e8fe96668a6b35e62a4b672762fe503bd9dd905769d9ac713a7ff6698d00b6",
+          "bytes": 35255
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/subject_consistency/results_eval_results.json",
+          "sha256": "27ff9ffc5c5d0bbefa15aa7acc9e1baddf56f4960390a2f5fb1b5793e8c4c20a",
+          "bytes": 12625
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/temporal_flickering/results_eval_results.json",
+          "sha256": "64f99cb2d00eacdf390042f9eb1b748d0a9de43047c77dca14f4cec18cdcbfbe",
+          "bytes": 16165
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/mxfp4-w4a4/tiny/scoring/static-coverage-v2/eval/temporal_style/results_eval_results.json",
+          "sha256": "e8a86c65345a5ec2f49c2f90ad98a4ffc1d2c3c051864e0ea8abbe8d65b44303",
+          "bytes": 14709
+        }
+      ]
+    },
+    {
+      "result_id": "V04",
+      "model": "MiniMax-H3",
+      "variant": "hifp4-w4a4",
+      "benchmark": "VBench Tiny",
+      "profile": "tiny",
+      "total": 80.88028804090108,
+      "quality": 84.70988358839023,
+      "semantic": 65.56190585094453,
+      "prompts": 108,
+      "planned_videos": 740,
+      "flicker_scored": 50,
+      "flicker_expected": 50,
+      "status": "仅 Tiny 参考；非全量",
+      "dimensions": [
+        {
+          "dimension": "aesthetic_quality",
+          "score": 0.6212962818145752,
+          "scored_records": 50
+        },
+        {
+          "dimension": "appearance_style",
+          "score": 0.20502071572580668,
+          "scored_records": 50
+        },
+        {
+          "dimension": "background_consistency",
+          "score": 0.9579733946265244,
+          "scored_records": 50
+        },
+        {
+          "dimension": "color",
+          "score": 0.7930341055341057,
+          "scored_records": 37
+        },
+        {
+          "dimension": "dynamic_degree",
+          "score": 0.84,
+          "scored_records": 50
+        },
+        {
+          "dimension": "human_action",
+          "score": 0.98,
+          "scored_records": 50
+        },
+        {
+          "dimension": "imaging_quality",
+          "score": 0.7083651935577392,
+          "scored_records": 50
+        },
+        {
+          "dimension": "motion_smoothness",
+          "score": 0.9805399186769423,
+          "scored_records": 50
+        },
+        {
+          "dimension": "multiple_objects",
+          "score": 0.615,
+          "scored_records": 50
+        },
+        {
+          "dimension": "object_class",
+          "score": 0.5575,
+          "scored_records": 50
+        },
+        {
+          "dimension": "overall_consistency",
+          "score": 0.22951798975467683,
+          "scored_records": 50
+        },
+        {
+          "dimension": "scene",
+          "score": 0.16375,
+          "scored_records": 50
+        },
+        {
+          "dimension": "spatial_relationship",
+          "score": 0.7083360443874775,
+          "scored_records": 50
+        },
+        {
+          "dimension": "subject_consistency",
+          "score": 0.9333631055680959,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_flickering",
+          "score": 0.9813235956173318,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_style",
+          "score": 0.2547188276052475,
+          "scored_records": 50
+        }
+      ],
+      "subset_manifest_sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+      "notes": "16 维报告已核对；视频生成文件未逐个验证；color 维度可能按检测结果筛选；不声称完整官方 benchmark",
+      "source": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/vbench_summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/vbench_summary.json",
+          "sha256": "556b1591c5914f47332241c3b41e77d8dd92e046358715509f0662b6fb910071",
+          "bytes": 31717
+        },
+        {
+          "path": "base_eval/vbench_tiny_manifest.json",
+          "sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+          "bytes": 29040
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/aesthetic_quality/results_eval_results.json",
+          "sha256": "464140c2fece2ac882cce4b325aa4162fe74f08a092c4d4aad0a6425a5456cd0",
+          "bytes": 13567
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/appearance_style/results_eval_results.json",
+          "sha256": "2f7f6f5220f85187a5f279178e4c8f8ab2da93b7c986d651420bce4d90de114e",
+          "bytes": 212247
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/background_consistency/results_eval_results.json",
+          "sha256": "3e34de565b888155e1fe6cdd2fee90f16a635c57cb3f18f957c4eee4f0b0df2f",
+          "bytes": 15614
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/color/results_eval_results.json",
+          "sha256": "f7b23805dc7138f930446891e96ead274a74b9fb96caacbdd1aef7e6617f91a6",
+          "bytes": 9897
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/dynamic_degree/results_eval_results.json",
+          "sha256": "81dc9a1bd4e000bf96979883fb8a7d6b39662d94ee1d88f0c97d0cc52a3b0394",
+          "bytes": 11919
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/human_action/results_eval_results.json",
+          "sha256": "3971c919f9d2e163e61cd5c90af4c318aec5c11710b2e02d77f307f243092d9a",
+          "bytes": 13505
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/imaging_quality/results_eval_results.json",
+          "sha256": "135c9c35b92f66b9083fff3ad1a74c9d58ed7aac39c351cf8673ef084cfed153",
+          "bytes": 13514
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/motion_smoothness/results_eval_results.json",
+          "sha256": "417c44ff91887adb47194fb72eeb5105476cd23c58f9bb799f13ece076ed95c7",
+          "bytes": 12624
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/multiple_objects/results_eval_results.json",
+          "sha256": "a0597e4741c10dad3d2c0a044a99e5ecd80545bca8acbebd06331c882e3140f1",
+          "bytes": 15305
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/object_class/results_eval_results.json",
+          "sha256": "2b2f93d62fbaa36ba738e717ff5a19010bab73cf5efbdd88c8f5bf576f344d38",
+          "bytes": 14518
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/overall_consistency/results_eval_results.json",
+          "sha256": "2c47582e2f6b34170d2f63569c1bb7ef885955410f215815ae76a72ea92e4dfd",
+          "bytes": 13594
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/scene/results_eval_results.json",
+          "sha256": "111fa7b8bb7ced0398e7985c7fd71764c8c0df368ab648e9933f7018309cfa4a",
+          "bytes": 14506
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/spatial_relationship/results_eval_results.json",
+          "sha256": "8d18467248a889125f5608a10efcaab027dfa4f65eea6506c551bf2d80b2ed66",
+          "bytes": 35259
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/subject_consistency/results_eval_results.json",
+          "sha256": "4d566c6a14cdb89e65c90de2462d0ffda832118ea76e0dd74c2bf58d77558959",
+          "bytes": 12624
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/temporal_flickering/results_eval_results.json",
+          "sha256": "c2d0eff70ff41587ab8d24c9d122a62fd4c61ba5691c310f85f468e2f4c48a7c",
+          "bytes": 16161
+        },
+        {
+          "path": "base_eval/results/MiniMax-H3/vbench_standard/hifp4-w4a4/tiny/scoring/static-coverage-v2/eval/temporal_style/results_eval_results.json",
+          "sha256": "ae242a5cb9d1ba39a20cd92d9fee27e5226e6a8b8e4c098979af534eb330c44e",
+          "bytes": 14702
+        }
+      ]
+    },
+    {
+      "result_id": "V05",
+      "model": "MAGI-2-preview",
+      "variant": "bf16-50p5",
+      "benchmark": "VBench Tiny",
+      "profile": "tiny",
+      "total": 80.00076478016564,
+      "quality": 84.84162289069602,
+      "semantic": 60.637332338044224,
+      "prompts": 108,
+      "planned_videos": 740,
+      "flicker_scored": 50,
+      "flicker_expected": 50,
+      "status": "仅 Tiny 参考；非全量",
+      "dimensions": [
+        {
+          "dimension": "aesthetic_quality",
+          "score": 0.6784598040580749,
+          "scored_records": 50
+        },
+        {
+          "dimension": "appearance_style",
+          "score": 0.20231577560240938,
+          "scored_records": 50
+        },
+        {
+          "dimension": "background_consistency",
+          "score": 0.9232908974924395,
+          "scored_records": 50
+        },
+        {
+          "dimension": "color",
+          "score": 0.7938442371581906,
+          "scored_records": 43
+        },
+        {
+          "dimension": "dynamic_degree",
+          "score": 0.94,
+          "scored_records": 50
+        },
+        {
+          "dimension": "human_action",
+          "score": 0.92,
+          "scored_records": 50
+        },
+        {
+          "dimension": "imaging_quality",
+          "score": 0.6421345965496508,
+          "scored_records": 50
+        },
+        {
+          "dimension": "motion_smoothness",
+          "score": 0.9928686333873807,
+          "scored_records": 50
+        },
+        {
+          "dimension": "multiple_objects",
+          "score": 0.40125,
+          "scored_records": 50
+        },
+        {
+          "dimension": "object_class",
+          "score": 0.565,
+          "scored_records": 50
+        },
+        {
+          "dimension": "overall_consistency",
+          "score": 0.20859293960034847,
+          "scored_records": 50
+        },
+        {
+          "dimension": "scene",
+          "score": 0.0975,
+          "scored_records": 50
+        },
+        {
+          "dimension": "spatial_relationship",
+          "score": 0.7041871099297171,
+          "scored_records": 50
+        },
+        {
+          "dimension": "subject_consistency",
+          "score": 0.8912694604009871,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_flickering",
+          "score": 0.9893311035773332,
+          "scored_records": 50
+        },
+        {
+          "dimension": "temporal_style",
+          "score": 0.24523460656404494,
+          "scored_records": 50
+        }
+      ],
+      "subset_manifest_sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+      "notes": "16 维报告已核对；视频生成文件未逐个验证；color 维度可能按检测结果筛选；不声称完整官方 benchmark",
+      "source": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/vbench_summary.json",
+      "evidence": [
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/vbench_summary.json",
+          "sha256": "b6e7f87b75341bf6948dc59a0aea145298964bf58e06524a51d9ac18c83255e1",
+          "bytes": 31754
+        },
+        {
+          "path": "base_eval/vbench_tiny_manifest.json",
+          "sha256": "5823e6399ba7e31ba5303dc6d63526c30656e2c45a6ae1c7ade2482a1d23e958",
+          "bytes": 29040
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/aesthetic_quality/results_eval_results.json",
+          "sha256": "f99a7a344908158fc5d337536a5706c3aacc109f6595ef97a09fd04f64a9282e",
+          "bytes": 13767
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/appearance_style/results_eval_results.json",
+          "sha256": "05cf107c972b3d2c1a6c35d80a302099c741d56e78777724a8ccce23659cdb72",
+          "bytes": 407095
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/background_consistency/results_eval_results.json",
+          "sha256": "541a2fbc2e280dd58cf54e6628e76c9013729c087a5a7b4fd0b76cf4af1ee900",
+          "bytes": 15811
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/color/results_eval_results.json",
+          "sha256": "9613151876f9add8fccffc1cec29f87693f911ea21a8d7b9d5c4850ee3c437dd",
+          "bytes": 11764
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/dynamic_degree/results_eval_results.json",
+          "sha256": "374cda8b7b1f16e2857bb0b5585c4c174c31f4a8d9e5f7f3e7d61b40446f1723",
+          "bytes": 12114
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/human_action/results_eval_results.json",
+          "sha256": "aee1d3e7b262ed4b6610dc4526a93fecd2b1f0455685ebf4a156a80e812d5b63",
+          "bytes": 13708
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/imaging_quality/results_eval_results.json",
+          "sha256": "0f4d720ae748abeaa43aa10fb364df7c88dda34d523ef6c866098cb1d06f025a",
+          "bytes": 13716
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/motion_smoothness/results_eval_results.json",
+          "sha256": "90e7c4b4ca8ac6b1c73e2d1c0465ec9480d82035ed90f5c80cdb7e8f0314c2e8",
+          "bytes": 12820
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/multiple_objects/results_eval_results.json",
+          "sha256": "6094f1686c171f21e7fcfe37efa8865cff798531e523df95be6920ccacf955cb",
+          "bytes": 15515
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/object_class/results_eval_results.json",
+          "sha256": "89e79e0ccc54e355da9bb4dcd93df903ce24b67984e0797059f5f79c3a5e11ce",
+          "bytes": 14748
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/overall_consistency/results_eval_results.json",
+          "sha256": "b74816b2ae359f70233577e8a1c62e59d8f4e97aef1274652c827bfe341e4f89",
+          "bytes": 13806
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/scene/results_eval_results.json",
+          "sha256": "8781b0f653748d090e0e15273740b43f7bf2185ca21d670f230338de8347c7fb",
+          "bytes": 14695
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/spatial_relationship/results_eval_results.json",
+          "sha256": "c5cc7b8730dfdcfa6b3bd965629d0baf6cfa8a89beea07741297cd7e155eb9e9",
+          "bytes": 35039
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/subject_consistency/results_eval_results.json",
+          "sha256": "21c09358383e65caaf9b155f28e7eea55d8d512b4c358c872bcbd0769c5e0f4d",
+          "bytes": 12825
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/temporal_flickering/results_eval_results.json",
+          "sha256": "18dcd35f9c27486193af93b16eacce6d4761a7e3fd9e6a2cf20db6e274b1644e",
+          "bytes": 16363
+        },
+        {
+          "path": "base_eval/results/MAGI-2-preview/vbench_standard/bf16-50p5/tiny/eval/temporal_style/results_eval_results.json",
+          "sha256": "425a661f5ab33d37dad6476d32474a988ddcac0759dbdc98d4e55351edaec2bf",
+          "bytes": 14908
+        }
+      ]
+    }
+  ],
+  "rejected": []
+}

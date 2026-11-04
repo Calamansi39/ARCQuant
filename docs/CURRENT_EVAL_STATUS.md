@@ -11,7 +11,9 @@ DeepSeek 生成接线已修正，CPU 回归检查通过；整模型恢复情况�
 share index 和硬件加速也未实现。详情见[结构化稀疏指南](STRUCTURED_SPARSITY.md)。
 下表历史 TEAL/WINA 分数属于非结构化方法对照，不能表示 2:4 或层覆盖验收已完成。
 
-已经完成的结果可查看[彩色 HTML 表格](completed_benchmarks_colored.html)，也可下载为 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
+展示以[已核查结果文档](RESULTS_PRESENTATION.md)及[彩色 Excel](completed_benchmarks.xlsx)为准。
+2026-11-04 重新核查后，完整文本主表为 25 项，5 项视频 Tiny 放入参考附页；
+旧 30 行混合表不再作为完整 benchmark 清单。可下载 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
 
 ## 1. 模型和 benchmark 的对应关系
 

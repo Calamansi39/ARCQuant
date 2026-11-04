@@ -20,7 +20,9 @@ from xml.sax.saxutils import escape
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_INPUT = ROOT / "docs/completed_benchmarks.tsv"
-DEFAULT_OUTPUT = ROOT / "docs/completed_benchmarks.xlsx"
+# Keep this generic legacy converter from overwriting the audited multi-sheet report.
+# Generate the main report with present_results.py --snapshot-only instead.
+DEFAULT_OUTPUT = ROOT / "docs/completed_benchmarks_legacy.xlsx"
 
 
 def col_name(number: int) -> str:
@@ -36,7 +38,7 @@ def xml_text(value: object) -> str:
 
 
 def read_tsv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
-    with path.open("r", encoding="utf-8", newline="") as handle:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle, delimiter="\t")
         if not reader.fieldnames:
             raise ValueError(f"empty result table: {path}")
