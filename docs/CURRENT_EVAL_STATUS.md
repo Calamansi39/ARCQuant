@@ -12,8 +12,8 @@ share index 和硬件加速也未实现。详情见[结构化稀疏指南](STRUC
 下表历史 TEAL/WINA 分数属于非结构化方法对照，不能表示 2:4 或层覆盖验收已完成。
 
 展示以[已核查结果文档](RESULTS_PRESENTATION.md)及[彩色 Excel](completed_benchmarks.xlsx)为准。
-2026-11-04 重新核查后，完整文本主表为 25 项，5 项视频 Tiny 放入参考附页；
-旧 30 行混合表不再作为完整 benchmark 清单。可下载 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
+2026-11-04 核查并按指定 HiF4 格式筛选后，展示 15 项完整文本成绩（含 BF16 参考），3 项视频 Tiny 放入参考页；
+NVFP4/MXFP4 历史结果仅留在审计快照。可下载 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
 
 ## 1. 模型和 benchmark 的对应关系
 

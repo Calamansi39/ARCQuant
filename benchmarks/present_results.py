@@ -19,6 +19,15 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL = 'DeepSeek-V4-Flash-0731'
 QUANTS = ('bf16', 'nvfp4', 'mxfp4', 'hifp4')
 LABELS = ('BF16', 'NVFP4', 'MXFP4', 'HiFP4')
+# QUANTS above enumerates existing files for provenance checks; it never launches
+# evaluations. Presentation follows the requested format for each model.
+TARGET_QUANT = {MODEL: 'hifp4', 'MiniMax-H3': 'hifp4', 'MAGI-2-preview': 'hifp4'}
+
+
+def requested_result(row):
+    precision = row.get('precision', row['variant']).lower().split()[0].split('-')[0]
+    precision = 'hifp4' if precision == 'hif4' else precision
+    return precision in ('bf16', TARGET_QUANT[row['model']])
 
 
 def read(path):
@@ -262,7 +271,8 @@ def export(snapshot, out):
     from openpyxl.worksheet.table import Table, TableStyleInfo
 
     out.mkdir(parents=True, exist_ok=True)
-    rows, videos = snapshot['rows'], snapshot['video_reference']
+    rows = [r for r in snapshot['rows'] if requested_result(r)]
+    videos = [v for v in snapshot['video_reference'] if requested_result(v)]
     blue, green, red, amber, purple = '17365D', 'E2F0D9', 'FCE4D6', 'FFF2CC', 'E4DFEC'
     wb = Workbook(); wb.remove(wb.active)
 
@@ -301,6 +311,8 @@ def export(snapshot, out):
 
     info=[
         ['主表范围',f'{len(rows)} 项完整文本评测；视频 {len(videos)} 项仅作 Tiny 附录；成绩均由原始文件核查'],
+        ['目标格式','按当前任务指定的 HiF4 W4A4 展示，保留 BF16 计算参考。NVFP4/MXFP4 历史结果只保存在审计快照，不列为本任务成果。'],
+        ['历史结果来源','外部 base_eval 的量化基线为已有记录。本次只读取、核对与汇总，没有为制作表格重新跑模型。'],
         ['阅读顺序','先看文本基线，再看 GPQA 方法对照；两者协议不同，不能混比'],
         ['完整的含义','固定题集全部有输出及评分；保留答错、截断和执行失败；不等于方法达标'],
         ['BF16 的含义','DeepSeek 发布的是混合 FP8/FP4 权重；这里 BF16 指反量化后计算参考，并非原始全 BF16 训练权重'],
@@ -317,12 +329,13 @@ def export(snapshot, out):
     baselines=[r for r in rows if r['group']=='baseline']
     benchmarks=list(dict.fromkeys(r['benchmark'] for r in baselines))
     matrix=[]
+    display_labels=('BF16', next(label for q,label in zip(QUANTS,LABELS) if q == TARGET_QUANT[MODEL]))
     for bench in benchmarks:
         group=[r for r in baselines if r['benchmark']==bench]
-        matrix.append([MODEL,bench,group[0]['evaluated_count'],group[0]['metric']]+[next((r['score'] for r in group if r['variant']==q),'未完成') for q in LABELS]+[group[0]['notes']])
-    ws=sheet('文本全量基线',['模型','Benchmark','题数','指标','BF16 (%)','NVFP4 (%)','MXFP4 (%)','HiFP4 (%)','协议说明'],matrix,[30,33,10,15,16,16,16,16,66],
-             '仅比较同一行；分数越高越好。完整题集：GPQA 198、MATH 500、LongBench 503、LCB 固定 test6 分片 175。')
-    for row in ws.iter_rows(min_row=4,min_col=5,max_col=8):
+        matrix.append([MODEL,bench,group[0]['evaluated_count'],group[0]['metric']]+[next((r['score'] for r in group if r['variant']==q),'未完成') for q in display_labels]+[group[0]['notes']])
+    ws=sheet('文本全量基线',['模型','Benchmark','题数','指标','BF16 参考 (%)','HiF4 W4A4 目标 (%)','协议说明'],matrix,[30,33,10,15,20,23,66],
+             '仅展示本任务指定的 HiF4 和 BF16 参考。成绩复用服务器已有结果，本次整理没有重新跑模型。每行分数越高越好。')
+    for row in ws.iter_rows(min_row=4,min_col=5,max_col=6):
         for c in row: c.fill=PatternFill('solid',fgColor='DDEBF7'); c.font=Font(bold=True,size=13,color=blue)
     methods=[r for r in rows if r['group']=='methods']
     ws=sheet('GPQA方法对照',['方法配置','正确题数','总题数','准确率 (%)','较 BF16 (pp)','状态','解释'],
@@ -345,6 +358,9 @@ def export(snapshot, out):
     sheet('证据索引',['结果编号','文件路径（相对根目录）','SHA256','字节数'],
           [[r['result_id'],e['path'],e['sha256'],e['bytes']] for r in rows+videos for e in r['evidence']], [14,105,72,18],
           'base_eval/ 相对外部评测器根目录；runs/ 相对 ARCQuant。哈希锁定本次核查内容，原始逐题大文件不随表公开。')
+    for name in ('完整结果明细','视频维度明细','待补齐与未纳入','证据索引'):
+        wb[name].sheet_state='hidden'
+    wb.active=wb.sheetnames.index('文本全量基线')
     workbook=out/'completed_benchmarks.xlsx'; wb.save(workbook)
     check=load_workbook(workbook,data_only=True)
     require(check['完整结果明细'].max_row == len(rows)+3, 'XLSX row count mismatch')
@@ -361,13 +377,14 @@ def export(snapshot, out):
 
     md=['# 实验结果展示：已核查的完整评测','',f'核查时间：{snapshot["audited_at"]}。本页由原始结果导出；本次整理没有新增模型评测。','',
         '[下载彩色 Excel](completed_benchmarks.xlsx?raw=true) · [CSV](completed_benchmarks.csv) · [TSV](completed_benchmarks.tsv) · [核查快照与证据哈希](results_audit.json)','',
-        f'**完整文本成绩 {len(rows)} 项；视频 Tiny 参考 {len(videos)} 项。** “完整”表示固定题集有完整输出与评分，不表示稀疏方法已达到最终目标。','',
+        f'**按目标格式筛选：完整文本成绩 {len(rows)} 项；视频 Tiny 参考 {len(videos)} 项。** 保留 BF16 参考和指定的 HiF4 W4A4。“完整”表示固定题集有完整输出与评分，不表示稀疏方法已达到最终目标。','',
+        'NVFP4/MXFP4 来自服务器已有的历史结果；本次整理没有为它们新增推理任务。旧版把这些额外格式也放入了主表，现已移除。原始核查快照保留历史记录供追查，不计入本任务展示数量。','',
         '## 1. DeepSeek 文本基线','',
-        '模型为 `DeepSeek-V4-Flash-0731`。下面只有位宽对照，没有加入 TEAL/WINA；分数单位为 %，越高越好。','',
-        '| Benchmark / 协议 | 题数 | BF16 参考 | NVFP4 W4A4 | MXFP4 W4A4 | HiFP4 W4A4 |',
-        '|---|---:|---:|---:|---:|---:|']
+        '模型为 `DeepSeek-V4-Flash-0731`。只看 BF16 参考与指定的 HiF4 W4A4，后者在外部结果文件中命名为 HiFP4。下面尚未加入 TEAL/WINA；分数单位为 %，越高越好。','',
+        '| Benchmark / 协议 | 题数 | BF16 参考 | HiF4 W4A4（目标） |',
+        '|---|---:|---:|---:|']
     for m in matrix:
-        md.append('| '+' | '.join([m[1],str(m[2])]+[f'{v:.2f}' if isinstance(v,(float,int)) else v for v in m[4:8]])+' |')
+        md.append('| '+' | '.join([m[1],str(m[2])]+[f'{v:.2f}' if isinstance(v,(float,int)) else v for v in m[4:6]])+' |')
     md+=['','- GPQA / MATH：0-shot thinking，8192 生成 tokens；分别用 `gpqa_final_letter_v4` / `math500_format_v3` 判分。',
          '- LongBench：503 题，chat 模式，输入上限 131072 tokens，中间截断；输出上限 8192。',
          '- LiveCodeBench：固定 release-v6 `test6` 分片 175 题，public + private 测试执行；不泛指所有版本题库。128K 为 64K 到限题续写，保留此前已结束的答案。',
@@ -393,7 +410,7 @@ def export(snapshot, out):
          '- 文本：核对唯一题号、数量、逐题评分和总分；LCB 从已保存的执行结果重新汇总；条件似然检查有限数值、argmax 和对错标签。各精度间核对题集与协议。没有重新执行模型或判题器。',
          '- 视频：核对 16 维报告与 summary、Tiny manifest 哈希和闪烁覆盖；仅作参考。',
          '- 修正旧表：MATH-500 的来源改为 `math500_generative/...`；旧路径 `math500/...` 属于另一套 4-shot 协议，不能给 0-shot 分数作证。',
-         '- Excel 内置颜色、筛选、冻结标题、原始计数、同协议差值、待补全清单与证据索引；CSV/TSV 只承载数据，没有颜色。',
+         '- Excel 默认显示阅读说明和三张成绩页；四张核查/待补全附页默认隐藏，可在表格软件中取消隐藏。CSV/TSV 与主展示范围一致，只承载数据，没有颜色。',
          '- 可直接分享本 GitHub 页面。需要多人编辑时，下载 XLSX，在腾讯文档、飞书或 Excel Online 中选择导入，再设置平台内分享权限。本次交付未创建这些平台的在线文档。',
          '- 只发布汇总指标和相对来源路径/哈希；权重、题目正文、逐题生成内容及本机私人文件不包含在共享包内。','',
          '### 更新方法','',
@@ -423,7 +440,9 @@ def main():
         args.output_dir.mkdir(parents=True,exist_ok=True)
         dest.write_text(json.dumps(snapshot,ensure_ascii=False,indent=2)+'\n')
     export(snapshot,args.output_dir)
-    print(json.dumps({'complete_results':len(snapshot['rows']),'video_reference':len(snapshot['video_reference']),
+    print(json.dumps({'audited_complete_results':len(snapshot['rows']),
+                      'display_complete_results':sum(requested_result(r) for r in snapshot['rows']),
+                      'display_video_reference':sum(requested_result(v) for v in snapshot['video_reference']),
                       'rejected':snapshot['rejected'],'workbook':str(args.output_dir/'completed_benchmarks.xlsx')},ensure_ascii=False,indent=2))
 
 
