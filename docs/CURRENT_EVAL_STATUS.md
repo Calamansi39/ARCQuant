@@ -2,6 +2,9 @@
 
 更新时间：2026-11-04。
 
+两种 baseline 的交付进度与队列说明见 [TEAL/WINA 实验交付表](BASELINE_PROGRESS.md)。
+DeepSeek 生成接线已修正，CPU 回归检查通过；整模型恢复情况仍待 GPU 验证。
+
 新增普通 2:4 路径：`structured-plan` / `structured-run` 已接 DeepSeek 的 HiF4 W4A4
 运行时和四个文本 benchmark 入口，四项 CPU dry-run 通过；真实权重的单卡投影测试
 6/6 输出有限，55,296 个四元组结构检查无违规。当前仍无该路径的整模型正式分数，
@@ -16,7 +19,7 @@ share index 和硬件加速也未实现。详情见[结构化稀疏指南](STRUC
 | --- | --- | ---: | ---: | --- |
 | DeepSeek V4 Flash | GPQA Diamond | 198 题 | smoke 8 题 | 独立基线已完成；ARCQuant 的 HiF4、ARC、TEAL、WINA 已完成 GPQA 全量 198 题 |
 | DeepSeek V4 Flash | MATH-500 | 500 题 | smoke 8 题 | 独立 BF16/FP4 基线已完成；WINA 50% 单题和 20 题试跑均退化并截断，TEAL 没有有效结果 |
-| DeepSeek V4 Flash | LongBench v2 | 503 条 | smoke 8 条 | 独立 BF16/FP4 基线已完成；WINA 1 题短上下文 smoke 已通过，未形成正式结果 |
+| DeepSeek V4 Flash | LongBench v2 | 503 条 | smoke 8 条 | 独立 BF16/FP4 基线已完成；旧 WINA 单题仅有运行记录，生成质量待修正后重新验证，无正式方法结果 |
 | DeepSeek V4 Flash | LiveCodeBench v6 | 175 题 | smoke 2 题 | 独立 BF16/FP4 基线已完成；WINA 生成入口已接入，需 GPU smoke 后才能形成正式结果 |
 | DeepSeek V4 Flash | Terminal-Bench core 0.1.1 | 86 个任务 | smoke 1 个，small 5 个 | 数据已检查，代理、终端服务和容器评分尚未接入 |
 | MiniMax H3 | VBench | 944 个官方 prompt | tiny 108 个唯一 prompt，740 条视频/精度 | Tiny 的 BF16、NVFP4、MXFP4、HiFP4 独立基线已评分；DiT WINA 启动器已接入，尚无正式稀疏成绩 |

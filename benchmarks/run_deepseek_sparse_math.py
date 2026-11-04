@@ -92,7 +92,8 @@ def main(argv=None) -> int:
     reference.prepare = prepare
     try:
         args = reference.parse_args(["--model", "deepseek", "--benchmark", "math500", *remaining])
-        tag = f"arcquant-{sparse.sparse_method}-{sparse.sparsity:g}"
+        runtime_hash = hashlib.sha256((ROOT / "model/deepseek_generation_runtime.py").read_bytes()).hexdigest()
+        tag = f"arcquant-{sparse.sparse_method}-{sparse.sparsity:g}-{runtime_hash[:12]}"
         args.out_dir = str(Path(args.out_dir) / tag)
         return int(reference.run(args) or 0)
     finally:

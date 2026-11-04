@@ -37,20 +37,34 @@ class DeepSeekGenerationWinaMixin:
         self.sparse_eligible = Counter()
         self.sparse_row_mask = None
         self.sparse_row_chunk = 4096
-        self.sparse_group_norms = {}
-        for name, module in model.named_modules():
+        self.sparse_groups = {}
+        self.sparse_attention_stack = []
+        self.sparse_linear_depth = 0
+        self.sparse_hooks = []
+        modules = dict(model.named_modules())
+        for name, module in modules.items():
             if isinstance(module, ds.Linear) and name.startswith("layers."):
                 key = name + ".weight"
                 self.sparse_modules[module.weight.data_ptr()] = key
                 if key.endswith(".attn.wo_a.weight"):
-                    parent = dict(model.named_modules()).get(name.rsplit(".", 1)[0])
+                    parent = modules.get(name.rsplit(".", 1)[0])
                     groups = int(getattr(parent, "n_local_groups", 0))
                     if groups > 0:
-                        numeric = self.dequantize_weight(module.weight).float()
-                        if numeric.shape[0] % groups:
+                        if module.out_features % groups:
                             raise ValueError(f"{key}: wo_a rows do not divide into groups")
-                        rows = numeric.shape[0] // groups
-                        self.sparse_group_norms[key] = numeric.view(groups, rows, -1).norm(dim=1)
+                        # Configuration runs BEFORE checkpoint loading. Read
+                        # layout only; never cache norms of uninitialized weights.
+                        self.sparse_groups[key] = (groups, module.in_features)
+
+                        def enter(_module, _args, projection=key):
+                            self.sparse_attention_stack.append(projection)
+
+                        def leave(_module, _args, _output, projection=key):
+                            if not self.sparse_attention_stack or self.sparse_attention_stack.pop() != projection:
+                                raise RuntimeError("Unbalanced sparse attention context")
+
+                        self.sparse_hooks += [parent.register_forward_pre_hook(enter),
+                            parent.register_forward_hook(leave, always_call=True)]
         self._install_moe_row_tracking(ds)
 
     @torch.no_grad()
@@ -61,19 +75,22 @@ class DeepSeekGenerationWinaMixin:
         immediately before their grouped contraction.  Applying the mask here
         covers both paths without rewriting either external function.
         """
-        result = super().quantize_activation(x)
-        if getattr(self, "sparse_sparsity", 0.0) and result.ndim == 4:
-            for key, norms in self.sparse_group_norms.items():
-                if result.shape[2] != norms.shape[0] or result.shape[3] != norms.shape[1]:
-                    continue
-                pieces = []
-                for group in range(norms.shape[0]):
-                    group_key = key + f"#group{group}"
-                    self.sparse_norms.setdefault(group_key, norms[group].to(result.device))
-                    pieces.append(self._sparse_mask(result[:, :, group, :], None, group_key))
-                result = torch.stack(pieces, dim=2)
-                break
-        return result
+        if (getattr(self, "sparse_sparsity", 0.0) and x.ndim == 4
+                and not getattr(self, "sparse_linear_depth", 0)):
+            if not self.sparse_attention_stack:
+                raise RuntimeError("Grouped sparse activation without attention context")
+            x = self._mask_grouped_input(x, self.sparse_attention_stack[-1])
+        # Match ordinary Linear: mask the original activation, then quantize.
+        return super().quantize_activation(x)
+
+    def _mask_grouped_input(self, x, key):
+        groups, width = self.sparse_groups[key]
+        if x.ndim != 4 or x.shape[2:] != (groups, width):
+            raise ValueError(f"Unexpected grouped activation layout at {key}")
+        # Upstream WINA uses unit importance for output projections. DeepSeek
+        # splits its output projection into groups; each keeps that same rule.
+        return torch.stack([self._sparse_mask(x[:, :, g, :], None, key + f"#group{g}")
+                            for g in range(groups)], dim=2)
 
     def _install_moe_row_tracking(self, ds):
         """Preserve original token positions through expert dispatch.
@@ -82,12 +99,11 @@ class DeepSeekGenerationWinaMixin:
         projections.  Without this wrapper every routed row would look like a
         decode row, which would apply the prefill rule to the wrong tokens.
         """
-        original = ds.MoE.forward
         runtime = self
 
         def moe(module, x, input_ids):
             shape = x.shape
-            rows = (runtime._prefill_rows(shape[1], x.device).repeat(shape[0])
+            rows = (runtime._active_rows(shape[1], x.device).repeat(shape[0])
                     if x.ndim == 3 else torch.ones(x.reshape(-1, x.shape[-1]).shape[0],
                                                     dtype=torch.bool, device=x.device))
             flat = x.reshape(-1, module.dim)
@@ -172,31 +188,29 @@ class DeepSeekGenerationWinaMixin:
 
     @torch.no_grad()
     def grouped_wo_a(self, x, module):
-        """Apply WINA independently to each grouped ``wo_a`` projection."""
-        groups = x.shape[2]
-        numeric = self.dequantize_weight(module.weight).float()
-        if numeric.shape[0] % groups or numeric.shape[1] != x.shape[-1]:
-            raise ValueError("wo_a group/width dimensions do not match")
-        rows = numeric.shape[0] // groups
-        parts = []
-        for group in range(groups):
-            key = self.sparse_modules.get(module.weight.data_ptr(), "") + f"#group{group}"
-            slice_x = x[:, :, group, :]
-            if self.sparse_sparsity:
-                norm = numeric[group * rows:(group + 1) * rows].norm(dim=0)
-                old = self.sparse_norms.get(key)
-                if old is None:
-                    self.sparse_norms[key] = norm
-                slice_x = self._sparse_mask(slice_x, module.weight, key)
-            parts.append(torch.nn.functional.linear(
-                slice_x, numeric[group * rows:(group + 1) * rows].to(slice_x.dtype)))
-        return torch.stack(parts, dim=2)
+        """Explicit grouped path with the same mask/quantization ordering."""
+        key = self.sparse_modules[module.weight.data_ptr()]
+        groups, _ = self.sparse_groups[key]
+        if self.sparse_sparsity:
+            x = self._mask_grouped_input(x, key)
+        q_x = super().quantize_activation(x)
+        q_w = self.get_weight(module.weight).view(groups, -1, x.shape[-1])
+        return torch.einsum("bsgd,grd->bsgr", q_x.to(q_w.dtype), q_w)
 
     def linear(self, x, weight, bias=None):
         key = self.sparse_modules.get(weight.data_ptr())
         if key is not None and getattr(self, "sparse_sparsity", 0.0):
             x = self._sparse_mask(x, weight, key)
-        return super().linear(x, weight, bias)
+        self.sparse_linear_depth += 1
+        try:
+            return super().linear(x, weight, bias)
+        finally:
+            self.sparse_linear_depth -= 1
+
+    def remove_sparse_hooks(self):
+        for handle in self.sparse_hooks:
+            handle.remove()
+        self.sparse_hooks = []
 
     def stats(self):
         base = super().stats()
