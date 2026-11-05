@@ -12,10 +12,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SPARSITIES = (.5, .6, .7, .8, .9)
 HEADERS = ['模型', 'Benchmark', '评测口径', '题数', '目标稀疏度 (%)',
-           'BF16 (0%)', 'HiF4 W4A4 (0%)', 'ARC (0%)', 'TEAL (%)', 'WINA (%)']
+           'BF16 (0%)', 'HiF4 基础量化 (0%)', 'HiF4 + ARC补偿 (0%)', 'TEAL (%)', 'WINA (%)']
 NOTES = [
     '分数单位为 %。目标稀疏度只针对 TEAL/WINA；BF16、HiF4、ARC 对照均为 0%。重复的 MATH 基线复用同一份结果。',
-    'TEAL/WINA 均在 HiF4 W4A4 下评测。GPQA 标签似然诊断的 TEAL/WINA 另含 ARC，WINA 为 mask-only；不能与生成式 GPQA 混比。',
+    '两列均使用 HiF4 W4A4。HiF4 基础量化不含 ARC；HiF4 + ARC补偿额外启用校准通道重排和增强残差通道。hifp4/HiFP4 是外部评测器对 HiF4 的命名，不是另一种格式。',
+    '当前生成式 TEAL/WINA 路径是 HiF4 基础量化 + 稀疏掩码，未启用 ARC 补偿；GPQA 标签似然诊断的 TEAL/WINA 则另含 ARC，WINA 为 mask-only。两种路径不能混报。',
     '50%–90% 是非结构化激活置零率目标，不是 2:4 或层覆盖率。未完成项目显示进度，不用部分题目计算最终分数。',
     'LiveCodeBench 为固定 test6 分片 175 题；128K 是 64K 到限题续写。生成式基线为本项目固定协议，不是官方榜单复现。',
     '蓝色＝完整生成式基线；紫色＝完整标签似然诊断；黄色＝待完成。其他 benchmark 暂列 50% 槽位，60%–90% 当前只登记 MATH 网格。',
@@ -186,7 +187,7 @@ def export(snapshot, out):
         ws.row_dimensions[ws.max_row].height = 42
     ws.auto_filter.ref = f'A3:J{ws.max_row}'; ws.freeze_panes = 'D4'
     ws.print_title_rows = '1:3'; ws.page_setup.orientation = 'landscape'; ws.page_setup.fitToWidth = 1
-    for col, width in enumerate([29, 34, 27, 9, 16, 17, 21, 17, 20, 23], 1):
+    for col, width in enumerate([29, 34, 27, 9, 16, 17, 26, 28, 20, 23], 1):
         ws.column_dimensions[get_column_letter(col)].width = width
     detail = wb.create_sheet('说明与来源'); detail.sheet_view.showGridLines = False
     detail.append(['项目', '说明 / 来源'])
