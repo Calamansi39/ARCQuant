@@ -335,11 +335,18 @@ def main(argv=None):
                     atomic_json(out/method/f'layer-{layer_id}.replay.json',
                         dict(zero_sparsity_error=zero_error, reference_norm=reference_norm,
                              search_batch_size=a.search_batch_size, search_samples=a.search_samples))
+                exported_profiles = -1
                 def checkpoint(state):
+                    nonlocal exported_profiles
                     state['layer'] = layer_id
                     if rank == 0:
                         atomic_json(destination, state)
-                        export_strategy(out, method, metadata, targets, config.n_layers)
+                        # Full strategy changes only when a target is reached.
+                        # Keep each-step checkpoints without rereading every
+                        # completed layer on the shared filesystem every step.
+                        if len(state['profiles']) != exported_profiles or state['complete']:
+                            export_strategy(out, method, metadata, targets, config.n_layers)
+                            exported_profiles = len(state['profiles'])
                     status('searching', layer=layer_id, method=method, iterations=state['iterations'],
                            effective_sparsity=state['curve'][-1]['effective_sparsity'] if state['curve'] else 0,
                            elapsed_seconds=state['elapsed_seconds'], complete=state['complete'])
