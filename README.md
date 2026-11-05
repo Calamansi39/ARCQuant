@@ -10,6 +10,8 @@
 
 **后续卡时与组会计划：** [首批申请、完整网格预算及实测依据](docs/GPU_BUDGET.md)（2026-11-05 更新）。
 
+**预算受限时的实验收缩方案：** [先选稀疏度，再做正式评测](docs/EXPERIMENT_RESCOPING.md)。
+
 <h5 align="center">
 
 [![arXiv](https://img.shields.io/badge/ARCQuant-2601.07475-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2601.07475)
