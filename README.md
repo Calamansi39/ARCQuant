@@ -1,6 +1,6 @@
 # ARCQuant: Boosting NVFP4 Quantization with Augmented Residual Channels for LLMs
 
-**实验结果展示：** [已核查结果与说明](docs/RESULTS_PRESENTATION.md) · [下载彩色 Excel](docs/completed_benchmarks.xlsx?raw=true)。完整文本评测与视频 Tiny 参考分别展示，包含待补全清单和来源核查记录。
+**实验结果表：** [在线查看](docs/RESULTS_PRESENTATION.md) · [下载彩色 Excel](docs/completed_benchmarks.xlsx?raw=true) · [CSV](docs/completed_benchmarks.csv) · [TSV](docs/completed_benchmarks.tsv)
 
 <h5 align="center">
 
