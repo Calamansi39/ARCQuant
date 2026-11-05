@@ -1,8 +1,9 @@
 # DeepSeek：HiF4、ARC 与 TEAL/WINA 实验入口
 
-> **方法完整性：** 当前 TEAL/WINA 使用统一投影预算（uniform），没有 greedy
-> 分配策略；WINA 未启用 transform。GPQA 标签似然和 MATH/GPQA 生成式入口已接入 ARC。
-> 生成式队列的配置、校准和验证见 [ARC 队列说明](DEEPSEEK_ARC_QUEUE.md)。现有命令不能代表完整原生复现，详见 [预算核查](DEEPSEEK_SPARSE_BUDGET_AUDIT.md)。
+> **2026-11-05 晚间更新：** DeepSeek 的 [greedy 离线搜索与生成式入口](DEEPSEEK_GREEDY.md)
+> 已实现，正式 43 层搜索尚未完成，尚无完整 greedy+ARC benchmark 成绩；WINA 未启用 transform。
+> 本页旧命令仍使用 uniform，GPQA 标签似然仅作诊断，不填入生成式主表。
+> [ARC 队列说明](DEEPSEEK_ARC_QUEUE.md)记录旧 uniform 队列及其失败状态。
 
 当前机器已经跑完一组 198 题 GPQA Diamond 全量对照，结果表和边界说明见
 [DeepSeek 完整结果](DEEPSEEK_FORMAL_RESULTS.md)。

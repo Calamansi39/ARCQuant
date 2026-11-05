@@ -1,9 +1,9 @@
 # 当前模型、数据集和方法评测状态
 
-更新时间：2026-11-05。
+更新时间：2026-11-05 21:03 CST。本次重新核查 DeepSeek 原始结果与运行状态；视频部分保留此前记录，未重新评分。
 
 两种 baseline 的交付进度与队列说明见 [TEAL/WINA 实验交付表](BASELINE_PROGRESS.md)。
-DeepSeek 生成接线已修正，CPU 回归检查通过；整模型恢复情况仍待 GPU 验证。
+DeepSeek 已有 8 项完整生成式基线成绩；ARC＋TEAL/WINA 的完整生成式成绩仍未完成。当前 GPU 工作是 greedy 离线预算搜索，尚未进入全量答题。
 
 新增普通 2:4 路径：`structured-plan` / `structured-run` 已接 DeepSeek 的 HiF4 W4A4
 运行时和四个文本 benchmark 入口，四项 CPU dry-run 通过；真实权重的单卡投影测试
@@ -12,17 +12,17 @@ share index 和硬件加速也未实现。详情见[结构化稀疏指南](STRUC
 下表历史 TEAL/WINA 分数属于非结构化方法对照，不能表示 2:4 或层覆盖验收已完成。
 
 展示以[已核查结果文档](RESULTS_PRESENTATION.md)及[彩色 Excel](completed_benchmarks.xlsx)为准。
-2026-11-04 核查并按指定 HiF4 格式筛选后，展示 15 项完整文本成绩（含 BF16 参考），3 项视频 Tiny 放入参考页；
-NVFP4/MXFP4 历史结果仅留在审计快照。可下载 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
+2026-11-05 晚间重新核对 25 项历史完整文本记录，主表只展示 8 项符合约定协议的成绩（BF16/HiF4 × 四项 benchmark），数值与上版一致。
+NVFP4/MXFP4、GPQA 标签似然、LiveCodeBench 128K 续写和视频 Tiny 留在审计快照。可下载 [TSV](completed_benchmarks.tsv) 或 [CSV](completed_benchmarks.csv)。
 
 ## 1. 模型和 benchmark 的对应关系
 
 | 模型 | 主要 benchmark | 完整规模 | tiny/smoke 规模 | 当前实际状态 |
 | --- | --- | ---: | ---: | --- |
-| DeepSeek V4 Flash | GPQA Diamond | 198 题 | smoke 8 题 | 独立基线已完成；ARCQuant 的 HiF4、ARC、TEAL、WINA 已完成 GPQA 全量 198 题 |
-| DeepSeek V4 Flash | MATH-500 | 500 题 | smoke 8 题 | 独立 BF16/FP4 基线已完成；50% WINA 全量队列正在续跑，50%/60%/70%/80%/90% TEAL/WINA 队列已建立，完整稀疏成绩尚未形成 |
-| DeepSeek V4 Flash | LongBench v2 | 503 条 | smoke 8 条 | 独立 BF16/FP4 基线已完成；旧 WINA 单题仅有运行记录，生成质量待修正后重新验证，无正式方法结果 |
-| DeepSeek V4 Flash | LiveCodeBench v6 | 175 题 | smoke 2 题 | 独立 BF16/FP4 基线已完成；WINA 生成入口已接入，需 GPU smoke 后才能形成正式结果 |
+| DeepSeek V4 Flash | GPQA Diamond | 198 题 | smoke 8 题 | BF16/HiF4 生成式基线已完成；ARC/TEAL/WINA 只有旧标签似然诊断，不能填生成式主表 |
+| DeepSeek V4 Flash | MATH-500 | 500 题 | smoke 8 题 | BF16/HiF4 基线已完成；旧无 ARC WINA 停在 127/500；当前 greedy+ARC 尚在离线搜索 |
+| DeepSeek V4 Flash | LongBench v2 | 503 条 | smoke 8 条 | BF16/HiF4 基线已完成；greedy+ARC 专用入口尚待补齐，无完整方法成绩 |
+| DeepSeek V4 Flash | LiveCodeBench v6 | 175 题 | smoke 2 题 | BF16/HiF4 64K 基线已完成；greedy+ARC 专用入口尚待补齐，无完整方法成绩 |
 | DeepSeek V4 Flash | Terminal-Bench core 0.1.1 | 86 个任务 | smoke 1 个，small 5 个 | 数据已检查，代理、终端服务和容器评分尚未接入 |
 | MiniMax H3 | VBench | 944 个官方 prompt | tiny 108 个唯一 prompt，740 条视频/精度 | Tiny 的 BF16、NVFP4、MXFP4、HiFP4 独立基线已评分；DiT WINA 启动器已接入，尚无正式稀疏成绩 |
 | MAGI-2 preview | VBench | 944 个官方 prompt | tiny 108 个唯一 prompt，740 条视频/精度 | BF16 Tiny 已评分；HiFP4 W4A4 生成任务有记录；WINA 启动器已通过 dry-run，分组 refiner 仍待校准 |
@@ -47,7 +47,7 @@ tiny 子集：
 
 ## 3. 我们已经实际跑了什么
 
-### DeepSeek 的 ARCQuant 方法结果
+### DeepSeek 的历史 ARCQuant 标签似然诊断（非生成式成绩）
 
 `runs/deepseek_formal/` 中已经完成同一份 GPQA Diamond 198 题的五组结果：
 
@@ -59,8 +59,8 @@ tiny 子集：
 | TEAL | HiF4 W4A4 + ARC + 50% TEAL 输入掩码 | 198 |
 | WINA | HiF4 W4A4 + ARC + 50% WINA 输入掩码 | 198 |
 
-这是当前唯一已经完成“FP4 数值路径 + ARC/TEAL/WINA 方法”的整模型 benchmark
-对照。该入口使用 HiF4 值重建和 dense PyTorch GEMM，能验证精度路径，不能直接
+这些是四个答案标签的条件似然诊断，并非主表要求的生成式 Pass@1。
+虽然覆盖 198 题，也不能作为完整目标方法结果。该入口使用 HiF4 值重建和 dense PyTorch GEMM，能验证精度路径，不能直接
 当作真实稀疏 kernel 的速度结果。Llama 路径已加入 WINA 论文中的可选全模型
 `transform`；DeepSeek 不使用该 Llama 坐标变换。
 
@@ -80,28 +80,44 @@ tiny 子集：
 
 结论分模型看：
 
-- **DeepSeek × GPQA：已满足。** 已跑 `HiF4 W4A4 + ARC`、`+ TEAL`、`+ WINA`，并且
-  使用同一校准目录和同一 198 题数据。
-- **DeepSeek × MATH：入口已接通但尚未形成正式结果；LongBench/LiveCodeBench：WINA/TEAL
-  入口已接通但尚未形成正式结果。** 目前只有短上下文、单题调试结果，不能加入正式
-  成绩表；完整任务仍需检查协议、覆盖率、续跑和显存峰值。
+- **DeepSeek × GPQA/MATH：尚无完整生成式方法成绩。** greedy+ARC 入口已实现，仍需完成全模型策略与校准，再按固定协议答完全部题目。
+- **DeepSeek × LongBench/LiveCodeBench：尚未满足。** 需补齐 greedy+ARC 专用入口，再做完整评测；基础 HiF4 或旧 uniform 入口不能代替。
 - **MiniMax H3 × VBench：尚未满足。** 已有 HiFP4 W4A4 基线，但没有 ARC/TEAL/WINA。
 - **MAGI-2 × VBench：尚未满足。** 目前没有完整的 FP4+方法结果；BF16 Tiny 已评分，
   HiFP4 W4A4 任务仍未形成完整评分表。
 
-另外，DeepSeek 自定义入口的 GPQA 是四选项条件似然协议，而 `base_eval` 的
+另外，DeepSeek 旧自定义入口的 GPQA 是答案标签条件似然协议，而 `base_eval` 的
 DeepSeek GPQA 是生成式 Pass@1；两者题目数相同，但指标协议不同，不能直接把
 百分数放在同一列比较。
 
-## 5. 最新 MATH-500 WINA 诊断与五档队列
+## 5. 最新进度与剩余工作
 
-WINA 50% 的早期单题/小批诊断曾出现长度上限和重复输出，因此此前的中间结果没有计入正式表。当前同一 HiF4 W4A4 生成协议的 50% WINA 队列已经重新启动，状态约为 103/500，`complete=false`，不能报告准确率。这个结果说明基础 W4A4 生成链路可用，但稀疏生成仍需完成全量覆盖和 EOS 检查。
+- 旧无 ARC WINA MATH 已停止，保存 127/500 条，不能报告为全量准确率。
+- 旧 uniform ARC 队列在校准保存阶段失败（BF16 索引越界）；主仓库已修复，但该旧队列的 11 个答题设置均未启动。
+- 当前 `runs/native_greedy_campaign_20261105_185006/full/` 正在做正式 greedy 搜索：128×512 校准、20 段误差样本。21:03 快照为 WINA 3/43 层、TEAL 2/43 层，均覆盖 50%–90% 五档，策略文件 `complete=false`。
+- 双机交接控制器仍在等 MAGI 当前批次释放 GPU，没有 `handoff_commit.json`，尚不能计作已双机并行。
+- 当前搜索队列不会自动答题。后续要校验完整策略与校准，运行 ARC 无稀疏对照、两种方法五档的 MATH/GPQA，并补齐 LongBench/LiveCodeBench greedy+ARC 入口。
 
-当前已为 TEAL/WINA 分别建立 50%、60%、70%、80%、90% 的 MATH-500 队列；每个新点都先做 1 题和 8 题验证，再决定是否进入 500 题。只有完整题集通过覆盖、EOS、答案格式和评分检查，才会写入正式结果表。
+“评测中”是按用户约定填写的缺失成绩占位符，不代表每个配置都已在作答。
 
-## 6. 稀疏率要求核查
+## 6. 主表稀疏度与配置
 
-当前正式表里的 TEAL/WINA 都是 50% 置零率。原生 WINA 的复现实验脚本还包含
-65% 这一标准点，greedy 默认有效目标约为 66%；原生 TEAL 的公开主结果集中在
-40%–50%。因此 50% 不是 WINA 唯一可能的最终点，但仓库中没有证据证明 TEAL 和
-WINA 必须统一到 65%。详细证据、定义和后续矩阵见[稀疏率要求核查](SPARSITY_REQUIREMENT_AUDIT.md)。
+主表使用 TEAL/WINA **greedy、50%/60%/70%/80%/90%、HiF4 W4A4＋ARC 补偿**。
+五档是按校准实际执行的逻辑线性 MAC 数加权的预算，各投影配额不同；不是实测全局激活零率，
+也不是 2:4。WINA 未启用 transform。实现和原生算法差异见 [greedy 说明](DEEPSEEK_GREEDY.md)。
+
+## 7. 如何刷新已有表格
+
+在仓库根目录使用装有 `openpyxl` 的 Python，读取现有产物即可更新，无需 GPU：
+
+```bash
+python -m benchmarks.present_results --snapshot-only \
+  --sweep-status runs/deepseek_arc_campaign_20261105/status.json \
+  --greedy-search runs/native_greedy_campaign_20261105_185006/full
+```
+
+双机交接后用实际的新搜索目录替换 `--greedy-search`；该参数可重复。每个来源都保留路径与快照时间。
+需要重新核查原始答题结果时，将 `--snapshot-only` 换成 `--base-eval /path/to/base_eval`；
+新完成的 MATH 结果通过 `--math-summary /path/to/summary.json` 加入，只有完整题集、协议、
+ARC 实际调用以及 greedy 策略和各 TP rank 证据全部通过才会填分数。
+原始运行文件不随仓库上传，迁移时需另行复制；仅浏览现有成绩可直接使用已提交的快照和工作簿。

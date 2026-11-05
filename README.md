@@ -1,6 +1,6 @@
 # ARCQuant: Boosting NVFP4 Quantization with Augmented Residual Channels for LLMs
 
-**DeepSeek ARC 量化＋稀疏队列：** [启动、校准与验证说明](docs/DEEPSEEK_ARC_QUEUE.md)
+**DeepSeek ARC uniform 对照队列：** [启动、校准与历史部署状态](docs/DEEPSEEK_ARC_QUEUE.md)；当前 greedy 目标使用下面的独立入口。
 
 **DeepSeek TEAL/WINA greedy 预算：** [原生搜索规则、离线准备、推理加载与迁移命令](docs/DEEPSEEK_GREEDY.md)。
 统一入口 `python arc.py deepseek-greedy --help`；先验证两种方法，再搜索 50%–90% 五档。

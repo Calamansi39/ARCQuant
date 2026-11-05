@@ -1,5 +1,7 @@
 # TEAL / WINA 实验交付表
 
+> **2026-11-05 晚间更新：** 下文保留 11 月 4 日的交付计划与历史诊断。当前 DeepSeek 已转入 greedy+ARC 离线搜索，尚无完整生成式方法成绩；旧 uniform ARC 队列校准保存失败。最新已核查状态见 [当前评测状态](CURRENT_EVAL_STATUS.md)，主表见 [结果表](RESULTS_PRESENTATION.md)。
+
 目标：把 TEAL、WINA 接到指定模型的 HiF4 W4A4 推理路径，在相同评测协议下补齐成绩。
 有空卡就运行；没有空卡就进入后台等待。适配问题先修好再扩大评测。
 

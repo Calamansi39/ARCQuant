@@ -1,6 +1,9 @@
 # DeepSeek：TEAL/WINA 预算分配核查
 
-核查日期：2026-11-05。结论以当前源码、产物和运行入口为依据。
+核查日期：2026-11-05（greedy 实现前的历史核查）。
+
+> 同日晚间更新：下文保留当时发现的缺口。现已实现 DeepSeek greedy 搜索与 MATH/GPQA
+> ARC 生成式入口，正式策略仍在搜索，尚无完整方法成绩；最新实现见 [greedy 说明](DEEPSEEK_GREEDY.md)。
 
 **当前 DeepSeek 使用统一稀疏配额（uniform），没有执行或接入数据驱动的 greedy
 预算分配。WINA/TEAL 原仓库均包含这一流程；不能把当前简化配置说成完整复现。**

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "audited_at": "2026-11-04T05:55:17+00:00",
-  "code_revision": "f259f6cf5d8bf2ab3ce876ad583c29505a6b93d4",
+  "audited_at": "2026-11-05T12:53:11+00:00",
+  "code_revision": "7cb6ab497251750d27c7ee9b67b7df41e83b8a08",
   "scope": "Existing complete text evaluations; video Tiny reference appendix; no new inference or re-grading",
   "rows": [
     {
@@ -2213,7 +2213,7 @@
   ],
   "rejected": [],
   "sparse_progress": {
-    "updated_at": "2026-11-05T10:29:10+00:00",
+    "updated_at": "2026-11-05T13:03:41+00:00",
     "rows": [
       {
         "benchmark": "MATH-500",
@@ -2331,122 +2331,252 @@
         "arc": true,
         "method": "none",
         "sparsity": 0.0,
-        "status": "排队",
+        "allocation": "none",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "teal",
         "sparsity": 0.5,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "wina",
         "sparsity": 0.5,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "teal",
         "sparsity": 0.6,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "wina",
         "sparsity": 0.6,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "teal",
         "sparsity": 0.7,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "wina",
         "sparsity": 0.7,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "teal",
         "sparsity": 0.8,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "wina",
         "sparsity": 0.8,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "teal",
         "sparsity": 0.9,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       },
       {
         "benchmark": "MATH-500",
         "arc": true,
         "method": "wina",
         "sparsity": 0.9,
-        "status": "排队",
+        "allocation": "unknown",
+        "status": "待修复",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/deepseek_arc_campaign_20261105/status.json"
+        "source": "runs/deepseek_arc_campaign_20261105/status.json",
+        "queue_state": "blocked",
+        "error": "formal calibration failed: exit 1",
+        "source_updated_at": "2026-11-05T10:51:53.517221+00:00"
       }
     ]
-  }
+  },
+  "preparation_progress": {
+    "updated_at": "2026-11-05T13:03:41+00:00",
+    "rows": [
+      {
+        "source": "runs/native_greedy_campaign_20261105_185006/full/wina/strategy.json",
+        "method": "wina",
+        "allocation": "greedy",
+        "quantization": "arc",
+        "complete": false,
+        "layers_per_target": {
+          "0.5": 3,
+          "0.6": 3,
+          "0.7": 3,
+          "0.8": 3,
+          "0.9": 3
+        },
+        "expected_layers": 43,
+        "calibration_samples": 128,
+        "calibration_length": 512,
+        "search_samples": 20,
+        "budget_metric": "calibration-executed-linear-MACs",
+        "strategy_sha256": "a1d416115a3435c2f85bf7854d62c05457f96aa672a52a3d22c30236643e4f67",
+        "source_phase": "searching",
+        "source_updated_at": 1793883819.397485
+      },
+      {
+        "source": "runs/native_greedy_campaign_20261105_185006/full/teal/strategy.json",
+        "method": "teal",
+        "allocation": "greedy",
+        "quantization": "arc",
+        "complete": false,
+        "layers_per_target": {
+          "0.5": 2,
+          "0.6": 2,
+          "0.7": 2,
+          "0.8": 2,
+          "0.9": 2
+        },
+        "expected_layers": 43,
+        "calibration_samples": 128,
+        "calibration_length": 512,
+        "search_samples": 20,
+        "budget_metric": "calibration-executed-linear-MACs",
+        "strategy_sha256": "6651d45fa4c5e00b505ccf06e7d85b97445b900f8d1938d26623674656b5ebd7",
+        "source_phase": "searching",
+        "source_updated_at": 1793883819.397485
+      }
+    ]
+  },
+  "deployment_progress": {
+    "updated_at": "2026-11-05T13:03:41+00:00",
+    "handoff_committed": false,
+    "sources": [
+      {
+        "source": "runs/deepseek_method_split_20261105_2040/local_status.json",
+        "sha256": "a62fc2d092925edc554b7ea407c9c52e61a6d699a61e18cdb8e36885f2ddf29c",
+        "state": {
+          "pid": 3149493,
+          "hostname": "10-0-2-5",
+          "role": "local",
+          "phase": "waiting_for_remote_gpu_and_pilot",
+          "updated_at": "2026-11-05T13:03:37.291043+00:00",
+          "remote_driver_pid": 1934442
+        }
+      },
+      {
+        "source": "runs/deepseek_method_split_20261105_2040/remote_status.json",
+        "sha256": "45c62368a4ff99d9d780855ffaa8f088d14319a4bdbd568a75f2af340f21a236",
+        "state": {
+          "pid": 1934442,
+          "hostname": "10-0-2-54",
+          "role": "remote",
+          "phase": "waiting_for_current_gpu_lease",
+          "updated_at": "2026-11-05T12:40:25.740810+00:00"
+        }
+      }
+    ]
+  },
+  "audit_notes": [
+    "2026-11-05 晚间复核：历史 25 项完整文本记录全部通过，逐题计数、分数、协议和来源哈希无变化；当前主表采用其中 8 项（两种基线 × 四个 benchmark）。",
+    "旧 uniform ARC 队列 runs/deepseek_arc_campaign_20261105/status.json 已 blocked，校准保存失败，11 个答题设置尚未启动。其固定代码副本的 BF16 索引问题已在主仓库修复。",
+    "当前执行 greedy 离线搜索，128×512 校准、20 段误差搜索样本。搜索队列不会自动启动 benchmark；全模型策略完成后仍须全量答题。",
+    "双机控制器已部署；本次快照仍 waiting_for_remote_gpu_and_pilot / waiting_for_current_gpu_lease，尚无 handoff_commit.json，不记为已双机并行。来源：runs/deepseek_method_split_20261105_2040/。",
+    "旧无 ARC WINA MATH 输出为 127/500，已停止；8 题检查、GPQA 标签似然、LCB 128K 续写均不填入主表。",
+    "后续：完整策略及校准校验 → ARC 无稀疏对照和 TEAL/WINA 五档 MATH/GPQA；LongBench/LiveCodeBench 的 greedy+ARC 专用入口还需补齐。"
+  ]
 }
