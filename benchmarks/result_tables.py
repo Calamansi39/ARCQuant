@@ -1,4 +1,4 @@
-"""Compact result tables with separate generation and likelihood rows."""
+"""One configuration per row, with verified full-benchmark scores only."""
 from __future__ import annotations
 
 import csv
@@ -11,15 +11,26 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPARSITIES = (.5, .6, .7, .8, .9)
-HEADERS = ['模型', 'Benchmark', '评测口径', '题数', '目标稀疏度 (%)',
-           'BF16 (0%)', 'HiF4 基础量化 (0%)', 'HiF4 + ARC补偿 (0%)', 'TEAL (%)', 'WINA (%)']
+MODEL = 'DeepSeek-V4-Flash-0731'
+HEADERS = ['模型', '稀疏方法', '稀疏度', '量化方式', 'GPQA', 'MATH', 'LongBench', 'LiveCodeBench']
+# Choose one fixed protocol per column; never fill gaps with likelihood diagnostics
+# or a longer-budget continuation of another run.
+BENCHMARKS = (
+    ('GPQA Diamond', 'generative_8k_v1; gpqa_final_letter_v4'),
+    ('MATH-500', 'generative_8k_v1; math500_format_v3'),
+    ('LongBench v2', 'longbench_explicit_answer_v2'),
+    ('LiveCodeBench v6 64K', 'lcb-grading-v2; independent-64k'),
+)
+PENDING = '评测中'
 NOTES = [
-    '分数单位为 %。目标稀疏度只针对 TEAL/WINA；BF16、HiF4、ARC 对照均为 0%。重复的 MATH 基线复用同一份结果。',
-    '两列均使用 HiF4 W4A4。HiF4 基础量化不含 ARC；HiF4 + ARC补偿额外启用校准通道重排和增强残差通道。hifp4/HiFP4 是外部评测器对 HiF4 的命名，不是另一种格式。',
-    '当前生成式 TEAL/WINA 路径是 HiF4 基础量化 + 稀疏掩码，未启用 ARC 补偿；GPQA 标签似然诊断的 TEAL/WINA 则另含 ARC，WINA 为 mask-only。两种路径不能混报。',
-    '50%–90% 是非结构化激活置零率目标，不是 2:4 或层覆盖率。未完成项目显示进度，不用部分题目计算最终分数。',
-    'LiveCodeBench 为固定 test6 分片 175 题；128K 是 64K 到限题续写。生成式基线为本项目固定协议，不是官方榜单复现。',
-    '蓝色＝完整生成式基线；紫色＝完整标签似然诊断；黄色＝待完成。其他 benchmark 暂列 50% 槽位，60%–90% 当前只登记 MATH 网格。',
+    '每行是一种模型设置，分数单位为 %。没有使用的配置填“无”；量化方式为“无”的一行是 BF16 参考。',
+    'HiF4 W4A4 为基础量化；HiF4 W4A4 + ARC 补偿额外启用校准通道重排和增强残差通道。hifp4/HiFP4 是评测器对 HiF4 的命名。',
+    'TEAL/WINA 行使用 HiF4 基础量化及非结构化激活稀疏，不含 ARC 补偿。50%–90% 是目标激活置零率，不是 2:4 或层覆盖率。',
+    'GPQA 使用 Diamond 198 题生成式 Pass@1，MATH 使用 MATH-500 的 500 题 Pass@1，LongBench 使用 v2 的 503 题 Accuracy。',
+    'LiveCodeBench 使用固定 v6 test6 分片 175 题的 64K 独立生成 Pass@1。128K 续写及 GPQA 标签似然诊断保留在审计快照，不填入主表。',
+    '“评测中”统一表示尚无可呈现的完整成绩，包括未开始、等待 GPU、运行中及待修复；不表示每个单元格都已启动。当前稀疏队列仅覆盖 MATH。',
+    '蓝色＝完整基线成绩；绿色＝完整稀疏成绩；黄色＝评测中。部分题目、smoke 和诊断分数不会用作完整评测成绩。',
+    '生成式基线采用本项目固定协议，不声称官方榜单复现。',
 ]
 
 
@@ -109,43 +120,46 @@ def refresh_progress(snapshot, math_summaries=(), sweep_statuses=()):
 
 
 def build_matrix(snapshot):
-    baseline = [r for r in snapshot['rows'] if r['group'] == 'baseline'
-                and r['variant'] in ('BF16', 'HiFP4')]
-    methods = [r for r in snapshot['rows'] if r['group'] == 'methods']
+    baseline = {(r['benchmark'], r['variant']): r for r in snapshot['rows']
+                if r['group'] == 'baseline' and r['model'] == MODEL
+                and r['variant'] in ('BF16', 'HiFP4')
+                and r['status'] == '已核查完整'
+                and (r['benchmark'], r['protocol']) in BENCHMARKS}
     progress = {(r['benchmark'], r['method'], r['sparsity']): r
-                for r in snapshot.get('sparse_progress', {}).get('rows', [])}
+                for r in snapshot.get('sparse_progress', {}).get('rows', [])
+                if r.get('model', MODEL) == MODEL}
+
+    def baseline_value(bench, variant):
+        score = baseline.get((bench, variant), {}).get('score')
+        return score if score is not None else PENDING
 
     def sparse_value(bench, method, rate):
         entry = progress.get((bench, method, rate))
-        if not entry:
-            return '未完成'
-        if entry.get('score') is not None and entry['status'] == '完整已核查':
+        if (entry and entry.get('score') is not None and entry['status'] == '完整已核查'
+                and entry.get('completed', 0) == entry.get('expected', -1)
+                and entry.get('expected', 0) > 0):
             return entry['score']
-        if entry.get('completed'):
-            return f"已写入 {entry['completed']}/{entry['expected']}"
-        return entry['status']
+        return PENDING
 
-    matrix = []
-    for bench in dict.fromkeys(r['benchmark'] for r in baseline):
-        group = [r for r in baseline if r['benchmark'] == bench]
-        reference = {r['variant']: r['score'] for r in group}
-        for rate in SPARSITIES if bench == 'MATH-500' else (.5,):
-            matrix.append([group[0]['model'], bench, '生成式 ' + group[0]['metric'],
-                           group[0]['evaluated_count'], int(rate * 100),
-                           reference.get('BF16', '未完成'), reference.get('HiFP4', '未完成'), '未完成',
-                           sparse_value(bench, 'teal', rate), sparse_value(bench, 'wina', rate)])
-    if methods:
-        def score(method):
-            return next((r['score'] for r in methods if r['variant'] == method), '未完成')
-        teal = next((r for r in methods if 'TEAL' in r['method']), None)
-        wina = next((r for r in methods if 'WINA' in r['method']), None)
-        if any(r and r.get('sparsity') != .5 for r in (teal, wina)):
-            raise ValueError('Likelihood results do not match the displayed 50% target')
-        matrix.append([methods[0]['model'], 'GPQA Diamond', '标签似然诊断 Accuracy', 198, 50,
-                       score('BF16'), score('HiF4 W4A4'), score('HiF4 + ARC'),
-                       teal['score'] if teal else '未完成', wina['score'] if wina else '未完成'])
-    return [[round(value, 2) if i >= 5 and isinstance(value, (float, int)) else value
+    matrix = [
+        [MODEL, '无', '无', quant,
+         *[baseline_value(bench, variant) for bench, _ in BENCHMARKS]]
+        for variant, quant in [('BF16', '无'), ('HiFP4', 'HiF4 W4A4')]
+    ]
+    # ARC has only likelihood diagnostics so far, not full generation results.
+    matrix.append([MODEL, '无', '无', 'HiF4 W4A4 + ARC 补偿', *[PENDING] * 4])
+    for method in ('teal', 'wina'):
+        for rate in SPARSITIES:
+            matrix.append([MODEL, method.upper(), f'{rate:.0%}', 'HiF4 W4A4',
+                           *[sparse_value(bench, method, rate) for bench, _ in BENCHMARKS]])
+    return [[round(value, 2) if i >= 4 and isinstance(value, (float, int)) else value
              for i, value in enumerate(row)] for row in matrix]
+
+
+def display(value, index):
+    if isinstance(value, (int, float)) and index >= 4:
+        return f'{value:.2f}%'
+    return str(value)
 
 
 def export(snapshot, out):
@@ -157,46 +171,43 @@ def export(snapshot, out):
     out = Path(out); out.mkdir(parents=True, exist_ok=True)
     matrix = build_matrix(snapshot)
     timestamp = snapshot.get('sparse_progress', {}).get('updated_at', snapshot['audited_at'])
-    navy, blue, purple, amber = '17365D', 'DDEBF7', 'E4DFEC', 'FFF2CC'
+    navy, blue, green, amber = '17365D', 'DDEBF7', 'E2EFDA', 'FFF2CC'
     wb = Workbook(); ws = wb.active; ws.title = '结果总表'
     ws.sheet_view.showGridLines = False
-    ws.append(['DeepSeek 量化与稀疏评测结果']); ws.merge_cells('A1:J1')
-    ws['A1'].font = Font(name='Microsoft YaHei', size=16, bold=True, color='FFFFFF')
-    ws['A1'].fill = PatternFill('solid', fgColor=navy); ws.row_dimensions[1].height = 32
-    ws.append(['进度快照：' + timestamp + '；紫色 GPQA 行为标签似然诊断，不能与生成式行混比。'])
-    ws.merge_cells('A2:J2'); ws['A2'].alignment = Alignment(wrap_text=True, vertical='center')
-    ws.row_dimensions[2].height = 32; ws.append(HEADERS)
-    for c in ws[3]:
+    ws.append(HEADERS)
+    for c in ws[1]:
         c.font = Font(name='Microsoft YaHei', size=11, bold=True, color='FFFFFF')
         c.fill = PatternFill('solid', fgColor=navy); c.alignment = Alignment(wrap_text=True, vertical='center')
-    ws.row_dimensions[3].height = 34
+    ws.row_dimensions[1].height = 34
+    for col, (bench, protocol) in enumerate(BENCHMARKS, 5):
+        ws.cell(1, col).comment = Comment(bench + '\n' + protocol + '\n分数单位：%。', 'ARCQuant')
     for values in matrix:
-        ws.append(values); diagnostic = values[2].startswith('标签似然')
+        ws.append(values)
         for c in ws[ws.max_row]:
-            c.font = Font(name='Microsoft YaHei', size=11, color='203040', bold=c.column >= 6 and isinstance(c.value, (int, float)))
+            c.font = Font(name='Microsoft YaHei', size=11, color='203040', bold=c.column >= 5 and isinstance(c.value, (int, float)))
             c.alignment = Alignment(vertical='center', wrap_text=True, horizontal='right' if isinstance(c.value, (int, float)) else 'left')
             c.border = Border(bottom=Side(style='hair', color='D8E2EC'))
-            color = purple if diagnostic else blue if c.column in (6, 7) else 'FFFFFF'
-            if c.column >= 8 and isinstance(c.value, str): color = amber
+            color = 'F2F5F9'
+            if c.column >= 5:
+                color = amber if c.value == PENDING else blue if values[1] == '无' else green
             c.fill = PatternFill('solid', fgColor=color)
-            if isinstance(c.value, (int, float)):
-                c.number_format = '0"%"' if c.column == 5 else '0.00"%"' if c.column >= 6 else '0'
-        if diagnostic:
-            ws.cell(ws.max_row, 9).comment = Comment('HiF4 W4A4 + ARC + TEAL，50% 非结构化掩码；198 题标签似然诊断。', 'ARCQuant')
-            ws.cell(ws.max_row, 10).comment = Comment('HiF4 W4A4 + ARC + WINA mask-only，50% 非结构化掩码；无 optional transform。', 'ARCQuant')
+            if c.column >= 5 and isinstance(c.value, (int, float)):
+                c.number_format = '0.00"%"'
         ws.row_dimensions[ws.max_row].height = 42
-    ws.auto_filter.ref = f'A3:J{ws.max_row}'; ws.freeze_panes = 'D4'
-    ws.print_title_rows = '1:3'; ws.page_setup.orientation = 'landscape'; ws.page_setup.fitToWidth = 1
-    for col, width in enumerate([29, 34, 27, 9, 16, 17, 26, 28, 20, 23], 1):
+    ws['D2'].comment = Comment('未增加量化，使用 BF16 参考结果。', 'ARCQuant')
+    ws.auto_filter.ref = f'A1:H{ws.max_row}'; ws.freeze_panes = 'E2'
+    ws.print_title_rows = '1:1'; ws.page_setup.orientation = 'landscape'; ws.page_setup.fitToWidth = 1
+    for col, width in enumerate([31, 15, 12, 29, 15, 15, 17, 21], 1):
         ws.column_dimensions[get_column_letter(col)].width = width
     detail = wb.create_sheet('说明与来源'); detail.sheet_view.showGridLines = False
     detail.append(['项目', '说明 / 来源'])
+    detail.append(['进度快照', timestamp])
     for i, note in enumerate(NOTES, 1): detail.append([f'说明 {i}', note])
     for r in snapshot['rows']:
         if r['group'] == 'methods' or (r['group'] == 'baseline' and r['variant'] in ('BF16', 'HiFP4')):
             detail.append([r['benchmark'] + ' / ' + r['variant'], r['source']])
     for r in snapshot.get('sparse_progress', {}).get('rows', []):
-        detail.append([f"MATH-500 {r['method']} {r['sparsity']:.0%}", r['source']])
+        detail.append([f"{r['benchmark']} {r['method']} {r['sparsity']:.0%}", r['source']])
     detail.column_dimensions['A'].width = 51; detail.column_dimensions['B'].width = 112
     for cells in detail:
         for c in cells:
@@ -207,32 +218,26 @@ def export(snapshot, out):
         c.font = Font(bold=True, color='FFFFFF'); c.fill = PatternFill('solid', fgColor=navy)
     wb.save(out / 'completed_benchmarks.xlsx')
     check = load_workbook(out / 'completed_benchmarks.xlsx', data_only=True)
-    assert list(check['结果总表'].values)[3:] == [tuple(r) for r in matrix]
+    assert list(check['结果总表'].values) == [tuple(HEADERS), *[tuple(r) for r in matrix]]
     check.close()
     for ext, separator in [('csv', ','), ('tsv', '\t')]:
         with (out / f'completed_benchmarks.{ext}').open('w', encoding='utf-8-sig', newline='') as f:
             writer = csv.writer(f, delimiter=separator, lineterminator='\n')
-            writer.writerow(HEADERS); writer.writerows(matrix)
+            writer.writerow(HEADERS)
+            writer.writerows([[display(v, i) for i, v in enumerate(row)] for row in matrix])
 
-    def display(value, index):
-        if isinstance(value, (int, float)) and index >= 5: return f'{value:.2f}'
-        if index == 4: return f'{value}%'
-        return str(value)
-
-    md = ['# DeepSeek 量化与稀疏评测结果', '', '模型：DeepSeek-V4-Flash-0731。分数单位为 %。进度快照：' + timestamp, '',
-          '| ' + ' | '.join(HEADERS[1:]) + ' |', '| ' + ' | '.join(['---'] * 9) + ' |']
-    for row in matrix: md.append('| ' + ' | '.join(display(v, i) for i, v in enumerate(row) if i) + ' |')
-    md += ['', *['- ' + note for note in NOTES], '',
-           '[彩色 Excel](completed_benchmarks.xlsx) · [CSV](completed_benchmarks.csv) · [TSV](completed_benchmarks.tsv) · [审计快照](results_audit.json)', '',
-           '从仓库快照重新导出：`python benchmarks/present_results.py --snapshot-only`。',
-           '有新进度时加 `--math-summary <完整的 summary.json 路径>` 和/或 `--sweep-status <队列 status.json 路径>`；两项都可重复指定。', '']
+    md = ['| ' + ' | '.join(HEADERS) + ' |', '| ' + ' | '.join(['---'] * 4 + ['---:'] * 4) + ' |']
+    for row in matrix: md.append('| ' + ' | '.join(display(v, i) for i, v in enumerate(row)) + ' |')
+    md.append('')
     (out / 'RESULTS_PRESENTATION.md').write_text('\n'.join(md))
     table = '<tr>' + ''.join('<th>' + html.escape(h) + '</th>' for h in HEADERS) + '</tr>'
     for row in matrix:
-        kind = 'diagnostic' if row[2].startswith('标签似然') else 'baseline'
-        table += f'<tr class="{kind}">' + ''.join('<td>' + html.escape(display(v, i)) + '</td>' for i, v in enumerate(row)) + '</tr>'
+        table += '<tr>'
+        for i, value in enumerate(row):
+            kind = 'config' if i < 4 else 'pending' if value == PENDING else 'baseline' if row[1] == '无' else 'sparse'
+            table += f'<td class="{kind}">' + html.escape(display(value, i)) + '</td>'
+        table += '</tr>'
     page = '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>DeepSeek 量化与稀疏评测结果</title>'
-    page += '<style>body{font-family:system-ui;padding:24px}table{border-collapse:collapse}th,td{padding:10px;border:1px solid #ccd6e0}th{background:#17365d;color:white}.baseline{background:#ddebf7}.diagnostic{background:#e4dfec}</style>'
-    page += '<h1>DeepSeek 量化与稀疏评测结果</h1><p>快照：' + html.escape(timestamp) + '</p><table>' + table + '</table><ul>'
-    page += ''.join('<li>' + html.escape(n) + '</li>' for n in NOTES) + '</ul></html>'
+    page += '<style>body{font-family:system-ui;padding:24px}table{border-collapse:collapse}th,td{padding:10px;border:1px solid #ccd6e0}th{background:#17365d;color:white}.config{background:#f2f5f9}.baseline{background:#ddebf7}.sparse{background:#e2efda}.pending{background:#fff2cc}</style>'
+    page += '<table>' + table + '</table></html>'
     (out / 'completed_benchmarks_colored.html').write_text(page)

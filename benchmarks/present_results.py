@@ -282,8 +282,12 @@ def main():
         refresh_progress(snapshot, args.math_summary, args.sweep_status)
         dest.write_text(json.dumps(snapshot,ensure_ascii=False,indent=2)+'\n')
     export(snapshot,args.output_dir)
+    from benchmarks.result_tables import build_matrix
+    matrix = build_matrix(snapshot)
     print(json.dumps({'audited_complete_results':len(snapshot['rows']),
-                      'display_complete_results':sum(requested_result(r) for r in snapshot['rows']),
+                      'display_configurations':len(matrix),
+                      'display_complete_results':sum(isinstance(value, (int, float))
+                                                     for row in matrix for value in row[4:]),
                       'archived_video_reference':sum(requested_result(v) for v in snapshot['video_reference']),
                       'rejected':snapshot['rejected'],'workbook':str(args.output_dir/'completed_benchmarks.xlsx')},ensure_ascii=False,indent=2))
 

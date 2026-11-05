@@ -1,11 +1,14 @@
-﻿模型,Benchmark,评测口径,题数,目标稀疏度 (%),BF16 (0%),HiF4 基础量化 (0%),HiF4 + ARC补偿 (0%),TEAL (%),WINA (%)
-DeepSeek-V4-Flash-0731,GPQA Diamond,生成式 Pass@1,198,50,86.87,78.79,未完成,未完成,未完成
-DeepSeek-V4-Flash-0731,MATH-500,生成式 Pass@1,500,50,98.6,98.6,未完成,等待 GPU,已写入 121/500
-DeepSeek-V4-Flash-0731,MATH-500,生成式 Pass@1,500,60,98.6,98.6,未完成,等待 GPU,等待 GPU
-DeepSeek-V4-Flash-0731,MATH-500,生成式 Pass@1,500,70,98.6,98.6,未完成,等待 GPU,等待 GPU
-DeepSeek-V4-Flash-0731,MATH-500,生成式 Pass@1,500,80,98.6,98.6,未完成,等待 GPU,等待 GPU
-DeepSeek-V4-Flash-0731,MATH-500,生成式 Pass@1,500,90,98.6,98.6,未完成,等待 GPU,等待 GPU
-DeepSeek-V4-Flash-0731,LongBench v2,生成式 Accuracy,503,50,50.3,47.51,未完成,未完成,未完成
-DeepSeek-V4-Flash-0731,LiveCodeBench v6 64K,生成式 Pass@1,175,50,84.57,73.14,未完成,未完成,未完成
-DeepSeek-V4-Flash-0731,LiveCodeBench v6 128K 续写,生成式 Pass@1,175,50,94.29,93.14,未完成,未完成,未完成
-DeepSeek-V4-Flash-0731,GPQA Diamond,标签似然诊断 Accuracy,198,50,50.0,46.46,51.52,43.94,40.91
+﻿模型,稀疏方法,稀疏度,量化方式,GPQA,MATH,LongBench,LiveCodeBench
+DeepSeek-V4-Flash-0731,无,无,无,86.87%,98.60%,50.30%,84.57%
+DeepSeek-V4-Flash-0731,无,无,HiF4 W4A4,78.79%,98.60%,47.51%,73.14%
+DeepSeek-V4-Flash-0731,无,无,HiF4 W4A4 + ARC 补偿,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,TEAL,50%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,TEAL,60%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,TEAL,70%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,TEAL,80%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,TEAL,90%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,WINA,50%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,WINA,60%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,WINA,70%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,WINA,80%,HiF4 W4A4,评测中,评测中,评测中,评测中
+DeepSeek-V4-Flash-0731,WINA,90%,HiF4 W4A4,评测中,评测中,评测中,评测中

@@ -2213,7 +2213,7 @@
   ],
   "rejected": [],
   "sparse_progress": {
-    "updated_at": "2026-11-05T09:03:13+00:00",
+    "updated_at": "2026-11-05T09:58:43+00:00",
     "rows": [
       {
         "benchmark": "MATH-500",
@@ -2309,12 +2309,12 @@
         "benchmark": "MATH-500",
         "method": "wina",
         "sparsity": 0.5,
-        "completed": 121,
+        "completed": 126,
         "expected": 500,
         "score": null,
         "status": "未完成",
         "source": "runs/baseline_queue_20261104_130054/full/wina/500/arcquant-wina-0.5-0a9a52f0d7ed/summary.json",
-        "summary_sha256": "222927956d7f97959d1ee813d714f96acab68c53ed8bbf0c53e4e4cd55fd28de"
+        "summary_sha256": "fca3a65b85f00e2963791f71a082fe127dea1e46ff491d59590a8310cf02f572"
       }
     ]
   }
