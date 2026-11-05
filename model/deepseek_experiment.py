@@ -56,6 +56,13 @@ def prefill_rows(length, method, device):
     return torch.arange(length, device=device) >= length - count
 
 
+def evenly_spaced_indices(size, count, device='cpu'):
+    """Inclusive deterministic samples, independent of default floating dtype."""
+    if size < 1 or not 1 <= count <= size:
+        raise ValueError('Sampling requires 1 <= count <= size')
+    return torch.arange(count, dtype=torch.int64, device=device) * (size - 1) // max(count - 1, 1)
+
+
 class InputCalibration:
     def __init__(self, width, sample_limit=16384):
         self.maximum = torch.zeros(width, dtype=torch.float32)
@@ -80,11 +87,11 @@ class InputCalibration:
         # retaining only the first prompt. All channels contribute to ARC max.
         flat = x.flatten()
         take = min(2048, flat.numel())
-        indices = torch.linspace(0, flat.numel() - 1, take).floor().long().clamp_max(flat.numel() - 1)
+        indices = evenly_spaced_indices(flat.numel(), take)
         self.samples.append(flat[indices])
         if sum(t.numel() for t in self.samples) > self.sample_limit * 2:
             merged = torch.cat(self.samples)
-            indices = torch.linspace(0, merged.numel() - 1, self.sample_limit).floor().long().clamp_max(merged.numel() - 1)
+            indices = evenly_spaced_indices(merged.numel(), self.sample_limit)
             self.samples = [merged[indices]]
 
     def finish(self):
@@ -92,7 +99,7 @@ class InputCalibration:
             raise ValueError('Projection received no calibration rows')
         values = torch.cat(self.samples)
         if values.numel() > self.sample_limit:
-            values = values[torch.linspace(0, values.numel()-1, self.sample_limit).long()]
+            values = values[evenly_spaced_indices(values.numel(), self.sample_limit)]
         centers, counts = reference_histogram(values)
         width = self.maximum.numel()
         selected = min(width, math.ceil(width * self.selected / self.elements / 64) * 64)

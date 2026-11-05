@@ -1,0 +1,224 @@
+{
+  "kind": "real DeepSeek first-layer diagnostic, not a benchmark score",
+  "date": "2026-11-05",
+  "model": "DeepSeek-V4-Flash-0731",
+  "world_size": 2,
+  "quantization": "HiF4 W4A4 + ARC",
+  "samples": 2,
+  "length": 128,
+  "layers": 1,
+  "max_steps": 1,
+  "full_model_strategy_complete": false,
+  "source_run": "runs/native_greedy_stream_pilot_20261105_183738",
+  "implementation_sha256": {
+    "benchmarks/deepseek_greedy_search.py": "f8f8b09404a76eb329d612faf8aa774263f1b975a909b650b608078123259c22",
+    "benchmarks/deepseek_greedy_strategy.py": "59891483b79bbe3d3de3c5a6760072a641f4476d68a7f48a9b8a2a6810706628",
+    "model/native_greedy.py": "4bcbc8453d4e284ed7cceaef9d6a11b624773a4deff476cc7d75f657600ac3e2",
+    "model/deepseek_greedy_runtime.py": "803bbe8f44388751faed0de11a31c7897b37ff2bc4073f3c07331cbd3605c73f",
+    "model/deepseek_experiment.py": "ba8ee7ad1d7c24ed7f6d0794bde8198b17beab3d18edcee5817c12b327fc77b0"
+  },
+  "methods": {
+    "wina": {
+      "iterations": 1,
+      "candidate_forwards": 11,
+      "elapsed_seconds": 2.5373811289900914,
+      "complete": false,
+      "curve": [
+        {
+          "iteration": 1,
+          "chosen": "layers.0.ffn.experts.w2",
+          "effective_sparsity": 0.0029629629629629632,
+          "error": 7.093185558915138e-07,
+          "rates": {
+            "layers.0.attn.wkv": 0.0,
+            "layers.0.attn.wo_a": 0.0,
+            "layers.0.attn.wo_b": 0.0,
+            "layers.0.attn.wq_a": 0.0,
+            "layers.0.attn.wq_b": 0.0,
+            "layers.0.ffn.experts.w1": 0.0,
+            "layers.0.ffn.experts.w2": 0.016666666666666666,
+            "layers.0.ffn.experts.w3": 0.0,
+            "layers.0.ffn.shared_experts.w1": 0.0,
+            "layers.0.ffn.shared_experts.w2": 0.0,
+            "layers.0.ffn.shared_experts.w3": 0.0
+          },
+          "candidates": [
+            {
+              "group": "layers.0.attn.wkv",
+              "error": 0.02548531536012888,
+              "delta": 0.4,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wo_a",
+              "error": 0.00667338352650404,
+              "delta": 0.025,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wo_b",
+              "error": 0.006922752363607287,
+              "delta": 0.025,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wq_a",
+              "error": 0.01974766794592142,
+              "delta": 0.2,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wq_b",
+              "error": 0.01482405699789524,
+              "delta": 0.025,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.experts.w1",
+              "error": 0.0006300895765889436,
+              "delta": 0.016666666666666666,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.experts.w2",
+              "error": 7.093185558915138e-07,
+              "delta": 0.016666666666666666,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.experts.w3",
+              "error": 0.0006251344457268715,
+              "delta": 0.016666666666666666,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.shared_experts.w1",
+              "error": 0.004545308882370591,
+              "delta": 0.1,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.shared_experts.w2",
+              "error": 0.000298114973702468,
+              "delta": 0.1,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.shared_experts.w3",
+              "error": 0.006812078412622213,
+              "delta": 0.1,
+              "effective_sparsity": 0.0029629629629629632
+            }
+          ],
+          "elapsed_seconds": 2.4794043690199032
+        }
+      ]
+    },
+    "teal": {
+      "iterations": 1,
+      "candidate_forwards": 11,
+      "elapsed_seconds": 2.4256103390362114,
+      "complete": false,
+      "curve": [
+        {
+          "iteration": 1,
+          "chosen": "layers.0.ffn.experts.w2",
+          "effective_sparsity": 0.0029629629629629632,
+          "error": 2.013477023865562e-05,
+          "rates": {
+            "layers.0.attn.wkv": 0.0,
+            "layers.0.attn.wo_a": 0.0,
+            "layers.0.attn.wo_b": 0.0,
+            "layers.0.attn.wq_a": 0.0,
+            "layers.0.attn.wq_b": 0.0,
+            "layers.0.ffn.experts.w1": 0.0,
+            "layers.0.ffn.experts.w2": 0.016666666666666666,
+            "layers.0.ffn.experts.w3": 0.0,
+            "layers.0.ffn.shared_experts.w1": 0.0,
+            "layers.0.ffn.shared_experts.w2": 0.0,
+            "layers.0.ffn.shared_experts.w3": 0.0
+          },
+          "candidates": [
+            {
+              "group": "layers.0.attn.wkv",
+              "error": 0.02508709579706192,
+              "delta": 0.4,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wo_a",
+              "error": 0.00967123033478856,
+              "delta": 0.025,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wo_b",
+              "error": 0.00790341105312109,
+              "delta": 0.025,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wq_a",
+              "error": 0.01994013600051403,
+              "delta": 0.2,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.attn.wq_b",
+              "error": 0.014505384024232626,
+              "delta": 0.025,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.experts.w1",
+              "error": 0.0006113604176789522,
+              "delta": 0.016666666666666666,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.experts.w2",
+              "error": 2.013477023865562e-05,
+              "delta": 0.016666666666666666,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.experts.w3",
+              "error": 0.0006226511031854898,
+              "delta": 0.016666666666666666,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.shared_experts.w1",
+              "error": 0.0045919695403426886,
+              "delta": 0.1,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.shared_experts.w2",
+              "error": 0.00016466288070660084,
+              "delta": 0.1,
+              "effective_sparsity": 0.0029629629629629632
+            },
+            {
+              "group": "layers.0.ffn.shared_experts.w3",
+              "error": 0.0072633742820471525,
+              "delta": 0.1,
+              "effective_sparsity": 0.0029629629629629632
+            }
+          ],
+          "elapsed_seconds": 2.3657789819990285
+        }
+      ]
+    }
+  },
+  "wina_online": {
+    "mask": "topk",
+    "checks": [
+      {
+        "target": 0.0029629629629629632,
+        "greedy_error": 7.781782187521458e-07,
+        "uniform_error": 0.010715109761804342
+      }
+    ]
+  }
+}

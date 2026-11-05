@@ -2,6 +2,10 @@
 
 **DeepSeek ARC 量化＋稀疏队列：** [启动、校准与验证说明](docs/DEEPSEEK_ARC_QUEUE.md)
 
+**DeepSeek TEAL/WINA greedy 预算：** [原生搜索规则、离线准备、推理加载与迁移命令](docs/DEEPSEEK_GREEDY.md)。
+统一入口 `python arc.py deepseek-greedy --help`；先验证两种方法，再搜索 50%–90% 五档。
+完整 43 层策略以产物的 `complete` 标记为准；WINA transform 尚未启用。
+
 **实验结果表：** [在线查看](docs/RESULTS_PRESENTATION.md) · [下载彩色 Excel](docs/completed_benchmarks.xlsx?raw=true) · [CSV](docs/completed_benchmarks.csv) · [TSV](docs/completed_benchmarks.tsv)
 
 <h5 align="center">

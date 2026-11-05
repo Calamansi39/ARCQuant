@@ -240,6 +240,9 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
+    from benchmarks.queue_deepseek_greedy import parser as greedy_parser
+    sub.add_parser("deepseek-greedy", parents=[greedy_parser()], add_help=False,
+                   help="queue native-style DeepSeek WINA/TEAL offline budget search")
     from benchmarks.queue_video import parser as video_parser
     sub.add_parser("video-queue", parents=[video_parser()], add_help=False,
                    help="prepare a video evaluation plan; --execute waits for available GPUs")
@@ -385,6 +388,9 @@ def runtime_env() -> dict[str, str]:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.action == "deepseek-greedy":
+            from benchmarks.queue_deepseek_greedy import run as run_greedy_queue
+            return run_greedy_queue(args)
         if args.action == "video-queue":
             from benchmarks.queue_video import run as run_video_queue
             try:
