@@ -75,3 +75,18 @@ WikiText-2 固定版本：`Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d23
 验证：每组 2 条提示、2 步批量解码，所有 rank 检测到 ARC 残差和两种注意力路径，
 logits 有限。36 项定向测试通过。精简原始证据见
 [验证记录](DEEPSEEK_ARC_VALIDATION.json)。这些验证不计作准确率成绩。
+
+## 当前部署（2026-11-05）
+
+正式队列已部署于 `runs/deepseek_arc_campaign_20261105/`，PID `2608124`，
+目标 GPU `0,1`。队列从该目录 `source/` 的固定提交 `7410808` 工作副本运行；
+后续主仓库编辑不会改变正在排队的代码。任务目录的 `launch.json` 保存完整命令，
+`status.json` 是实时状态，`launcher.log` 为队列日志。
+
+部署核查时处于 `waiting_for_gpu_locks`，正式校准尚未开始：GPU 0/1 被另一项
+`native_greedy_priority_20261105_182612` 校准任务占用。释放后本队列自动进入
+128×512 正式校准，然后执行 11 个 ARC 设置。不要把已通过的短诊断称为
+正式校准或 500 题结果已经完成。
+
+旧的无 ARC sweep 已停止；旧 WINA 50% 的 127/500 条 MATH 输出保留在
+`runs/baseline_queue_20261104_130054/`，不续接到 ARC 输出目录。
