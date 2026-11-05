@@ -76,7 +76,7 @@ def run_child(command, env, log, timeout):
                     child.wait()
 
 
-def main(argv=None):
+def main(argv=None, *, gpu_lease=wait_for_idle_pair):
     p = argparse.ArgumentParser(description=__doc__)
     for key in ('base-eval-root', 'source-model', 'converted-model', 'calibration', 'out-dir'):
         p.add_argument('--' + key, type=Path, required=True)
@@ -148,7 +148,7 @@ def main(argv=None):
                     if a.dry_run:
                         rc = run_child(command(method, count, destination), env, log, 600)
                     else:
-                        with wait_for_idle_pair(poll_seconds=a.poll_seconds) as ids:
+                        with gpu_lease(poll_seconds=a.poll_seconds) as ids:
                             if fingerprint() != code:
                                 raise RuntimeError('source changed while queued; restart with a new output directory')
                             entry.update(status='running', gpu_ids=ids)

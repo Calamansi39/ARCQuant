@@ -25,10 +25,10 @@ class SparseQueueHealthTests(unittest.TestCase):
     def test_wrong_but_valid_answers_are_not_filtered_by_score(self):
         self.assertTrue(self.check(self.rows()))
 
-    def test_truncation_or_missing_answer_blocks_full_run(self):
+    def test_truncation_is_kept_but_missing_answer_blocks_full_run(self):
         rows = self.rows()
         rows[0]['generation']['finish_reason'] = 'length'
-        self.assertFalse(self.check(rows))
+        self.assertTrue(self.check(rows))
         rows = self.rows()
         rows[0]['score']['extracted_answer'] = None
         self.assertFalse(self.check(rows))
