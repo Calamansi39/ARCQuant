@@ -220,5 +220,247 @@
         "uniform_error": 0.010715109761804342
       }
     ]
+  },
+  "formal_first_step": {
+    "kind": "formal calibration size, first-layer one-step timing only",
+    "samples": 128,
+    "length": 512,
+    "search_samples": 20,
+    "search_batch_size": 20,
+    "quantization": "HiF4 W4A4 + ARC",
+    "world_size": 2,
+    "layer_count_measured": 1,
+    "source_run": "runs/native_greedy_formal_batch20_20261105_184601/search",
+    "complete_model_strategy": false,
+    "implementation_sha256": {
+      "benchmarks/deepseek_greedy_search.py": "b5a1393321dc7ea43c1f8a5a664921b67cc1c78a4dbcc85a9faf7da26eec2cfb",
+      "benchmarks/deepseek_greedy_strategy.py": "59891483b79bbe3d3de3c5a6760072a641f4476d68a7f48a9b8a2a6810706628",
+      "model/native_greedy.py": "4bcbc8453d4e284ed7cceaef9d6a11b624773a4deff476cc7d75f657600ac3e2",
+      "model/deepseek_greedy_runtime.py": "803bbe8f44388751faed0de11a31c7897b37ff2bc4073f3c07331cbd3605c73f",
+      "model/deepseek_experiment.py": "ba8ee7ad1d7c24ed7f6d0794bde8198b17beab3d18edcee5817c12b327fc77b0"
+    },
+    "methods": {
+      "wina": {
+        "iterations": 1,
+        "candidate_forwards": 11,
+        "elapsed_seconds": 4.657098784984555,
+        "curve": [
+          {
+            "iteration": 1,
+            "chosen": "layers.0.ffn.experts.w2",
+            "effective_sparsity": 0.0029629629629629632,
+            "error": 7.086813184287166e-06,
+            "rates": {
+              "layers.0.attn.wkv": 0.0,
+              "layers.0.attn.wo_a": 0.0,
+              "layers.0.attn.wo_b": 0.0,
+              "layers.0.attn.wq_a": 0.0,
+              "layers.0.attn.wq_b": 0.0,
+              "layers.0.ffn.experts.w1": 0.0,
+              "layers.0.ffn.experts.w2": 0.016666666666666666,
+              "layers.0.ffn.experts.w3": 0.0,
+              "layers.0.ffn.shared_experts.w1": 0.0,
+              "layers.0.ffn.shared_experts.w2": 0.0,
+              "layers.0.ffn.shared_experts.w3": 0.0
+            },
+            "candidates": [
+              {
+                "group": "layers.0.attn.wkv",
+                "error": 0.05749126896262169,
+                "delta": 0.4,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wo_a",
+                "error": 0.015196246095001698,
+                "delta": 0.025,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wo_b",
+                "error": 0.01493978500366211,
+                "delta": 0.025,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wq_a",
+                "error": 0.04404829815030098,
+                "delta": 0.2,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wq_b",
+                "error": 0.032322000712156296,
+                "delta": 0.025,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.experts.w1",
+                "error": 0.0016561804804950953,
+                "delta": 0.016666666666666666,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.experts.w2",
+                "error": 7.086813184287166e-06,
+                "delta": 0.016666666666666666,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.experts.w3",
+                "error": 0.0017226673662662506,
+                "delta": 0.016666666666666666,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.shared_experts.w1",
+                "error": 0.010533569380640984,
+                "delta": 0.1,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.shared_experts.w2",
+                "error": 0.0007734589744359255,
+                "delta": 0.1,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.shared_experts.w3",
+                "error": 0.01599511317908764,
+                "delta": 0.1,
+                "effective_sparsity": 0.0029629629629629632
+              }
+            ],
+            "elapsed_seconds": 4.04009273997508
+          }
+        ],
+        "complete": false,
+        "replay": {
+          "zero_sparsity_error": 0.0,
+          "reference_norm": 1.082408607006073,
+          "search_batch_size": 20,
+          "search_samples": 20
+        }
+      },
+      "teal": {
+        "iterations": 1,
+        "candidate_forwards": 11,
+        "elapsed_seconds": 4.103108141047414,
+        "curve": [
+          {
+            "iteration": 1,
+            "chosen": "layers.0.ffn.experts.w2",
+            "effective_sparsity": 0.0029629629629629632,
+            "error": 1.4896123502694536e-05,
+            "rates": {
+              "layers.0.attn.wkv": 0.0,
+              "layers.0.attn.wo_a": 0.0,
+              "layers.0.attn.wo_b": 0.0,
+              "layers.0.attn.wq_a": 0.0,
+              "layers.0.attn.wq_b": 0.0,
+              "layers.0.ffn.experts.w1": 0.0,
+              "layers.0.ffn.experts.w2": 0.016666666666666666,
+              "layers.0.ffn.experts.w3": 0.0,
+              "layers.0.ffn.shared_experts.w1": 0.0,
+              "layers.0.ffn.shared_experts.w2": 0.0,
+              "layers.0.ffn.shared_experts.w3": 0.0
+            },
+            "candidates": [
+              {
+                "group": "layers.0.attn.wkv",
+                "error": 0.05638314038515091,
+                "delta": 0.4,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wo_a",
+                "error": 0.02780121937394142,
+                "delta": 0.025,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wo_b",
+                "error": 0.014295932836830616,
+                "delta": 0.025,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wq_a",
+                "error": 0.04367949441075325,
+                "delta": 0.2,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.attn.wq_b",
+                "error": 0.033095669001340866,
+                "delta": 0.025,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.experts.w1",
+                "error": 0.00155859615188092,
+                "delta": 0.016666666666666666,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.experts.w2",
+                "error": 1.4896123502694536e-05,
+                "delta": 0.016666666666666666,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.experts.w3",
+                "error": 0.0016039051115512848,
+                "delta": 0.016666666666666666,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.shared_experts.w1",
+                "error": 0.009421798400580883,
+                "delta": 0.1,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.shared_experts.w2",
+                "error": 0.0006130984402261674,
+                "delta": 0.1,
+                "effective_sparsity": 0.0029629629629629632
+              },
+              {
+                "group": "layers.0.ffn.shared_experts.w3",
+                "error": 0.014444324187934399,
+                "delta": 0.1,
+                "effective_sparsity": 0.0029629629629629632
+              }
+            ],
+            "elapsed_seconds": 4.067668060015421
+          }
+        ],
+        "complete": false,
+        "replay": {
+          "zero_sparsity_error": 0.0,
+          "reference_norm": 1.082408607006073,
+          "search_batch_size": 20,
+          "search_samples": 20
+        }
+      }
+    },
+    "wina_online": {
+      "mask": "topk",
+      "checks": [
+        {
+          "target": 0.0029629629629629632,
+          "greedy_error": 4.011960299976636e-06,
+          "uniform_error": 0.021017512306571007
+        }
+      ]
+    },
+    "extrapolation": {
+      "assumption": "all 43 layers cost the same as measured first-layer iteration; excludes calibration and loading, later saturation/MLA layers can change costs",
+      "nominal_iterations_per_layer_to_90": 304,
+      "two_method_wall_hours": 31.809284704747196,
+      "two_gpu_hours": 63.61856940949439,
+      "measured_full_run": false
+    }
   }
 }
