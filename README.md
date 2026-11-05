@@ -125,9 +125,10 @@ torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_math.py \
   --limit 8 --out-dir validation/math-wina
 ```
 
-要一次生成原生 TEAL/WINA 的 50% 和 65% 元素稀疏率对照命令，可用 `sparse-plan`；
-这些点不保证 2:4，也不表示稀疏层覆盖率。`sparse-plan` 只写
-计划，不占用 GPU；默认输出 WINA/TEAL 各自的 50% 和 65% smoke 命令：
+要一次生成原生 TEAL/WINA 的 50%、60%、70% 和 80% 元素稀疏率对照命令，可用
+`sparse-plan`；这些点不保证 2:4，也不表示稀疏层覆盖率。`sparse-plan` 只写
+计划，不占用 GPU；使用 `--profile baseline_sweep` 时会输出这四档的 WINA/TEAL
+smoke 命令：
 
 ```bash
 python arc.py sparse-plan --benchmark math500 \
@@ -139,8 +140,8 @@ python arc.py sparse-plan --benchmark math500 \
 ```
 
 稀疏运行时会把目标稀疏率、可掩码元素数、实际置零元素数和实际零值比例写入
-`runtime`。这样 65% 的目标值和真实观测值会同时保留，不会把 prefill 中未处理的
-前缀或模型原有零值误报成精确的 65%。
+`runtime`。目标值和真实观测值会同时保留，不会把 prefill 中未处理的前缀或模型
+原有零值误报成精确的目标百分比。
 
 TEAL 还要加入与 TP rank 对应的 `--calibration runs/.../rank*.pt`。输出中的
 `runtime.sparse_masked_elements` 是真实掩码计数；smoke 结果只用于检查链路，不能

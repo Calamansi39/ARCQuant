@@ -16,16 +16,19 @@
 
 CLI 的 `smoke` 档分别取 GPQA Diamond 8 题、MATH-500 8 题、LongBench v2 8 题和 LiveCodeBench v6 2 题。DeepSeek 使用 2 卡，卡时应按 **2 × 实测墙钟小时**计算。GPQA 和 MATH 的已有协议最多生成 8192 token；LongBench v2 有 128K 长输入，LiveCodeBench v6 还有长代码生成与执行评分。题目数相同也不能用同一单题耗时估算。先用 `python arc.py plan --backend base-eval ... --profile smoke` 检查参数，再记录实际加载时间、每题耗时和峰值显存。
 
-高稀疏率 smoke 可以加入等待队列，不会终止已有进程：
+高稀疏率 smoke 可以加入等待队列，不会终止已有进程。正式网格是 50%、60%、70%、80%；
+可以为每个点使用独立输出目录，例如：
 
 ```bash
-ARCQUANT_SPARSITY=0.65 ARCQUANT_LIMIT=1 \
-ARCQUANT_MAX_NEW_TOKENS=128 ARCQUANT_BATCH_SIZE=1 \
-bash benchmarks/queue_deepseek_sparse_math.sh
+for s in 0.5 0.6 0.7 0.8; do
+  ARCQUANT_SPARSITY="$s" ARCQUANT_LIMIT=1 \
+  ARCQUANT_MAX_NEW_TOKENS=128 ARCQUANT_BATCH_SIZE=1 \
+  ARCQUANT_SPARSE_LOG_DIR="runs/sparse_queue_${s}" \
+  bash benchmarks/queue_deepseek_sparse_math.sh
+done
 ```
 
-该命令会依次检查 WINA 65% 和 TEAL 65%，输出目录带有 `sparsity_65`。它用于检查
-生成是否正常结束和实际 mask 比例，不能直接作为全量成绩。队列会过滤有 compute
+每个队列用于检查生成是否正常结束和实际 mask 比例，不能直接作为全量成绩。队列会过滤有 compute
 进程的卡，并在启动前再次观察；可用 `ARCQUANT_GPU_SETTLE_SECONDS=5` 延长二次观察窗口。
 默认只等待一个轮询周期来凑齐四张卡，凑不齐就立即退化为两卡顺序运行；可用
 `ARCQUANT_FOUR_GPU_WAIT_POLLS` 延长四卡并发等待。
