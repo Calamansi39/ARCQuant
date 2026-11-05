@@ -240,5 +240,162 @@
       568.8888888888889,
       1137.7777777777778
     ]
+  },
+  "historical_scope_note": "Top-level as_of, scope, assumptions and estimates retain the original full-grid scenario; they are superseded for resource allocation by screening_plan. Original measurements are preserved.",
+  "screening_plan": {
+    "updated_at": "2026-11-06T00:07:00+08:00",
+    "status": "proposed, not launched; dev pools and loading adapter not implemented",
+    "model": "DeepSeek-V4-Flash",
+    "gpu_type": "H20-3e",
+    "world_size_per_job": 2,
+    "quantization": "HiF4 W4A4 + ARC",
+    "sparsities": [
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9
+    ],
+    "protocol": {
+      "max_new_tokens": 8192,
+      "scoring": "generated-answer correctness",
+      "within_round_fixed_prompt_seed_order_and_batch": true,
+      "round_1_batch_capacity": 16,
+      "round_2_batch_capacity": 20
+    },
+    "development_data": {
+      "math": "48 stratified original MATH training questions, content-deduplicated against final MATH-500 and calibration; fixed nested 16 for round 1; availability and manifest pending",
+      "science": "16 GPQA main/extended questions after normalized question/options deduplication and removal of all Diamond overlap; availability/access and manifest pending",
+      "test_selection_fallback": "must disclose exploratory tuning; exclude selected questions for independent held-out evaluation or disclose tuning in full benchmark scores"
+    },
+    "round_1": {
+      "configurations": 11,
+      "math_per_configuration": 16,
+      "science_per_configuration": 0,
+      "generations": 176,
+      "baseline_gpu_hours": 7.796117049455567,
+      "scenario_gpu_hours": [
+        19.49029262363892,
+        38.98058524727784
+      ]
+    },
+    "round_2": {
+      "configurations": 5,
+      "common_candidate_sparsities": 2,
+      "math_per_configuration": 48,
+      "science_per_configuration": 16,
+      "generations": 320,
+      "reruns_of_round_1_answers": 80,
+      "reruns_included_in_cost": true,
+      "baseline_gpu_hours": 25.662022422147786,
+      "scenario_gpu_hours": [
+        64.15505605536947,
+        128.31011211073894
+      ]
+    },
+    "screening_total": {
+      "generations": 496,
+      "reuse_assumed": false,
+      "baseline_gpu_hours": 33.45813947160335,
+      "scenario_gpu_hours": [
+        83.64534867900838,
+        167.29069735801676
+      ],
+      "rounded_allocation_gpu_hours": [
+        90,
+        180
+      ]
+    },
+    "remaining_greedy_gpu_hours": [
+      80,
+      100
+    ],
+    "search_plus_screening_rounded_gpu_hours": [
+      170,
+      280
+    ],
+    "suggested_initial_allocation_gpu_hours": 300,
+    "allocation_excludes_formal_benchmarks_and_video": true,
+    "budget_control": "measure ARC and representative TEAL/WINA first batches, include loading and token growth; initial screening allocation 180 GPU-hours, pause expansion at batch boundaries if forecast exceeds allocation; completion not guaranteed",
+    "per_question_baseline_gpu_hours": {
+      "math": 0.04429611959917936,
+      "science": 0.18788692147930922
+    },
+    "assumed_runtime_multiplier": [
+      2,
+      4
+    ],
+    "contingency_factor": 1.25,
+    "assumptions_note": "Multiplier and allowance are unmeasured planning assumptions for ARC/sparse overhead, changed output lengths, loading, small-batch inefficiency and limited retries. Development distributions can differ. Not a confidence interval or upper bound.",
+    "selection_rule": {
+      "status": "proposed exploratory rule to freeze before outputs; not project acceptance criteria",
+      "round_1": "coarse failures only; carry two common candidates based on worse-method paired degradation, with a conservative point and a higher-sparsity point; report uncertainty",
+      "round_2_max_net_math_correct_loss": 2,
+      "round_2_max_net_science_correct_loss": 1,
+      "both_methods_required": true,
+      "report_paired_losses_and_gains": true,
+      "if_uncertain": "prefer lower candidate and report uncertainty",
+      "if_none_acceptable": "report no acceptable point",
+      "statistical_limit": "48 math and 16 science cannot establish <1-3 percentage point degradation"
+    },
+    "withdrawn_old_11_config_100_math_32_science_plan": {
+      "baseline_gpu_hours": 114.86192791981414,
+      "scenario_gpu_hours": [
+        287.15481979953535,
+        574.3096395990707
+      ]
+    },
+    "additional_formal_three_config_math500": {
+      "baseline_gpu_hours": 66.44417939876904,
+      "scenario_gpu_hours": [
+        166.1104484969226,
+        332.2208969938452
+      ]
+    },
+    "additional_formal_three_config_gpqa198": {
+      "baseline_gpu_hours": 111.60483135870967,
+      "scenario_gpu_hours": [
+        279.0120783967742,
+        558.0241567935484
+      ]
+    },
+    "additional_formal_three_config_both": {
+      "baseline_gpu_hours": 178.04901075747873,
+      "scenario_gpu_hours": [
+        445.12252689369683,
+        890.2450537873937
+      ]
+    },
+    "withdrawn_claim": "500 H20 GPU-hours covers remaining search, screening and all three configurations of full MATH+GPQA",
+    "greedy_status_observed_20261105_2357_CST": {
+      "handoff": {
+        "local": {
+          "path": "runs/deepseek_method_split_20261105_2040/local_status.json",
+          "sha256": "74b9b5814e79efc70ababd49fc02cad1e8056449211f65360227166600f59cef",
+          "phase": "failed",
+          "updated_at": "2026-11-05T13:46:13.272452+00:00",
+          "error": "TimeoutError: Original queue has not exited; copied checkpoints retained"
+        },
+        "remote": {
+          "path": "runs/deepseek_method_split_20261105_2040/remote_status.json",
+          "sha256": "6df277984a6805c2cbd109d7cd483865df3b9f97a3dfe8a6bfdde8220ffe2507",
+          "phase": "failed",
+          "updated_at": "2026-11-05T13:46:14.647369+00:00",
+          "error": "RuntimeError: Local handoff failed; releasing remote GPUs"
+        }
+      },
+      "process_evidence": {
+        "queue_pid": 2712330,
+        "queue_alive": true,
+        "torchrun_pid": 2729204,
+        "torchrun_state": "Zs zombie",
+        "absent_rank_pids": [
+          2729240,
+          2729241
+        ]
+      },
+      "conclusion": "old searching status is stale; no progress from original rank workers; search must recover checkpoint before remaining-runtime estimate applies",
+      "gpu_jobs_changed_this_turn": false
+    }
   }
 }
