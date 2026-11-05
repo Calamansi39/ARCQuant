@@ -92,6 +92,8 @@ We will release our vLLM evaluation very soon.
 新增 `arc.py video-queue` 自动完成环境预检、等空卡、单视频验证、VBench 生成和评分。
 两台机器共用挂载存储时，直接看 [MAGI H20 交接](docs/MAGI_H20_HANDOFF.md)：
 现有资产与结果位置、避免重复生成、运行要求和方法适配任务均已列出。
+向 A800 传包部署 MiniMax 时，使用 [MiniMax A800 交接](docs/MINIMAX_A800_HANDOFF.md)，
+含完整 Git 仓库恢复、模型下载、环境安装与 HiF4 稀疏评测要求。
 
 **普通 2:4 结构化路径：** 新增 `arc.py structured-plan` / `structured-run`，将
 HiF4 W4A4 与每组四取二的激活掩码组合，并单独统计线性投影覆盖率。它与原生
