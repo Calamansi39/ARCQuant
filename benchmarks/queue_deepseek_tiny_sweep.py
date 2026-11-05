@@ -199,23 +199,28 @@ def main():
     if len(set(gpu_candidates)) < 2:
         raise SystemExit('need at least two candidate GPUs')
     heartbeat = args.out_dir / f'heartbeat-{args.host_label}.json'
-    while True:
+    selected = {method: None for method in methods}
+    while not any(selected.values()):
         selected = {method: choose(candidates[method], method) for method in methods}
-        atomic_json(heartbeat, dict(host=args.host_label, phase='waiting_for_complete_greedy',
+        atomic_json(heartbeat, dict(host=args.host_label, phase='waiting_for_any_complete_greedy',
             strategies=selected, updated_at=now()))
-        if all(selected.values()):
-            break
-        time.sleep(args.poll_seconds)
+        if not any(selected.values()):
+            time.sleep(args.poll_seconds)
     tasks_pending = tasks[:]
     while tasks_pending:
         atomic_json(heartbeat, dict(host=args.host_label, phase='scheduling',
             remaining=[t['id'] for t in tasks_pending], updated_at=now()))
         available = idle_gpus(138000, gpu_candidates)
-        if len(available) < 2:
+        # Refresh independently: one method can start while the other is
+        # still searching, so newly freed pairs are not left idle.
+        selected = {method: choose(candidates[method], method) for method in methods}
+        if len(available) < 2 or not any(selected.get(t['method']) for t in tasks_pending):
             time.sleep(args.poll_seconds); continue
         pair = available[:2]
         task = None
         for candidate in tasks_pending:
+            if selected.get(candidate['method']) is None:
+                continue
             task_dir = args.out_dir / 'claims' / candidate['id']
             if summary_complete(candidate['output'], candidate):
                 tasks_pending.remove(candidate); continue
