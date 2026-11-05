@@ -35,7 +35,9 @@ def parser():
     p.add_argument('--magi-repo', type=Path, default=ROOT / 'external/MAGI-2-preview')
     p.add_argument('--generator-python')
     p.add_argument('--scorer-python')
-    p.add_argument('--method', choices=['none', 'wina'], default='none')
+    p.add_argument('--method', choices=['none', 'wina', 'teal'], default='none')
+    p.add_argument('--calibration', type=Path)
+    p.add_argument('--magi-zero-evidence', type=Path)
     p.add_argument('--sparsity', type=float, default=0.)
     p.add_argument('--quant', choices=['hifp4', 'bf16'], default='hifp4')
     p.add_argument('--profile', choices=['smoke', 'tiny', 'official'], default='tiny')
@@ -56,9 +58,16 @@ def build_plan(a, catalog):
         raise ValueError('Steps and polling interval must be positive')
     if not 0 <= a.sparsity < 1 or (a.method == 'none' and a.sparsity != 0):
         raise ValueError('Use --method wina for nonzero sparsity; sparsity must be in [0,1)')
-    if a.method == 'wina' and (a.model != 'minimax-h3' or a.quant != 'hifp4'):
-        raise ValueError('This queue supports MiniMax WINA + HiF4 only. MAGI grouped refiner '
-                         'and video TEAL are still incomplete; no fallback to a dense baseline.')
+    if a.method != 'none' and a.quant != 'hifp4':
+        raise ValueError('Sparse video queues require HiF4')
+    if a.method == 'teal' and (a.model != 'magi-2-preview' or not a.calibration):
+        raise ValueError('Video TEAL requires MAGI and a completed --calibration')
+    if a.calibration and a.method != 'teal':
+        raise ValueError('--calibration is only valid for TEAL')
+    if a.magi_zero_evidence and (a.model != 'magi-2-preview' or a.method == 'none'):
+        raise ValueError('--magi-zero-evidence requires a MAGI sparse method')
+    if a.model == 'magi-2-preview' and a.method != 'none' and a.profile != 'smoke' and not a.magi_zero_evidence:
+        raise ValueError('Full MAGI sparse suites require validated --magi-zero-evidence; run smoke first')
     count = 1 if a.model == 'minimax-h3' else 2
     candidates = a.gpu_ids.split(',') if a.gpu_ids else None
     if candidates is not None and (len(set(candidates)) != len(candidates) or
@@ -75,6 +84,10 @@ def build_plan(a, catalog):
     backend, out = a.base_eval_root.expanduser().resolve(), a.out_dir.expanduser().resolve()
     files = ['benchmarks/queue_video.py', 'benchmarks/run_minimax_sparse.py',
              'model/video_sparse_runtime.py'] if a.method == 'wina' else ['benchmarks/queue_video.py']
+    if a.model == 'magi-2-preview' and a.method != 'none':
+        files = ['benchmarks/queue_video.py', 'benchmarks/magi_validation.py',
+                 'benchmarks/run_magi2_sparse.py', 'model/magi2_sparse_runtime.py',
+                 'model/magi2_sparse_moe.py', 'model/magi2_calibration.py', 'model/sparse_utils.py']
     hashes = {f: hashlib.sha256((ROOT / f).read_bytes()).hexdigest() for f in files}
     identity = dict(model=a.model, model_path=str(model), method=a.method, sparsity=a.sparsity,
                     quant=a.quant, mode='w4a4' if a.quant != 'bf16' else 'bf16',
@@ -82,6 +95,13 @@ def build_plan(a, catalog):
                     model_revision=catalog['models'][a.model]['source']['revision'],
                     backend_revision=catalog['backends']['base-eval']['revision'],
                     generator_python=generator, scorer_python=scorer, sources=hashes)
+    if a.model == 'magi-2-preview':
+        identity['allocator'] = 'expandable_segments:True'
+        identity['nccl_algo'] = '^NVLS'
+    if a.calibration:
+        identity['calibration_sha256'] = hashlib.sha256(a.calibration.read_bytes()).hexdigest()
+    if a.magi_zero_evidence:
+        identity['zero_evidence_sha256'] = hashlib.sha256(a.magi_zero_evidence.read_bytes()).hexdigest()
     digest = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:12]
     tag = f'{a.quant}-{a.method}-s{a.sparsity:g}-{a.steps}p{a.refiner_steps}-{digest}'
     runtime_env = dict(HF_HOME=str(asset_root() / 'hf_home'),
@@ -106,14 +126,21 @@ def build_plan(a, catalog):
         runtime_env[f'GIT_CONFIG_VALUE_{slot}'] = str(trusted)
         slot += 1
     runtime_env['GIT_CONFIG_COUNT'] = str(slot)
+    if count == 2:
+        runtime_env.update(PYTORCH_CUDA_ALLOC_CONF='expandable_segments:True', NCCL_ALGO='^NVLS',
+                           OMP_NUM_THREADS='16')
+        runtime_env['MAGI2_KERNEL_CACHE_ROOT'] = str(Path('/tmp') / f'arcquant-magi2-{os.getuid()}' / digest)
 
     def generation(profile, directory):
         script = backend / ('gen_vbench_minimax.py' if count == 1 else 'gen_vbench_magi2.py')
         command = [generator, str(script)]
-        if a.method == 'wina':
-            command = [generator, str(ROOT / 'benchmarks/run_minimax_sparse.py'),
-                       '--base-eval-root', str(backend), '--sparse-method', 'wina',
+        if a.method != 'none':
+            wrapper = 'run_minimax_sparse.py' if count == 1 else 'run_magi2_sparse.py'
+            command = [generator, str(ROOT / 'benchmarks' / wrapper),
+                       '--base-eval-root', str(backend), '--sparse-method', a.method,
                        '--sparsity', str(a.sparsity)]
+            if a.calibration:
+                command += ['--calibration', str(a.calibration.expanduser().resolve())]
         command += ['--model', str(model), '--quant', a.quant, '--mode', 'w4a4',
                     '--protocol', {'smoke': 'custom10', 'tiny': 'tiny16', 'official': 'standard16'}[profile],
                     '--num-inference-steps', str(a.steps), '--seed', '0', '--tag', tag,
@@ -268,6 +295,12 @@ def execute(a, plan, catalog):
 
         save('preflight')
         try:
+            if a.magi_zero_evidence:
+                from benchmarks.magi_validation import validate_zero_equivalence
+                evidence = json.loads(a.magi_zero_evidence.read_text())
+                if not evidence.get('complete'):
+                    raise ValueError('Incomplete MAGI zero-sparsity validation')
+                validate_zero_equivalence(evidence['baseline'], evidence['sparse'])
             check_backend(plan)
             status['hardware'] = hardware_candidates(plan)
             env = {**os.environ, **plan['env']}
@@ -306,6 +339,12 @@ def execute(a, plan, catalog):
                     run_child(phase['command'], {**env, 'CUDA_VISIBLE_DEVICES': ids},
                               plan['cwd'], out / f'{name}.log')
                     checked_result(phase)
+                    if a.model == 'magi-2-preview' and a.method != 'none' and name.endswith('generate'):
+                        from benchmarks.magi_validation import validate_sparse_runtime
+                        validate_sparse_runtime(Path(phase['result']).parent, a.method, a.sparsity)
+                    if a.model == 'magi-2-preview' and name == 'tiny-score':
+                        from benchmarks.magi_validation import validate_tiny_scores
+                        validate_tiny_scores(Path(phase['result']).parent)
                 status['stages'][name] = 'completed'
                 save('between_stages', gpu_ids=None)
             save('completed', current_stage=None)

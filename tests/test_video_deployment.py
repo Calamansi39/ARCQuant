@@ -46,6 +46,14 @@ class VideoDeploymentTests(unittest.TestCase):
             with self.subTest(args=args), self.assertRaises(ValueError):
                 self.plan(*args)
 
+    def test_magi_sparse_smoke_and_teal_fail_closed(self):
+        plan = self.plan('--model', 'magi-2-preview', '--method', 'wina', '--sparsity', '.5', '--profile', 'smoke')
+        self.assertIn(str(q.ROOT / 'benchmarks/run_magi2_sparse.py'), plan['phases'][0]['command'])
+        self.assertEqual(plan['env']['PYTORCH_CUDA_ALLOC_CONF'], 'expandable_segments:True')
+        for model in ('magi-2-preview', 'minimax-h3'):
+            with self.assertRaisesRegex(ValueError, 'calibration'):
+                self.plan('--model', model, '--method', 'teal', '--sparsity', '.5', '--profile', 'smoke')
+
     def test_impossible_hardware_fails_without_waiting(self):
         with patch.object(q.subprocess, 'check_output', return_value='0, NVIDIA H20, 98000, 9.0\n1, NVIDIA H20, 98000, 9.0\n'):
             with self.assertRaisesRegex(ValueError, 'incompatible GPU'):
