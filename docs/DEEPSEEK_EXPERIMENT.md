@@ -60,10 +60,10 @@ python arc.py experiment --stage evaluate --variant wina --sparsity 0.5 \
   --output runs/deepseek_formal/gpqa_wina.json --gpu-ids 0,1
 ```
 
-### 50%/65% 统一计划
+### 50%/60%/70%/80%/90% 统一计划
 
 当前 50% 结果保持不变。修复生成链路后，可以用下面的计划器生成同一 benchmark
-下的 50% 和 65% WINA/TEAL 命令：
+下的五个正式稀疏度 WINA/TEAL 命令：
 
 ```bash
 python arc.py sparse-plan --benchmark math500 \
@@ -75,7 +75,7 @@ python arc.py sparse-plan --benchmark math500 \
 ```
 
 计划器的配置来自 `configs/sparsity_profiles.json`。每一个运行目录都带有方法和
-稀疏率，例如 `wina-0.65`；不能用 50% 的输出替代 65% 的结果。完整评测前仍应
+稀疏率，例如 `wina-0.9`；不能用 50% 的输出替代任何其他稀疏度的结果。完整评测前仍应
 按 1 题、8 题、20 题逐级确认 EOS、有限 logits、答案格式和评分状态。
 
 ## 结果解释

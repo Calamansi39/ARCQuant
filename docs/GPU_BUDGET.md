@@ -16,7 +16,7 @@
 
 CLI 的 `smoke` 档分别取 GPQA Diamond 8 题、MATH-500 8 题、LongBench v2 8 题和 LiveCodeBench v6 2 题。DeepSeek 使用 2 卡，卡时应按 **2 × 实测墙钟小时**计算。GPQA 和 MATH 的已有协议最多生成 8192 token；LongBench v2 有 128K 长输入，LiveCodeBench v6 还有长代码生成与执行评分。题目数相同也不能用同一单题耗时估算。先用 `python arc.py plan --backend base-eval ... --profile smoke` 检查参数，再记录实际加载时间、每题耗时和峰值显存。
 
-高稀疏率 smoke 可以加入等待队列，不会终止已有进程。正式网格是 50%、60%、70%、80%；
+高稀疏率 smoke 可以加入等待队列，不会终止已有进程。正式网格是 50%、60%、70%、80%、90%；
 可以为每个点使用独立输出目录，例如：
 
 ```bash

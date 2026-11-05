@@ -40,7 +40,7 @@ keep = 1 - sparsity = 0.35
 
 - CLI 和 DeepSeek 生成入口接受任意 `[0, 1)` 的稀疏率，代码没有把 50% 写死为唯一合法值。
 - `configs/sparsity_profiles.json` 已登记原生 WINA、原生 TEAL、正式候选和高稀疏四组配置；`python arc.py sparse-plan` 可直接生成带方法和稀疏率标签的 DeepSeek smoke 命令。
-- DeepSeek generation runtime 现在会记录目标稀疏率、可掩码元素数和每个投影的实际零值比例，便于检查四档目标是否真的落在对应输入路径上。
+- DeepSeek generation runtime 现在会记录目标稀疏率、可掩码元素数和每个投影的实际零值比例，便于检查五档目标是否真的落在对应输入路径上。
 - 现有 DeepSeek × GPQA 正式结果只有 50%，对应配置和结果文件中的 `sparsity` 都是 `0.5`。
 - WINA 50% 在 DeepSeek MATH-500 生成中已经出现单题和 20 题退化；因此 60%–80% 任务必须先通过 1 题和 8 题闸门。
 - 目前没有 60%、70%、80% 或 90% 的正式结果，不能把 50% 表格复制到新一栏。
