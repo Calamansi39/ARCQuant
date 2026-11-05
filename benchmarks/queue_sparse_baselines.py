@@ -23,7 +23,14 @@ from benchmarks.gpu_wait import wait_for_idle_pair
 
 
 def health(directory, expected):
-    """Check coverage and usable answers, without selecting on benchmark score."""
+    """Check coverage and generation integrity, without selecting on score.
+
+    A length-truncated candidate is a valid completed record in the pinned
+    evaluator and is counted as an incorrect answer by its scorer.  It should
+    be reported in the smoke detail, but must not prevent the full run from
+    starting; otherwise one hard question can silently suppress an entire
+    method.
+    """
     summaries = list(directory.glob('*/summary.json'))
     if len(summaries) != 1:
         return False, 'missing or ambiguous summary'
@@ -33,11 +40,23 @@ def health(directory, expected):
     if (not summary.get('complete') or summary.get('questions') != expected
             or len(rows) != expected or len({r['id'] for r in rows}) != expected):
         return False, 'incomplete question coverage'
-    if any(r.get('generation', {}).get('finish_reason') != 'eos'
-           or not r.get('final_output', '').strip()
-           or r.get('score', {}).get('extracted_answer') is None for r in rows):
-        return False, 'truncated generation or missing final answer; inspect outputs'
-    return True, f"{expected} answers; {summary.get('correct_candidates')} correct"
+    invalid = []
+    truncated = 0
+    for row in rows:
+        generation = row.get('generation', {})
+        reason = generation.get('finish_reason')
+        if reason == 'length':
+            truncated += 1
+            continue
+        if (reason != 'eos' or not row.get('final_output', '').strip()
+                or row.get('score', {}).get('extracted_answer') is None):
+            invalid.append(row.get('id', '<unknown>'))
+    if invalid:
+        return False, f'invalid generation records: {invalid[:3]}'
+    detail = f"{expected} answers; {summary.get('correct_candidates')} correct"
+    if truncated:
+        detail += f"; {truncated} length-truncated (scored incorrect)"
+    return True, detail
 
 
 def run_child(command, env, log, timeout):
@@ -63,6 +82,8 @@ def main(argv=None):
         p.add_argument('--' + key, type=Path, required=True)
     p.add_argument('--python', default=sys.executable)
     p.add_argument('--sparsity', type=float, default=.5)
+    p.add_argument('--methods', default='teal,wina',
+                   help='comma-separated methods to run (teal,wina)')
     p.add_argument('--full', action='store_true', help='automatically run 500 questions after both validation stages')
     p.add_argument('--dry-run', action='store_true', help='check native evaluation prerequisites without requesting GPUs')
     p.add_argument('--poll-seconds', type=int, default=60)
@@ -80,7 +101,9 @@ def main(argv=None):
         ROOT / 'model/deepseek_generation_runtime.py', ROOT / 'model/sparse_utils.py',
         ROOT / 'benchmarks/run_deepseek_sparse_math.py', Path(__file__)))).hexdigest()
     code = fingerprint()
-    methods = ('teal', 'wina')
+    methods = tuple(dict.fromkeys(item.strip() for item in a.methods.split(',') if item.strip()))
+    if not methods or any(method not in ('teal', 'wina') for method in methods):
+        p.error('--methods must contain teal and/or wina')
     state = {'benchmark': 'MATH-500', 'quantization': 'HiF4 W4A4', 'sparsity': a.sparsity,
              'code_sha256': code, 'full_requested': a.full, 'methods': {m: [] for m in methods}}
 
