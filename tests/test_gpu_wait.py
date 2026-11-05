@@ -3,7 +3,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from benchmarks.gpu_wait import idle_gpus, wait_for_idle_pair
+from benchmarks.gpu_wait import idle_gpus, wait_for_idle_gpus, wait_for_idle_pair
 
 
 class GpuWaitTests(unittest.TestCase):
@@ -27,6 +27,22 @@ class GpuWaitTests(unittest.TestCase):
                 patch("benchmarks.gpu_wait.time.sleep"):
             with wait_for_idle_pair() as ids:
                 self.assertEqual(ids, "2,3")
+
+    def test_single_gpu_lock_is_released_after_child_failure(self):
+        with patch("benchmarks.gpu_wait.idle_gpus", return_value=["999"]), \
+                patch("benchmarks.gpu_wait.time.sleep"):
+            with self.assertRaises(RuntimeError):
+                with wait_for_idle_gpus(1, 79000, candidates=["999"]) as ids:
+                    self.assertEqual(ids, "999")
+                    raise RuntimeError("child failed")
+            # A leaked advisory lock would prevent reacquiring this same GPU.
+            with wait_for_idle_gpus(1, 79000, candidates=["999"]) as ids:
+                self.assertEqual(ids, "999")
+
+    def test_rejects_insufficient_candidate_count(self):
+        with self.assertRaises(ValueError):
+            with wait_for_idle_gpus(2, candidates=["0"]):
+                self.fail("invalid candidates acquired a GPU")
 
 
 if __name__ == "__main__":

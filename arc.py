@@ -240,6 +240,9 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
+    from benchmarks.queue_video import parser as video_parser
+    sub.add_parser("video-queue", parents=[video_parser()], add_help=False,
+                   help="prepare a video evaluation plan; --execute waits for available GPUs")
     from benchmarks.structured_plan import parser as structured_parser
     for action in ("structured-plan", "structured-run"):
         sub.add_parser(action, parents=[structured_parser()],
@@ -382,6 +385,12 @@ def runtime_env() -> dict[str, str]:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.action == "video-queue":
+            from benchmarks.queue_video import run as run_video_queue
+            try:
+                return run_video_queue(args)
+            except ValueError as exc:
+                raise PlanError(str(exc)) from exc
         catalog = read_catalog()
         if args.action in ("structured-plan", "structured-run"):
             from benchmarks.structured_plan import build_plan as structured_plan

@@ -87,6 +87,10 @@ We will release our vLLM evaluation very soon.
 
 ## 中文快速指南：方法整合与迁移
 
+**三台服务器分工部署：** [部署与占卡评测指南](docs/MULTI_SERVER_DEPLOYMENT.md)
+说明如何让当前机器保留 DeepSeek、另一台 H20 跑 MAGI、A800 跑 MiniMax；
+新增 `arc.py video-queue` 自动完成环境预检、等空卡、单视频验证、VBench 生成和评分。
+
 **普通 2:4 结构化路径：** 新增 `arc.py structured-plan` / `structured-run`，将
 HiF4 W4A4 与每组四取二的激活掩码组合，并单独统计线性投影覆盖率。它与原生
 TEAL/WINA 元素稀疏率扫描是不同的实验。当前完成了 CPU 测试及真实权重的单卡

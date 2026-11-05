@@ -63,8 +63,8 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def audit_model(name: str, entry: dict) -> dict:
-    root = _resolve(entry, name, "models")
+def audit_model(name: str, entry: dict, *, override: str | Path | None = None) -> dict:
+    root = asset_path(entry, name, "models", override=override)
     issues: list[str] = []
     referenced_shards: set[Path] = set()
     if root is None or not root.is_dir():

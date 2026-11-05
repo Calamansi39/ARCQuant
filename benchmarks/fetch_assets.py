@@ -28,7 +28,7 @@ def fetch_huggingface(source: dict, destination: Path, *, dry_run: bool = False)
     try:
         from huggingface_hub import HfApi, snapshot_download
     except ImportError as exc:
-        raise FetchError("Install the runtime dependencies first: python -m pip install -r requirements.txt") from exc
+        raise FetchError("Install the download dependency: python -m pip install huggingface-hub") from exc
     api = HfApi()
     try:
         info = (api.model_info if repo_type == "model" else api.dataset_info)(
@@ -75,7 +75,7 @@ def fetch_git(source: dict, destination: Path, *, dry_run: bool = False) -> dict
             env["GIT_CONFIG_GLOBAL"] = str(safe_config)
         if not destination.exists():
             clone = ["git", "clone"]
-            if not local_source.is_dir():
+            if not local_source.exists():
                 clone.append("--filter=blob:none")
             subprocess.run(clone + [source["url"], str(destination)],
                            check=True, env=env)

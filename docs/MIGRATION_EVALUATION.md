@@ -1,10 +1,13 @@
 # 换机器后怎样准备模型评测
 
+**按“当前机器 DeepSeek / H20 MAGI / A800 MiniMax”部署，优先看 [三机部署指南](MULTI_SERVER_DEPLOYMENT.md)。**
+该指南提供固定版本评测器迁移包、独立环境安装和 `arc.py video-queue` 等卡入口。
+
 这份说明面向刚接触本仓库的同学。先记住三个不同的状态：
 
 1. **文件准备好**：模型、数据、转换分片、评测器源码在本机能找到。
 2. **基线可运行**：指定的 Python 环境、评分权重和空闲 GPU 也齐全；可以评 BF16 或普通 W4A4 HiF4 基线。
-3. **我们的方法可运行**：还需 ARCQuant 增强残差通道加 TEAL/WINA 的目标模型校准和完整前向接线。当前三个目标模型都**未达到第 3 步**，不能把基线分数称作我们的方法分数。
+3. **方法实验可运行并形成完整成绩**：DeepSeek 已有独立生成式 TEAL/WINA 入口并在跑 MATH-500，完整成绩仍需等待；MiniMax 有 WINA 选择规则的 DiT 适配，MAGI WINA 和视频 TEAL 尚未完整接好。方法是否可跑、是否完整复现、是否已有全量成绩应分别核对，不能把普通量化基线称作稀疏方法成绩。
 
 仓库保存来源、固定版本、入口、检查规则和方法代码。几百 GB 的权重、视频和运行结果不放进 GitHub。换机器后需要重新下载，或把 `assets/` 整体迁走；这台机器的 `assets/` 多数是指向别处的软链接，**不能只复制链接本身**。
 
@@ -45,7 +48,7 @@ python arc.py provision --model deepseek-v4-flash --benchmark gpqa-diamond \
   --backend-source /path/to/authorized/base_eval --execute
 ```
 
-`--backend-source` 也可传有权限的 Git URL；它不会改变清单要求的提交号。**未取得评测器权限时，这项依赖无法仅靠克隆 ARCQuant 自动补齐。** MAGI-2 的官方运行源码是另一项公开仓库，`provision` 会按清单固定提交检出。
+`--backend-source` 也可传有权限的 Git URL，或 `benchmarks.export_backend` 导出的本地 `.bundle` 文件；它不会改变清单要求的提交号。**没有授权副本或访问权限时，这项依赖无法仅靠克隆 ARCQuant 自动补齐。** MAGI-2 的官方运行源码是另一项公开仓库，`provision` 会按清单固定提交检出。
 
 只下载 VBench 评分资产也可用 `python arc.py fetch --scorer vbench`。它包含 21 个模型/BERT 文件和 ViCLIP 分词文件；下载后按清单中的 SHA256 或 Git blob 哈希逐一核验，缺失的分词文件也会提前补齐，避免评分环境导入时向 GitHub 临时下载。`fetch --benchmark vbench` 只准备官方提示词和评分源码。
 
@@ -83,7 +86,7 @@ python arc.py doctor --model minimax-h3 --benchmark vbench --native-dry-run --sk
 python arc.py doctor --model deepseek-v4-flash --benchmark gpqa-diamond --skip-gpu
 ```
 
-`doctor --backend arcquant --method teal/wina` 对三个目标仍会明确阻止；这表示目标方法接线尚未完成，不是权重缺失。三个目标的具体进度见 [目标模型状态](TARGET_MODELS.md)，DeepSeek 投影级代码与测试见 [适配说明](DEEPSEEK_ADAPTER.md)。
+`doctor --backend arcquant --method teal/wina` 检查的是旧的通用模型入口，不能代表独立目标模型入口的进度。DeepSeek 生成式方法入口见 [实验指南](DEEPSEEK_EXPERIMENT.md)，视频方法入口与限制见 [三机部署指南](MULTI_SERVER_DEPLOYMENT.md)。
 
 ## 第五步：先跑同协议基线
 
@@ -101,4 +104,4 @@ python arc.py plan --backend base-eval --model minimax-h3 \
   --benchmark vbench --profile tiny --method none --quant-type HiF4 --gpu-ids auto
 ```
 
-已登记的 Terminal-Bench 包含 86 个任务，但终端代理、容器及评分协议尚未整合，`doctor` 会阻止把它当作当前可运行评测。LongBench v2 和 LiveCodeBench 走各自的生成式协议；外部 `base-eval` 的 HiF4 是普通 W4A4 假量化，**不包含 ARCQuant 增强残差通道，也不包含 TEAL/WINA**。这三个目标方法仍需要模型级校准、推理接线和 GPU 回归，不能通过切换 `--method` 绕过。
+已登记的 Terminal-Bench 包含 86 个任务，但终端代理、容器及评分协议尚未整合，`doctor` 会阻止把它当作当前可运行评测。LongBench v2 和 LiveCodeBench 走各自的生成式协议；外部 `base-eval` 的 HiF4 是普通 W4A4 假量化，**不包含 ARCQuant 增强残差通道，也不包含 TEAL/WINA**。稀疏方法需走已经实现的独立入口，并记录方法覆盖、校准与完整性证据。

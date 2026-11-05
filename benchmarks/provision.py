@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import hashlib
+import os
 from pathlib import Path
 
 from benchmarks.asset_inventory import audit_benchmark, audit_model
