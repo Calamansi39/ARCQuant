@@ -2213,108 +2213,118 @@
   ],
   "rejected": [],
   "sparse_progress": {
-    "updated_at": "2026-11-05T09:58:43+00:00",
+    "updated_at": "2026-11-05T10:23:33+00:00",
     "rows": [
       {
         "benchmark": "MATH-500",
         "method": "teal",
         "sparsity": 0.5,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "teal",
         "sparsity": 0.6,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "wina",
         "sparsity": 0.6,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "teal",
         "sparsity": 0.7,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "wina",
         "sparsity": 0.7,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "teal",
         "sparsity": 0.8,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "wina",
         "sparsity": 0.8,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "teal",
         "sparsity": 0.9,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "wina",
         "sparsity": 0.9,
-        "status": "等待 GPU",
+        "status": "已停止，迁移到 ARC",
         "completed": 0,
         "expected": 500,
         "score": null,
-        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json",
+        "arc": false
       },
       {
         "benchmark": "MATH-500",
         "method": "wina",
         "sparsity": 0.5,
-        "completed": 126,
+        "arc": false,
+        "completed": 127,
         "expected": 500,
         "score": null,
-        "status": "未完成",
+        "status": "已停止，迁移到 ARC",
         "source": "runs/baseline_queue_20261104_130054/full/wina/500/arcquant-wina-0.5-0a9a52f0d7ed/summary.json",
-        "summary_sha256": "fca3a65b85f00e2963791f71a082fe127dea1e46ff491d59590a8310cf02f572"
+        "summary_sha256": "c31bfc6387e5e237161d7df130d671cd7f93a75fee46762111d6c8063f1d72db"
       }
     ]
   }

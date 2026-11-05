@@ -75,7 +75,7 @@ TEAL 官方同样有 `teal/greedyopt.py`，其预算搜索通过直方图阈值�
   预算曲线或策略表。已经核查的 DeepSeek 入口也不读取任何此类策略。
 
 因此当前结果应标为 **TEAL uniform** 或 **WINA uniform / mask-only / transform 关闭**。
-生成式队列还没有 ARC 补偿；GPQA 标签似然诊断有 ARC。两套协议仍须分开报告。
+2026-11-05 更新：MATH/GPQA 生成式队列已接入 ARC 补偿，见 [ARC 队列说明](DEEPSEEK_ARC_QUEUE.md)。这次接线不包含 greedy 分配或 WINA transform；标签似然诊断与生成式成绩仍须分开报告。
 
 ## 4. 耗时和后续实现要求
 

@@ -24,7 +24,7 @@ class ResultTableTests(unittest.TestCase):
         for method in ('TEAL', 'WINA'):
             sparse = [r for r in rows if r[1] == method]
             self.assertEqual([r[2] for r in sparse], ['50%', '60%', '70%', '80%', '90%'])
-            self.assertTrue(all(r[3] == 'HiF4 W4A4' and r[4] == '评测中' for r in sparse))
+            self.assertTrue(all(r[3] == 'HiF4 W4A4 + ARC 补偿' and r[4] == '评测中' for r in sparse))
 
     def test_missing_or_wrong_protocol_scores_are_pending(self):
         snapshot = copy.deepcopy(self.snapshot)
@@ -44,7 +44,7 @@ class ResultTableTests(unittest.TestCase):
         snapshot = copy.deepcopy(self.snapshot)
         snapshot['sparse_progress'] = {'rows': [dict(
             benchmark='MATH-500', method='wina', sparsity=.5,
-            completed=121, expected=500, score=99.9, status='未完成')]}
+            completed=121, expected=500, score=99.9, status='未完成', arc=True)]}
         row = next(r for r in build_matrix(snapshot) if r[1:3] == ['WINA', '50%'])
         self.assertEqual(row[5], '评测中')
 
@@ -52,11 +52,19 @@ class ResultTableTests(unittest.TestCase):
         snapshot = copy.deepcopy(self.snapshot)
         snapshot['sparse_progress'] = {'rows': [dict(
             benchmark='MATH-500', method='wina', sparsity=.8,
-            completed=500, expected=500, score=0.0, status='完整已核查')]}
+            completed=500, expected=500, score=0.0, status='完整已核查', arc=True)]}
         rows = build_matrix(snapshot)
         row = next(r for r in rows if r[1:3] == ['WINA', '80%'])
         self.assertEqual(row[4:], ['评测中', 0.0, '评测中', '评测中'])
         self.assertEqual(next(r for r in rows if r[1:3] == ['WINA', '70%'])[5], '评测中')
+
+    def test_basic_hif4_sparse_score_cannot_fill_an_arc_row(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot['sparse_progress'] = {'rows': [dict(
+            benchmark='MATH-500', method='wina', sparsity=.5,
+            completed=500, expected=500, score=99., status='完整已核查')]}
+        row = next(r for r in build_matrix(snapshot) if r[1:3] == ['WINA', '50%'])
+        self.assertEqual(row[5], '评测中')
 
     def test_exports_share_first_row_headers_and_keep_excel_colors(self):
         from openpyxl import load_workbook

@@ -40,7 +40,7 @@ class SparseSweepTests(unittest.TestCase):
     def arguments(self, root, extra=()):
         for rank in range(2):
             (root / f'rank{rank}.pt').touch()
-        args = ['--gpu-ids', '0,1', '--out-dir', str(root / 'out')]
+        args = ['--gpu-ids', '0,1', '--out-dir', str(root / 'out'), '--quantization', 'hif4']
         for name in ('base-eval-root', 'source-model', 'converted-model', 'calibration'):
             args.extend(['--' + name, str(root)])
         return args + list(extra)
@@ -107,6 +107,44 @@ class SparseSweepTests(unittest.TestCase):
             queue.assert_not_called()
             state = json.loads((root / 'out/status.json').read_text())
             self.assertEqual(state['state'], 'blocked')
+
+    def test_arc_sweep_includes_dense_reference_and_all_ten_sparse_settings(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+                patch.object(sweep, 'hold_pair') as hold, \
+                patch.object(sweep, 'run_queue', return_value=0) as queue:
+            root = Path(tmp)
+            rc = sweep.main(self.arguments(root, ['--quantization', 'arc', '--dry-run']))
+            self.assertEqual(rc, 0)
+            self.assertEqual(queue.call_count, 11)
+            for call in queue.call_args_list:
+                args = call.args[0]
+                self.assertEqual(args[args.index('--quantization') + 1], 'arc')
+            state = json.loads((root / 'out/status.json').read_text())
+            self.assertTrue(all(j['arc'] for j in state['jobs']))
+            self.assertEqual(state['jobs'][0]['method'], 'none')
+            hold.assert_not_called()
+
+    def test_formal_calibration_failure_blocks_all_evaluations(self):
+        @contextmanager
+        def lease(*args):
+            yield '0,1'
+        with tempfile.TemporaryDirectory() as tmp, \
+                patch.object(sweep, 'hold_pair', side_effect=lease), \
+                patch.object(sweep, 'run_child', return_value=1) as child, \
+                patch.object(sweep, 'run_queue') as queue:
+            root = Path(tmp)
+            data = root / 'train.parquet'
+            data.touch()
+            args = self.arguments(root, ['--quantization', 'arc', '--calibration-data', str(data),
+                                         '--calibration', str(root / 'new-calibration')])
+            with self.assertRaisesRegex(RuntimeError, 'formal calibration failed'):
+                sweep.main(args)
+            queue.assert_not_called()
+            command = child.call_args.args[0]
+            self.assertEqual(command[command.index('--samples') + 1], '128')
+            self.assertEqual(command[command.index('--calibration-length') + 1], '512')
+            state = json.loads((root / 'out/status.json').read_text())
+            self.assertEqual(state['calibration_stage'], 'failed')
 
 
 if __name__ == '__main__':

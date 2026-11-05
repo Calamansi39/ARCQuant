@@ -1,8 +1,8 @@
 # DeepSeek：HiF4、ARC 与 TEAL/WINA 实验入口
 
 > **方法完整性：** 当前 TEAL/WINA 使用统一投影预算（uniform），没有 greedy
-> 分配策略；WINA 未启用 transform。GPQA 标签似然入口包含 ARC，生成式稀疏入口
-> 尚不包含 ARC。现有命令不能代表完整原生复现，详见 [预算核查](DEEPSEEK_SPARSE_BUDGET_AUDIT.md)。
+> 分配策略；WINA 未启用 transform。GPQA 标签似然和 MATH/GPQA 生成式入口已接入 ARC。
+> 生成式队列的配置、校准和验证见 [ARC 队列说明](DEEPSEEK_ARC_QUEUE.md)。现有命令不能代表完整原生复现，详见 [预算核查](DEEPSEEK_SPARSE_BUDGET_AUDIT.md)。
 
 当前机器已经跑完一组 198 题 GPQA Diamond 全量对照，结果表和边界说明见
 [DeepSeek 完整结果](DEEPSEEK_FORMAL_RESULTS.md)。
@@ -147,6 +147,7 @@ torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_math.py \
   --base-eval-root /path/to/base_eval --sparse-method wina --sparsity 0.5 \
   --source-model /path/to/DeepSeek-V4-Flash-0731 \
   --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 \
+  --quantization arc --calibration /path/to/formal-calibration \
   --quant hifp4 --mode w4a4 --limit 8 \
   --out-dir validation/deepseek_math_wina_smoke
 ```

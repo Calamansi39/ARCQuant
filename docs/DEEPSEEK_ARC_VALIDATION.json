@@ -1,0 +1,321 @@
+{
+  "scope": "Two-prompt, two-decode-step execution validation; not benchmark accuracy",
+  "tests_passed": 36,
+  "runs": [
+    {
+      "method": "none",
+      "probe": "/mnt/kpfs_qyang/zhaolianchao/base_eval/validation/arcquant_arc_20261105/none/arcquant-arc-none-0-14577a3ced34/probe.json",
+      "finite_logits": true,
+      "finite_logits_checks": 4,
+      "decode_calls": 2,
+      "gpu_memory": [
+        {
+          "rank": 0,
+          "local_rank": 0,
+          "load_seconds": 380.390911702998,
+          "generation_seconds": 25.808114674990065,
+          "peak_allocated_gib": 85.64837598800659,
+          "peak_reserved_gib": 86.05078125
+        },
+        {
+          "rank": 1,
+          "local_rank": 1,
+          "load_seconds": 364.0604663430131,
+          "generation_seconds": 37.60909723100485,
+          "peak_allocated_gib": 85.65348052978516,
+          "peak_reserved_gib": 86.107421875
+        }
+      ],
+      "runtime": {
+        "schema_version": 2,
+        "method": "none",
+        "sparsity": 0.0,
+        "allocation": "uniform",
+        "arc": true,
+        "quantization": "arc",
+        "kernel": "HiF4-value-reconstruction+dense-GEMM",
+        "calibration": {
+          "manifest_sha256": "71e2daf07bb74092b11f7f093b6825a2ebbdb8cec9c49e836f49140fc7dd1cf3",
+          "rank_sha256": {
+            "0": "ba103dbcd8ce5c57eea1c97025bf14c21967d717bb952c467f856ec920538849",
+            "1": "a32318c703b52bc3c225c1f8e90de882121fd7087c4e42d14909de7b4bab24b8"
+          },
+          "world_size": 2,
+          "dataset": "WikiText-2 train",
+          "samples": 1,
+          "length": 64,
+          "arc_policy": "per-input-channel absmax order; signed max/8 count rounded up to 64"
+        },
+        "implementation_sha256": {
+          "benchmarks/run_deepseek_sparse_math.py": "6377af2aa7d320e5ad1c6452d5d009fa21a4c20858584473c4907c277a5a7267",
+          "model/deepseek_generation_arc.py": "92d24d97311ae9ebc93e9716284e5419d45286b2126cc4f370087f2e364e7045",
+          "model/deepseek_generation_runtime.py": "0a9a52f0d7ed563504231a32fb1ad3ed4cdb6d8fb75f03bf8979b2d1a8a733d9",
+          "model/deepseek_experiment.py": "d76f7ffb6519f377293787d6eb902481608cd83a9b66aed80ef049ad752aef08",
+          "model/deepseek_adapter.py": "d6c727dc3ec6094c99e59632016cf0d8e07e722a623732c1d9adccf2f600881f",
+          "model/sparse_utils.py": "1820a0777f72e98332f024baa98b6f3f9692eb1ea6ba85d4579ff361789a120f"
+        },
+        "runtime_sha256": "14577a3ced34cfeccaf36a8cbd1ba29c0272a59b8e60e3ea855aac23b372a39d"
+      },
+      "ranks": [
+        {
+          "runtime_sha256": "14577a3ced34cfeccaf36a8cbd1ba29c0272a59b8e60e3ea855aac23b372a39d",
+          "run_succeeded": true,
+          "rank": 0,
+          "sparse_method": "none",
+          "sparse_sparsity": 0.0,
+          "arc": true,
+          "arc_expected_projections": 17151,
+          "arc_executed_projections": 9234,
+          "arc_executed_families": [
+            "attention",
+            "grouped_wo_a",
+            "routed_expert",
+            "shared_expert"
+          ],
+          "arc_projection_calls": 16919,
+          "arc_residual_calls": 16919,
+          "arc_cache_gib": 9.718616485595703,
+          "arc_attention_paths": {
+            "standard": 86,
+            "ragged": 86
+          },
+          "arc_finite_logits_checks": 4
+        },
+        {
+          "runtime_sha256": "14577a3ced34cfeccaf36a8cbd1ba29c0272a59b8e60e3ea855aac23b372a39d",
+          "run_succeeded": true,
+          "rank": 1,
+          "sparse_method": "none",
+          "sparse_sparsity": 0.0,
+          "arc": true,
+          "arc_expected_projections": 17151,
+          "arc_executed_projections": 9237,
+          "arc_executed_families": [
+            "attention",
+            "grouped_wo_a",
+            "routed_expert",
+            "shared_expert"
+          ],
+          "arc_projection_calls": 16805,
+          "arc_residual_calls": 16805,
+          "arc_cache_gib": 9.718982696533203,
+          "arc_attention_paths": {
+            "standard": 86,
+            "ragged": 86
+          },
+          "arc_finite_logits_checks": 4
+        }
+      ]
+    },
+    {
+      "method": "wina",
+      "probe": "/mnt/kpfs_qyang/zhaolianchao/base_eval/validation/arcquant_arc_20261105/wina/arcquant-arc-wina-0.5-0f9e4617c6b4/probe.json",
+      "finite_logits": true,
+      "finite_logits_checks": 4,
+      "decode_calls": 2,
+      "gpu_memory": [
+        {
+          "rank": 0,
+          "local_rank": 0,
+          "load_seconds": 89.08540916099446,
+          "generation_seconds": 17.329212827025913,
+          "peak_allocated_gib": 85.758216381073,
+          "peak_reserved_gib": 86.19921875
+        },
+        {
+          "rank": 1,
+          "local_rank": 1,
+          "load_seconds": 77.39460970298387,
+          "generation_seconds": 24.758739901008084,
+          "peak_allocated_gib": 85.75656461715698,
+          "peak_reserved_gib": 86.251953125
+        }
+      ],
+      "runtime": {
+        "schema_version": 2,
+        "method": "wina",
+        "sparsity": 0.5,
+        "allocation": "uniform",
+        "arc": true,
+        "quantization": "arc",
+        "kernel": "HiF4-value-reconstruction+dense-GEMM",
+        "calibration": {
+          "manifest_sha256": "71e2daf07bb74092b11f7f093b6825a2ebbdb8cec9c49e836f49140fc7dd1cf3",
+          "rank_sha256": {
+            "0": "ba103dbcd8ce5c57eea1c97025bf14c21967d717bb952c467f856ec920538849",
+            "1": "a32318c703b52bc3c225c1f8e90de882121fd7087c4e42d14909de7b4bab24b8"
+          },
+          "world_size": 2,
+          "dataset": "WikiText-2 train",
+          "samples": 1,
+          "length": 64,
+          "arc_policy": "per-input-channel absmax order; signed max/8 count rounded up to 64"
+        },
+        "implementation_sha256": {
+          "benchmarks/run_deepseek_sparse_math.py": "6377af2aa7d320e5ad1c6452d5d009fa21a4c20858584473c4907c277a5a7267",
+          "model/deepseek_generation_arc.py": "92d24d97311ae9ebc93e9716284e5419d45286b2126cc4f370087f2e364e7045",
+          "model/deepseek_generation_runtime.py": "0a9a52f0d7ed563504231a32fb1ad3ed4cdb6d8fb75f03bf8979b2d1a8a733d9",
+          "model/deepseek_experiment.py": "d76f7ffb6519f377293787d6eb902481608cd83a9b66aed80ef049ad752aef08",
+          "model/deepseek_adapter.py": "d6c727dc3ec6094c99e59632016cf0d8e07e722a623732c1d9adccf2f600881f",
+          "model/sparse_utils.py": "1820a0777f72e98332f024baa98b6f3f9692eb1ea6ba85d4579ff361789a120f"
+        },
+        "runtime_sha256": "0f9e4617c6b418e59ae76e6d2727714d6b70bd7d78d64982ca59370d3db4046a"
+      },
+      "ranks": [
+        {
+          "runtime_sha256": "0f9e4617c6b418e59ae76e6d2727714d6b70bd7d78d64982ca59370d3db4046a",
+          "run_succeeded": true,
+          "rank": 0,
+          "sparse_method": "wina",
+          "sparse_sparsity": 0.5,
+          "arc": true,
+          "arc_expected_projections": 17151,
+          "arc_executed_projections": 9513,
+          "arc_executed_families": [
+            "attention",
+            "grouped_wo_a",
+            "routed_expert",
+            "shared_expert"
+          ],
+          "arc_projection_calls": 17240,
+          "arc_residual_calls": 17240,
+          "arc_cache_gib": 9.718616485595703,
+          "arc_attention_paths": {
+            "standard": 86,
+            "ragged": 86
+          },
+          "arc_finite_logits_checks": 4
+        },
+        {
+          "runtime_sha256": "0f9e4617c6b418e59ae76e6d2727714d6b70bd7d78d64982ca59370d3db4046a",
+          "run_succeeded": true,
+          "rank": 1,
+          "sparse_method": "wina",
+          "sparse_sparsity": 0.5,
+          "arc": true,
+          "arc_expected_projections": 17151,
+          "arc_executed_projections": 9399,
+          "arc_executed_families": [
+            "attention",
+            "grouped_wo_a",
+            "routed_expert",
+            "shared_expert"
+          ],
+          "arc_projection_calls": 17108,
+          "arc_residual_calls": 17108,
+          "arc_cache_gib": 9.718982696533203,
+          "arc_attention_paths": {
+            "standard": 86,
+            "ragged": 86
+          },
+          "arc_finite_logits_checks": 4
+        }
+      ]
+    },
+    {
+      "method": "teal",
+      "probe": "/mnt/kpfs_qyang/zhaolianchao/base_eval/validation/arcquant_arc_20261105/teal/arcquant-arc-teal-0.5-a916a2e360c1/probe.json",
+      "finite_logits": true,
+      "finite_logits_checks": 4,
+      "decode_calls": 2,
+      "gpu_memory": [
+        {
+          "rank": 0,
+          "local_rank": 0,
+          "load_seconds": 75.368693610013,
+          "generation_seconds": 20.209536764014047,
+          "peak_allocated_gib": 85.65498113632202,
+          "peak_reserved_gib": 86.05859375
+        },
+        {
+          "rank": 1,
+          "local_rank": 1,
+          "load_seconds": 77.30275235098088,
+          "generation_seconds": 13.72583124000812,
+          "peak_allocated_gib": 85.6591100692749,
+          "peak_reserved_gib": 86.115234375
+        }
+      ],
+      "runtime": {
+        "schema_version": 2,
+        "method": "teal",
+        "sparsity": 0.5,
+        "allocation": "uniform",
+        "arc": true,
+        "quantization": "arc",
+        "kernel": "HiF4-value-reconstruction+dense-GEMM",
+        "calibration": {
+          "manifest_sha256": "71e2daf07bb74092b11f7f093b6825a2ebbdb8cec9c49e836f49140fc7dd1cf3",
+          "rank_sha256": {
+            "0": "ba103dbcd8ce5c57eea1c97025bf14c21967d717bb952c467f856ec920538849",
+            "1": "a32318c703b52bc3c225c1f8e90de882121fd7087c4e42d14909de7b4bab24b8"
+          },
+          "world_size": 2,
+          "dataset": "WikiText-2 train",
+          "samples": 1,
+          "length": 64,
+          "arc_policy": "per-input-channel absmax order; signed max/8 count rounded up to 64"
+        },
+        "implementation_sha256": {
+          "benchmarks/run_deepseek_sparse_math.py": "6377af2aa7d320e5ad1c6452d5d009fa21a4c20858584473c4907c277a5a7267",
+          "model/deepseek_generation_arc.py": "92d24d97311ae9ebc93e9716284e5419d45286b2126cc4f370087f2e364e7045",
+          "model/deepseek_generation_runtime.py": "0a9a52f0d7ed563504231a32fb1ad3ed4cdb6d8fb75f03bf8979b2d1a8a733d9",
+          "model/deepseek_experiment.py": "d76f7ffb6519f377293787d6eb902481608cd83a9b66aed80ef049ad752aef08",
+          "model/deepseek_adapter.py": "d6c727dc3ec6094c99e59632016cf0d8e07e722a623732c1d9adccf2f600881f",
+          "model/sparse_utils.py": "1820a0777f72e98332f024baa98b6f3f9692eb1ea6ba85d4579ff361789a120f"
+        },
+        "runtime_sha256": "a916a2e360c15f73a49862a90f16b52963e9e36bf9f6f331474576e58d5180ad"
+      },
+      "ranks": [
+        {
+          "runtime_sha256": "a916a2e360c15f73a49862a90f16b52963e9e36bf9f6f331474576e58d5180ad",
+          "run_succeeded": true,
+          "rank": 0,
+          "sparse_method": "teal",
+          "sparse_sparsity": 0.5,
+          "arc": true,
+          "arc_expected_projections": 17151,
+          "arc_executed_projections": 9483,
+          "arc_executed_families": [
+            "attention",
+            "grouped_wo_a",
+            "routed_expert",
+            "shared_expert"
+          ],
+          "arc_projection_calls": 17195,
+          "arc_residual_calls": 17195,
+          "arc_cache_gib": 9.718616485595703,
+          "arc_attention_paths": {
+            "standard": 86,
+            "ragged": 86
+          },
+          "arc_finite_logits_checks": 4
+        },
+        {
+          "runtime_sha256": "a916a2e360c15f73a49862a90f16b52963e9e36bf9f6f331474576e58d5180ad",
+          "run_succeeded": true,
+          "rank": 1,
+          "sparse_method": "teal",
+          "sparse_sparsity": 0.5,
+          "arc": true,
+          "arc_expected_projections": 17151,
+          "arc_executed_projections": 9417,
+          "arc_executed_families": [
+            "attention",
+            "grouped_wo_a",
+            "routed_expert",
+            "shared_expert"
+          ],
+          "arc_projection_calls": 17060,
+          "arc_residual_calls": 17060,
+          "arc_cache_gib": 9.718982696533203,
+          "arc_attention_paths": {
+            "standard": 86,
+            "ragged": 86
+          },
+          "arc_finite_logits_checks": 4
+        }
+      ]
+    }
+  ]
+}

@@ -20,7 +20,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from benchmarks.gpu_wait import idle_gpus
-from benchmarks.queue_sparse_baselines import main as run_queue
+from benchmarks.queue_sparse_baselines import main as run_queue, run_child
 
 
 @contextmanager
@@ -62,9 +62,9 @@ def hold_pair(ids, min_free_mib, poll_seconds, report, lock_root=None):
 
 
 def source_hash():
+    from benchmarks.run_deepseek_sparse_math import SOURCES
     paths = ['benchmarks/queue_sparse_sweep.py', 'benchmarks/queue_sparse_baselines.py',
-             'benchmarks/run_deepseek_sparse_math.py',
-             'model/deepseek_generation_runtime.py', 'model/sparse_utils.py']
+             'benchmarks/deepseek_experiment.py', *SOURCES]
     return hashlib.sha256(b''.join((ROOT / p).read_bytes() for p in paths)).hexdigest()
 
 
@@ -76,6 +76,13 @@ def main(argv=None):
     p.add_argument('--gpu-ids', required=True, help='exactly two physical indices, e.g. 0,1')
     p.add_argument('--sparsities', default='0.5,0.6,0.7,0.8,0.9')
     p.add_argument('--methods', default='teal,wina')
+    p.add_argument('--quantization', choices=('arc', 'hif4'), default='arc')
+    p.add_argument('--no-dense-reference', action='store_true',
+                   help='omit the ARC-only zero-sparsity reference (included by default for ARC)')
+    p.add_argument('--calibration-data', type=Path,
+                   help='WikiText-2 train parquet; build fresh formal calibration before all evaluations')
+    p.add_argument('--calibration-samples', type=int, default=128)
+    p.add_argument('--calibration-length', type=int, default=512)
     p.add_argument('--skip', action='append', default=[], metavar='METHOD:SPARSITY',
                    help='omit an already running/completed combination; repeatable')
     p.add_argument('--min-free-mib', type=int, default=138000)
@@ -101,12 +108,23 @@ def main(argv=None):
         p.error('--skip must refer to a requested method and sparsity')
     for key in ('base_eval_root', 'source_model', 'converted_model', 'calibration', 'out_dir'):
         setattr(a, key, getattr(a, key).expanduser().resolve())
-    for path in (a.base_eval_root, a.source_model, a.converted_model,
-                 a.calibration / 'rank0.pt', a.calibration / 'rank1.pt'):
+    assets = [a.base_eval_root, a.source_model, a.converted_model]
+    if a.calibration_data:
+        a.calibration_data = a.calibration_data.expanduser().resolve()
+        assets.append(a.calibration_data)
+        if a.calibration_samples < 128 or a.calibration_length < 512:
+            p.error('formal calibration requires at least 128 samples of 512 tokens')
+        if a.calibration.exists():
+            p.error('fresh calibration must use a new --calibration directory')
+    else:
+        assets += [a.calibration / 'rank0.pt', a.calibration / 'rank1.pt']
+    for path in assets:
         if not path.exists():
             p.error(f'missing asset: {path}')
-    jobs = [{'method': m, 'sparsity': s, 'status': 'pending'}
+    jobs = [{'method': m, 'sparsity': s, 'status': 'pending', 'arc': a.quantization == 'arc'}
             for s in sparsities for m in methods if (m, s) not in skip]
+    if a.quantization == 'arc' and not a.no_dense_reference:
+        jobs.insert(0, {'method': 'none', 'sparsity': 0., 'status': 'pending', 'arc': True})
     if not jobs:
         p.error('no combinations remain after --skip')
     a.out_dir.mkdir(parents=True, exist_ok=True)
@@ -117,7 +135,10 @@ def main(argv=None):
         code = source_hash()
         state = dict(pid=os.getpid(), hostname=os.uname().nodename,
                      gpu_ids=','.join(ids), lease_scope='local advisory locks only',
-                     code_sha256=code, jobs=jobs, skipped=a.skip, dry_run=a.dry_run)
+                     code_sha256=code, jobs=jobs, skipped=a.skip, dry_run=a.dry_run,
+                     quantization=a.quantization, arc=a.quantization == 'arc',
+                     calibration=str(a.calibration),
+                     calibration_stage='pending' if a.calibration_data else 'existing')
 
         def save(status=None):
             if status:
@@ -137,6 +158,34 @@ def main(argv=None):
             lease = nullcontext(','.join(ids)) if a.dry_run else hold_pair(
                 ids, a.min_free_mib, a.poll_seconds, save)
             with lease as gpu_ids:
+                if a.calibration_data:
+                    if a.dry_run:
+                        raise ValueError('Fresh calibration needs GPUs; use existing calibration for CPU preflight')
+                    if source_hash() != code:
+                        raise RuntimeError('source changed before calibration')
+                    state['calibration_stage'] = 'running'
+                    save('calibrating')
+                    command = [a.python, '-m', 'torch.distributed.run', '--standalone', '--nproc-per-node=2',
+                               str(ROOT / 'benchmarks/deepseek_experiment.py'), '--stage', 'calibrate',
+                               '--calibration-data', str(a.calibration_data),
+                               '--samples', str(a.calibration_samples), '--calibration-length', str(a.calibration_length),
+                               '--max-length', str(max(4096, a.calibration_length)),
+                               '--output', str(a.out_dir / 'calibration_manifest.json')]
+                    for key in ('base_eval_root', 'source_model', 'converted_model', 'calibration'):
+                        command += ['--' + key.replace('_', '-'), str(getattr(a, key))]
+                    state['calibration_command'] = command
+                    save()
+                    rc = run_child(command, {**os.environ, 'CUDA_VISIBLE_DEVICES': gpu_ids,
+                                            'HF_HUB_OFFLINE': '1', 'HF_DATASETS_OFFLINE': '1'},
+                                   a.out_dir / 'calibration.log', None)
+                    if rc:
+                        state['calibration_stage'] = 'failed'
+                        raise RuntimeError(f'formal calibration failed: exit {rc}')
+                    manifest = json.loads((a.calibration / 'manifest.json').read_text())
+                    if manifest['samples'] != a.calibration_samples or manifest['length'] != a.calibration_length:
+                        raise RuntimeError('calibration manifest differs from requested size')
+                    state['calibration_stage'] = 'completed'
+                    save()
                 for job in jobs:
                     if source_hash() != code:
                         raise RuntimeError('source changed; restart into a fresh output directory')
@@ -145,6 +194,7 @@ def main(argv=None):
                     job.update(status='running', output_dir=str(destination))
                     save('preflight' if a.dry_run else 'running')
                     args = ['--out-dir', str(destination), '--python', a.python,
+                            '--quantization', a.quantization,
                             '--sparsity', str(job['sparsity']), '--methods', job['method'], '--full']
                     for key in ('base_eval_root', 'source_model', 'converted_model', 'calibration'):
                         args += ['--' + key.replace('_', '-'), str(getattr(a, key))]

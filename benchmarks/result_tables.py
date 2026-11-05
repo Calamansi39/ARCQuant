@@ -25,7 +25,7 @@ PENDING = '评测中'
 NOTES = [
     '每行是一种模型设置，分数单位为 %。没有使用的配置填“无”；量化方式为“无”的一行是 BF16 参考。',
     'HiF4 W4A4 为基础量化；HiF4 W4A4 + ARC 补偿额外启用校准通道重排和增强残差通道。hifp4/HiFP4 是评测器对 HiF4 的命名。',
-    'TEAL/WINA 行使用 HiF4 基础量化及非结构化激活稀疏，不含 ARC 补偿。50%–90% 是目标激活置零率，不是 2:4 或层覆盖率。',
+    'TEAL/WINA 行使用 HiF4 W4A4 + ARC 补偿及非结构化激活稀疏。50%–90% 是目标激活置零率，不是 2:4 或层覆盖率；当前采用 uniform 分配。历史无 ARC 稀疏记录保留在审计快照。',
     'GPQA 使用 Diamond 198 题生成式 Pass@1，MATH 使用 MATH-500 的 500 题 Pass@1，LongBench 使用 v2 的 503 题 Accuracy。',
     'LiveCodeBench 使用固定 v6 test6 分片 175 题的 64K 独立生成 Pass@1。128K 续写及 GPQA 标签似然诊断保留在审计快照，不填入主表。',
     '“评测中”统一表示尚无可呈现的完整成绩，包括未开始、等待 GPU、运行中及待修复；不表示每个单元格都已启动。当前稀疏队列仅覆盖 MATH。',
@@ -50,7 +50,9 @@ def math_progress(path, snapshot):
     summary = json.loads(raw)
     runtime = read(path.with_name('arcquant_sparse_runtime.json'))
     method, sparsity = runtime['method'], runtime['sparsity']
-    if method not in ('teal', 'wina') or sparsity not in SPARSITIES:
+    arc = runtime.get('arc', False)
+    if not ((method in ('teal', 'wina') and sparsity in SPARSITIES)
+            or (arc and method == 'none' and sparsity == 0)):
         raise ValueError('Unsupported sparse method/rate in ' + str(path))
     if summary['benchmark'] != 'math500' or summary['quant'] != 'hifp4' or summary['questions'] != 500:
         raise ValueError('Expected HiF4 MATH-500 summary')
@@ -58,12 +60,18 @@ def math_progress(path, snapshot):
     if not 0 <= completed <= 500:
         raise ValueError('Invalid completed question count')
     entry = dict(benchmark='MATH-500', method=method, sparsity=sparsity,
+                 arc=arc,
                  completed=completed, expected=500, score=None, status='未完成',
                  source=source_label(path), summary_sha256=hashlib.sha256(raw).hexdigest())
     if not summary['complete']:
         return entry
     if completed != 500 or not summary['is_full_dataset'] or summary['is_smoke_test']:
         raise ValueError('Complete flag disagrees with full coverage')
+    if arc:
+        from benchmarks.queue_sparse_baselines import arc_health
+        ok, detail = arc_health(path.parent, require_ragged=True)
+        if not ok:
+            raise ValueError(detail)
     protocol = read(path.with_name('protocol.json'))
     outputs = path.parent / summary.get('scored_outputs_path', 'outputs.jsonl')
     rows = [json.loads(line) for line in outputs.read_text().splitlines() if line.strip()]
@@ -93,14 +101,14 @@ def math_progress(path, snapshot):
 
 
 def refresh_progress(snapshot, math_summaries=(), sweep_statuses=()):
-    entries = {(r['method'], r['sparsity']): r
+    entries = {(r.get('arc', False), r['method'], r['sparsity']): r
                for r in snapshot.get('sparse_progress', {}).get('rows', [])}
     for path in sweep_statuses:
         state = read(path)
         if state.get('dry_run'):
             raise ValueError('CPU preflight is not evaluation progress')
         for job in state['jobs']:
-            key = (job['method'], job['sparsity'])
+            key = (job.get('arc', state.get('arc', False)), job['method'], job['sparsity'])
             if entries.get(key, {}).get('status') == '完整已核查':
                 # A queue refresh must not erase an already verified score.
                 continue
@@ -109,12 +117,12 @@ def refresh_progress(snapshot, math_summaries=(), sweep_statuses=()):
             else:
                 status = {'running': '运行中', 'completed': '已完成，待核查',
                           'needs_debug': '待修复'}.get(job['status'], '未完成')
-            entries[key] = dict(benchmark='MATH-500', method=key[0], sparsity=key[1],
+            entries[key] = dict(benchmark='MATH-500', arc=key[0], method=key[1], sparsity=key[2],
                                 status=status, completed=0, expected=500, score=None,
                                 source=source_label(path))
     for path in math_summaries:
         entry = math_progress(path, snapshot)
-        entries[(entry['method'], entry['sparsity'])] = entry
+        entries[(entry['arc'], entry['method'], entry['sparsity'])] = entry
     snapshot['sparse_progress'] = dict(updated_at=datetime.now(timezone.utc).isoformat(timespec='seconds'),
                                       rows=list(entries.values()))
 
@@ -125,7 +133,7 @@ def build_matrix(snapshot):
                 and r['variant'] in ('BF16', 'HiFP4')
                 and r['status'] == '已核查完整'
                 and (r['benchmark'], r['protocol']) in BENCHMARKS}
-    progress = {(r['benchmark'], r['method'], r['sparsity']): r
+    progress = {(r['benchmark'], r['method'], r['sparsity'], r.get('arc', False)): r
                 for r in snapshot.get('sparse_progress', {}).get('rows', [])
                 if r.get('model', MODEL) == MODEL}
 
@@ -134,7 +142,7 @@ def build_matrix(snapshot):
         return score if score is not None else PENDING
 
     def sparse_value(bench, method, rate):
-        entry = progress.get((bench, method, rate))
+        entry = progress.get((bench, method, rate, True))
         if (entry and entry.get('score') is not None and entry['status'] == '完整已核查'
                 and entry.get('completed', 0) == entry.get('expected', -1)
                 and entry.get('expected', 0) > 0):
@@ -146,11 +154,11 @@ def build_matrix(snapshot):
          *[baseline_value(bench, variant) for bench, _ in BENCHMARKS]]
         for variant, quant in [('BF16', '无'), ('HiFP4', 'HiF4 W4A4')]
     ]
-    # ARC has only likelihood diagnostics so far, not full generation results.
-    matrix.append([MODEL, '无', '无', 'HiF4 W4A4 + ARC 补偿', *[PENDING] * 4])
+    matrix.append([MODEL, '无', '无', 'HiF4 W4A4 + ARC 补偿',
+                   *[sparse_value(bench, 'none', 0.) for bench, _ in BENCHMARKS]])
     for method in ('teal', 'wina'):
         for rate in SPARSITIES:
-            matrix.append([MODEL, method.upper(), f'{rate:.0%}', 'HiF4 W4A4',
+            matrix.append([MODEL, method.upper(), f'{rate:.0%}', 'HiF4 W4A4 + ARC 补偿',
                            *[sparse_value(bench, method, rate) for bench, _ in BENCHMARKS]])
     return [[round(value, 2) if i >= 4 and isinstance(value, (float, int)) else value
              for i, value in enumerate(row)] for row in matrix]
@@ -207,7 +215,7 @@ def export(snapshot, out):
         if r['group'] == 'methods' or (r['group'] == 'baseline' and r['variant'] in ('BF16', 'HiFP4')):
             detail.append([r['benchmark'] + ' / ' + r['variant'], r['source']])
     for r in snapshot.get('sparse_progress', {}).get('rows', []):
-        detail.append([f"{r['benchmark']} {r['method']} {r['sparsity']:.0%}", r['source']])
+        detail.append([f"{r['benchmark']} {r['method']} {r['sparsity']:.0%} ARC={r.get('arc', False)}", r['source']])
     detail.column_dimensions['A'].width = 51; detail.column_dimensions['B'].width = 112
     for cells in detail:
         for c in cells:

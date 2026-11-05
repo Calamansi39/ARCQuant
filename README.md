@@ -1,5 +1,7 @@
 # ARCQuant: Boosting NVFP4 Quantization with Augmented Residual Channels for LLMs
 
+**DeepSeek ARC 量化＋稀疏队列：** [启动、校准与验证说明](docs/DEEPSEEK_ARC_QUEUE.md)
+
 **实验结果表：** [在线查看](docs/RESULTS_PRESENTATION.md) · [下载彩色 Excel](docs/completed_benchmarks.xlsx?raw=true) · [CSV](docs/completed_benchmarks.csv) · [TSV](docs/completed_benchmarks.tsv)
 
 <h5 align="center">
@@ -127,6 +129,7 @@ torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_extended.py \
   --limit 1 --max-new-tokens 4 --out-dir validation/longbench-wina
 
 torchrun --nproc_per_node=2 benchmarks/run_deepseek_sparse_math.py \
+  --quantization arc --calibration /path/to/formal-calibration \
   --base-eval-root /path/to/base_eval --sparse-method wina --sparsity 0.5 \
   --source-model /path/to/DeepSeek-V4-Flash-0731 \
   --converted-model /path/to/DeepSeek-V4-Flash-0731-mp2 --quant hifp4 --mode w4a4 \
