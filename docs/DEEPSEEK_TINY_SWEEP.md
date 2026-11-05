@@ -1,6 +1,6 @@
 # DeepSeek 五档 tiny 横评
 
-`benchmarks/queue_deepseek_tiny_sweep.py` 是一个跨主机调度器。它等待 TEAL/WINA 的完整 native greedy 策略，然后调用现有 `run_deepseek_greedy_eval.py`，不会另写一套模型推理逻辑。
+`benchmarks/queue_deepseek_tiny_sweep.py` 是一个跨主机调度器。它对 TEAL、WINA 分别等待完整 native greedy 策略；某一种方法先完成，就先启动该方法的五档任务，然后调用现有 `run_deepseek_greedy_eval.py`，不会另写一套模型推理逻辑。
 
 ## 评测范围
 
