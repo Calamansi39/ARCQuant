@@ -80,9 +80,11 @@ python arc.py sparse-plan --benchmark math500 \
 
 ## 结果解释
 
-当前 GPQA 入口复现的是 lm-eval `gpqa_diamond_zeroshot` 的题目模板和选项
-似然评分：每个选项独立计算条件 log-likelihood，最高者作为答案。它和历史
-报告中原生 thinking 的生成式 Pass@1 不是同一个指标，不能直接比较百分数。
+当前 GPQA 入口复现的是 lm-eval `gpqa_diamond_zeroshot` 的题目模板，但本仓库
+的实现只对答案标签 `(A)`、`(B)`、`(C)`、`(D)` 的条件 log-likelihood 打分，
+并没有对四个完整选项文本打分，也没有让模型先生成 thinking。这是一个内部
+方法诊断协议。它和历史报告中允许 thinking 的生成式 Pass@1 不是同一个指标，
+不能直接比较百分数；正式方法结果应使用同一生成式协议重新评测。
 结果 JSON 会保存题目哈希、选项置换、每题分数、数据集 SHA256、权重签名、
 代码签名、TP 显存峰值和投影覆盖率。
 
