@@ -1,4 +1,8 @@
-# DeepSeek V4 Flash：当前完整 GPQA 结果
+# DeepSeek V4 Flash：GPQA 全题集标签似然诊断
+
+> 本页覆盖 198 题，但不代表方法完整复现。TEAL/WINA 均使用 **uniform 预算**，
+> 没有执行 greedy 预算搜索；WINA 的 transform 关闭。校准仍是 1×64 token 的
+> smoke 产物。详见 [预算分配核查](DEEPSEEK_SPARSE_BUDGET_AUDIT.md)。
 
 本页记录仓库当前实现跑出的第一组完整对照结果。模型是
 `DeepSeek-V4-Flash-0731` 官方 TP2 权重，数据是本仓库固定的 GPQA Diamond
@@ -9,8 +13,8 @@
 | BF16 | BF16 基线 | 99 / 198 | 50.00% | — |
 | HiF4 | HiF4 W4A4 | 92 / 198 | 46.46% | -3.54 个百分点 |
 | ARC | HiF4 W4A4 + ARC | 102 / 198 | 51.52% | +1.52 个百分点 |
-| TEAL | HiF4 W4A4 + ARC + TEAL，稀疏率 50% | 87 / 198 | 43.94% | -6.06 个百分点 |
-| WINA | HiF4 W4A4 + ARC + WINA，稀疏率 50% | 81 / 198 | 40.91% | -9.09 个百分点 |
+| TEAL | HiF4 W4A4 + ARC + TEAL uniform，目标稀疏率 50% | 87 / 198 | 43.94% | -6.06 个百分点 |
+| WINA | HiF4 W4A4 + ARC + WINA uniform / mask-only，目标稀疏率 50% | 81 / 198 | 40.91% | -9.09 个百分点 |
 
 ## 这组数字说明什么
 
@@ -40,5 +44,5 @@
 
 这页是 DeepSeek × GPQA Diamond 的第一组完整结果，不代表 MiniMax H3、MAGI-2
 或 MATH-500、LongBench、LiveCodeBench、Terminal-Bench、VBench 已经完成。下一步
-应在相同 CLI 和元数据协议下逐项接入这些模型与 benchmark，并先补齐 WINA
-transform 和真正的 sparse kernel，再报告速度指标。
+应先补齐 DeepSeek 的正式校准、greedy 预算分配和生成式 ARC 共同基座，并单独验证
+DeepSeek 的 WINA transform 适配；真实速度指标还需要 sparse kernel 与端到端测量。

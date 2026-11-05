@@ -1,9 +1,13 @@
-# DeepSeek：HiF4 + ARC + TEAL/WINA 正式评测
+# DeepSeek：HiF4、ARC 与 TEAL/WINA 实验入口
+
+> **方法完整性：** 当前 TEAL/WINA 使用统一投影预算（uniform），没有 greedy
+> 分配策略；WINA 未启用 transform。GPQA 标签似然入口包含 ARC，生成式稀疏入口
+> 尚不包含 ARC。现有命令不能代表完整原生复现，详见 [预算核查](DEEPSEEK_SPARSE_BUDGET_AUDIT.md)。
 
 当前机器已经跑完一组 198 题 GPQA Diamond 全量对照，结果表和边界说明见
 [DeepSeek 完整结果](DEEPSEEK_FORMAL_RESULTS.md)。
 
-`arc.py experiment` 是 DeepSeek V4 Flash 的完整实验入口。它把同一份
+`arc.py experiment` 是 DeepSeek V4 Flash 的校准与 GPQA 标签似然诊断入口。它把同一份
 官方 TP2 权重、同一份校准数据和同一份 benchmark 题目固定下来，分别运行：
 
 - `bf16`：原始 BF16 计算对照；
@@ -90,6 +94,8 @@ python arc.py sparse-plan --benchmark math500 \
 
 ### 重要实现边界
 
+- 一个 `--sparsity` 统一应用到所有纳入掩码的投影，TEAL 的不同阈值不代表已经做了
+  不同预算分配；该入口没有装载 greedy 策略的接口。采集直方图不等于完成预算搜索。
 - ARC 的顺序和残差通道来自校准输入的 per-channel absmax；残差数按已有
   ARCQuant 的 `max/8` 规则取整到 64 通道。
 - TEAL 使用 signed histogram 的 `0.5 + sparsity/2` 阈值；prefill 只掩码后半段，

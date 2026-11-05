@@ -1,5 +1,10 @@
 # TEAL / WINA：原生规则、接线与可信范围
 
+> **2026-11-05 完成度更正：** 当前 DeepSeek 只接入 uniform 预算下的在线选通，
+> 没有适配或执行 TEAL/WINA 原仓库的 greedy 预算搜索，也没有执行 WINA transform。
+> 下文的通用 greedy/transform 实现属于旧模型路径，不能当作目标模型已经完成的证据。
+> 逐项源码核查与缺口见 [DeepSeek 预算核查](DEEPSEEK_SPARSE_BUDGET_AUDIT.md)。
+
 本页对照了 TEAL 官方仓库 [`FasterDecoding/TEAL`](https://github.com/FasterDecoding/TEAL) 的 `fb7373c93ac3594817c9ee64d4e08b47430a1822`，以及 WINA 的 [`Calamansi39/wina`](https://github.com/Calamansi39/wina) 提交 `04ac8794aa4ae345d09414733ceb76470d3b6a3e`（fork 自 [`microsoft/wina`](https://github.com/microsoft/wina)）。当前代码以 ARCQuant 的 Llama 量化层为宿主，实现两篇方法中可独立使用的原生选通规则。它们不等于论文全部实验设置。
 
 ## 方法怎么选输入
@@ -18,7 +23,7 @@
 
 1. `arc.py prepare` 是 ARCQuant 原有工作：读取模型和校准数据，生成通道重排索引、残差通道数、激活统计到 `saved/`。`none`、`teal`、`wina` 走同一套 HiF4 准备过程。
 2. `arc.py calibrate --method teal` 逐层读取校准文本，收集**有符号**的注意力与 MLP `h1/h2` 激活，生成每层的 `histograms.pt`。这一步沿用 TEAL 的直方图布局和阈值定义。`wina --allocation uniform` 不需要这一步；加载层时从原权重计算 K/gate 列范数即可。
-3. 两种方法均可用 `--allocation greedy`。校准器对每层 Q/K/V/O/gate/up/down 逐一试增加稀疏率，选使该层输出与未稀疏输出差别最小的投影，直到按七个权重矩阵参数量加权的预算达到目标值。每次候选消耗相同的权重预算：以 Q 投影的参数量为单位，参考默认步长为 `0.025`，其它矩阵的稀疏率增量按参数量反比换算。误差使用参考仓库的层输出后段 token 范数。生成的 `strategy.json` 记录每层七个稀疏率、校准设置和模型配置哈希；`run` 会核对。这里是基于参考 greedy 思路的重新实现，样本数与步长可由 CLI 控制，不应把它描述为逐字节复制官方 CSV 曲线。
+3. **旧 Llama adapter** 中两种方法均可用 `--allocation greedy`，DeepSeek 尚不支持。校准器对每层 Q/K/V/O/gate/up/down 逐一试增加稀疏率，选使该层输出与未稀疏输出差别最小的投影，直到按七个权重矩阵参数量加权的预算达到目标值。每次候选消耗相同的权重预算：以 Q 投影的参数量为单位，参考默认步长为 `0.025`，其它矩阵的稀疏率增量按参数量反比换算。误差使用参考仓库的层输出后段 token 范数。生成的 `strategy.json` 记录每层七个稀疏率、校准设置和模型配置哈希；`run` 会核对。这是基于参考 greedy 思路的重实现；本地 WINA 搜索直接使用 top-k，原版固定源码用 threshold 搜索、top-k 评测，不能把两条流程称为完全相同。
 4. `arc.py run` 在线运行时，先对每个投影输入应用 TEAL 阈值或 WINA top-k，再走 ARCQuant 的通道重排、HiF4 权重/激活数值模拟及投影计算。`model/sparse_utils.py` 实现掩码，`model/qLlamaLayer.py` 把七个掩码接到对应输入；`model/calibrate_sparse.py` 实现离线产物。
 
 本次服务器上的逐行核查使用了保存的源码快照：
@@ -37,4 +42,4 @@ WINA 的 `--transform` 现在由 `model/wina_transform.py` 提供：LayerNorm/RM
 - WINA 官方复现脚本使用 `--greedy --transform`。变换代码已移植，但它仍需要在目标机器上重新生成对应 ARC 缓存；未带 `_wina_transform` 后缀的旧缓存不能用于变换模型。只有同时记录 transform manifest、缓存哈希和评测结果，才可称为完整 WINA+ARCQuant 实验。
 - TEAL/WINA 原仓库没有验证与 ARCQuant 增强残差通道的 HiF4 W4A4 组合。`HiF4` 路径目前仍主要是密集矩阵乘法的数值模拟；出现零值不意味着实际稀疏内核已跳过乘法，也不能据此宣称加速。
 - 锁定 `transformers==4.46.3` 的小型 Llama CPU 检查已覆盖离线四组激活、官方层前向一致性、greedy 预算、TEAL 文件读取、WINA 零稀疏率下的量化输出一致性。还没有在真实 8B 模型上完成精度、逐层误差和端到端延迟回归。迁移后应先用 `smoke` 跑通，再用相同模型/评测协议分别测 `none`、`teal`、`wina`。
-- 当前仅 Llama 有 TEAL/WINA 的 ARCQuant 整模型投影接线。Qwen、Mixtral 保留原量化路径；DeepSeek 已有投影级代码和官方权重切片 CPU 检查，但尚未完成整模型接线及校准；视频模型仍只登记了资产及外部基线。`base-eval` 不实现 ARCQuant 稀疏方法。
+- 当前通用 greedy/transform 路径限制在旧 Llama adapter。DeepSeek 已有 uniform 选通的 GPQA 标签似然诊断和生成式评测入口，使用的校准仍是 1×64 token smoke；greedy 预算搜索、DeepSeek transform 和生成式 ARC 补偿均未完成。视频模型的适配进展另见各模型交接文档；不能由旧模型接口的存在推断目标模型已经完成。
