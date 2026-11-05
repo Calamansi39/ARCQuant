@@ -5,34 +5,66 @@
     "wina_native": {
       "description": "Sparsity points used by the native WINA reproduction scripts",
       "rates": {
-        "wina": [0.25, 0.4, 0.5, 0.65]
+        "wina": [
+          0.25,
+          0.4,
+          0.5,
+          0.65,
+          0.8
+        ]
       }
     },
     "teal_native": {
       "description": "Main model-wide points reported by native TEAL",
       "rates": {
-        "teal": [0.4, 0.5]
+        "teal": [
+          0.4,
+          0.5,
+          0.8
+        ]
       }
     },
     "formal_candidate": {
       "description": "Legacy alias for baseline_sweep; unstructured element-rate comparison, not a structured coverage requirement",
       "rates": {
-        "teal": [0.5, 0.65],
-        "wina": [0.5, 0.65]
+        "teal": [
+          0.5,
+          0.65,
+          0.8
+        ],
+        "wina": [
+          0.5,
+          0.65,
+          0.8
+        ]
       }
     },
     "high_sparsity": {
-      "description": "Unstructured 65% diagnostic/ablation; does not imply 2:4 or layer coverage",
+      "description": "Unstructured 65% and 80% diagnostic/ablation; does not imply 2:4 or layer coverage",
       "rates": {
-        "teal": [0.65],
-        "wina": [0.65]
+        "teal": [
+          0.65,
+          0.8
+        ],
+        "wina": [
+          0.65,
+          0.8
+        ]
       }
     },
     "baseline_sweep": {
       "description": "Native TEAL/WINA unstructured element-rate comparisons; distinct from structured24 experiments",
       "rates": {
-        "teal": [0.5, 0.65],
-        "wina": [0.5, 0.65]
+        "teal": [
+          0.5,
+          0.65,
+          0.8
+        ],
+        "wina": [
+          0.5,
+          0.65,
+          0.8
+        ]
       }
     }
   }
