@@ -8,6 +8,8 @@
 
 **实验结果表：** [在线查看](docs/RESULTS_PRESENTATION.md) · [下载彩色 Excel](docs/completed_benchmarks.xlsx?raw=true) · [CSV](docs/completed_benchmarks.csv) · [TSV](docs/completed_benchmarks.tsv)
 
+**后续卡时与组会计划：** [首批申请、完整网格预算及实测依据](docs/GPU_BUDGET.md)（2026-11-05 更新）。
+
 <h5 align="center">
 
 [![arXiv](https://img.shields.io/badge/ARCQuant-2601.07475-b31b1b.svg?logo=arXiv)](https://arxiv.org/abs/2601.07475)

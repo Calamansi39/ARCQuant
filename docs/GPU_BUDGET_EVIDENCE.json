@@ -1,0 +1,244 @@
+{
+  "as_of": "2026-11-05T21:56:58+08:00",
+  "scope": "Remaining DS 11 ARC configurations x 4 benchmarks; video 11 ARC configurations x VBench Tiny; planning scenarios, not measured ARC throughput",
+  "measurements": {
+    "GPQA": {
+      "path": "/mnt/kpfs_qyang/zhaolianchao/base_eval/results/DeepSeek-V4-Flash-0731/gpqa_generative/hifp4/performance.json",
+      "sha256": "1aa3e871959056637cc92017b6ad754e233d2a0a8f324dbcf34810025ddbb06f",
+      "questions": 198,
+      "world_size": 2,
+      "batch_size": 20,
+      "generated_tokens": 638795,
+      "generation_wall_hours": 18.600805226451612,
+      "generation_gpu_hours": 37.201610452903225,
+      "load_seconds_max": 238.21581570617855
+    },
+    "MATH": {
+      "path": "/mnt/kpfs_qyang/zhaolianchao/base_eval/results/DeepSeek-V4-Flash-0731/math500_generative/hifp4/performance.json",
+      "sha256": "c82564e0054f8f689e515b0b574d1f8be4f159ce6854419f0d0147900de9af9d",
+      "questions": 500,
+      "world_size": 2,
+      "batch_size": 20,
+      "generated_tokens": 383359,
+      "generation_wall_hours": 11.07402989979484,
+      "generation_gpu_hours": 22.14805979958968,
+      "load_seconds_max": 245.9975777999498
+    },
+    "LongBench": {
+      "path": "/mnt/kpfs_qyang/zhaolianchao/base_eval/results/DeepSeek-V4-Flash-0731/longbench_v2/hifp4-w4a4.jsonl",
+      "sha256": "5b0785e3f09a20b98c81b602f22fa684b00cd1801be4fb7e89f092d7e717801f",
+      "questions": 503,
+      "world_size": 2,
+      "prompt_tokens": 43020973,
+      "generation_wall_hours": 15.698198611111112,
+      "generation_gpu_hours": 31.396397222222223,
+      "note": "sequential requests, sum prefill+decode, excludes loading"
+    },
+    "LiveCodeBench": {
+      "path": "/mnt/kpfs_qyang/zhaolianchao/base_eval/results/DeepSeek-V4-Flash-0731/livecodebench_v6_64k_n1_batch16/hifp4-w4a4.jsonl",
+      "sha256": "2d9dfeecd88e78dcebd8d9e8a06d0b25901bc47a6e894b1d0ceeb322c218593e",
+      "questions": 175,
+      "world_size": 2,
+      "batch_capacity": 16,
+      "generated_tokens": 5843205,
+      "sum_request_wall_seconds": 10178535.102,
+      "max_request_wall_seconds": 118208.608,
+      "estimated_generation_gpu_hours": [
+        353.42135770833335,
+        419.09280659722225
+      ],
+      "note": "not measured job wall time: occupied request-slot hours /16, plus up to one slow request for final drain; assumes continuous scheduling, no queue gaps"
+    },
+    "greedy_layers": [
+      {
+        "path": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/native_greedy_campaign_20261105_185006/full/wina/layer-0.json",
+        "sha256": "e301e54eb9635aee9981d4d360ef4030113e2e36cf40cafdb1d97fb927a77f02",
+        "method": "wina",
+        "layer": 0,
+        "complete": true,
+        "elapsed_seconds": 1192.0901302580023,
+        "iterations": 307
+      },
+      {
+        "path": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/native_greedy_campaign_20261105_185006/full/wina/layer-1.json",
+        "sha256": "773669510c8970644ac60a574dd7fe374402f87c9343e767757335288e6a8a62",
+        "method": "wina",
+        "layer": 1,
+        "complete": true,
+        "elapsed_seconds": 1246.4045684550074,
+        "iterations": 307
+      },
+      {
+        "path": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/native_greedy_campaign_20261105_185006/full/wina/layer-2.json",
+        "sha256": "7fad19bdc9b6d3a918bdde014e7f5c2decdbdc8ec2ba6fc95601ae1891d7fb02",
+        "method": "wina",
+        "layer": 2,
+        "complete": true,
+        "elapsed_seconds": 1970.305118254968,
+        "iterations": 331
+      },
+      {
+        "path": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/native_greedy_campaign_20261105_185006/full/wina/layer-3.json",
+        "sha256": "dd856137b48417dbfdc08edebc7fd31cc2fe9d5ea877420b73940473a268af5d",
+        "method": "wina",
+        "layer": 3,
+        "complete": false,
+        "elapsed_seconds": 1200.034556220984,
+        "iterations": 233
+      },
+      {
+        "path": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/native_greedy_campaign_20261105_185006/full/teal/layer-0.json",
+        "sha256": "3c182e64bc52ca38d8c007cd3499a30f737c199dadbaecaca354d9a54c951b88",
+        "method": "teal",
+        "layer": 0,
+        "complete": true,
+        "elapsed_seconds": 1198.0537341759773,
+        "iterations": 307
+      },
+      {
+        "path": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/native_greedy_campaign_20261105_185006/full/teal/layer-1.json",
+        "sha256": "23ddc3f33de52714340bd524b231ae35d76f7fe9a88dd25f524a0eccf944a29b",
+        "method": "teal",
+        "layer": 1,
+        "complete": true,
+        "elapsed_seconds": 1245.1130984050105,
+        "iterations": 307
+      },
+      {
+        "path": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/native_greedy_campaign_20261105_185006/full/teal/layer-2.json",
+        "sha256": "15d8ac75e53d046f682af19d8c8c1c47babff6c7b620aa1a5932dc683dca0e22",
+        "method": "teal",
+        "layer": 2,
+        "complete": true,
+        "elapsed_seconds": 1907.9311710239854,
+        "iterations": 331
+      }
+    ],
+    "MAGI": {
+      "sources": [
+        {
+          "path": "/mnt/kpfs_qyang/zhaolianchao/base_eval/results/MAGI-2-preview/vbench_standard/hifp4-w4a4-50p5/tiny/workers/1793449052506066455-965648-gpu-0-1-1/timings.rank0.json",
+          "sha256": "2345d2fa85f2fe76eb47922eca8b3adb7bc2a86c68e86660549135290b5a6d1e",
+          "completed_samples": 209,
+          "total_seconds": 437256.584571445,
+          "mean_seconds": 2092.136768284426
+        },
+        {
+          "path": "/mnt/kpfs_qyang/zhaolianchao/base_eval/results/MAGI-2-preview/vbench_standard/hifp4-w4a4-50p5/tiny/workers/1793449052506066455-965648-gpu-2-3-2/timings.rank0.json",
+          "sha256": "c14c658864886ce9c9c3235feb7b9a344b0ff2d9b470ed1ba3dfa5a9a6d830e3",
+          "completed_samples": 208,
+          "total_seconds": 437267.24742265785,
+          "mean_seconds": 2102.246381839701
+        },
+        {
+          "path": "/mnt/kpfs_qyang/zhaolianchao/base_eval/results/MAGI-2-preview/vbench_standard/hifp4-w4a4-50p5/tiny/workers/arc-extra-10-0-2-54-1817032-1793880947714781325/timings.rank0.json",
+          "sha256": "d74e67003e2a7a464bf8b2484f7c091994c479acd77d289c7fd9f8733bb17e56",
+          "completed_samples": 2,
+          "total_seconds": 4204.828217234986,
+          "mean_seconds": 2102.414108617493
+        }
+      ],
+      "world_size": 2,
+      "samples": 419,
+      "mean_seconds": 2097.204439645198,
+      "min_seconds": 1965.7650751360343,
+      "max_seconds": 2194.9136544509674,
+      "completed_cache_records": 419,
+      "cache_validation": "prompt/sample and file size only; not full video rehash or score audit",
+      "remaining_videos": 321,
+      "baseline_gpu_hours_per_video": 1.1651135775806656,
+      "baseline_gpu_hours_per_tiny": 862.1840474096925,
+      "baseline_remaining_gpu_hours": 374.0014584033936,
+      "protocol": {
+        "preview_steps": 50,
+        "refiner_steps": 5,
+        "seconds": 10,
+        "resolution": "1080p"
+      }
+    }
+  },
+  "assumptions": {
+    "remaining_configurations": 11,
+    "text_questions_per_configuration": {
+      "MATH": 500,
+      "GPQA": 198,
+      "LongBench": 503,
+      "LiveCodeBench": 175
+    },
+    "ds_gpu_hours_per_configuration": {
+      "MATH": [
+        100,
+        300
+      ],
+      "GPQA": [
+        100,
+        300
+      ],
+      "LongBench": [
+        60,
+        150
+      ],
+      "LiveCodeBench": [
+        800,
+        2000
+      ]
+    },
+    "ds_remaining_search_gpu_hours": [
+      80,
+      100
+    ],
+    "ds_full_validation_gpu_hours": [
+      50,
+      100
+    ],
+    "ds_first_batch_validation_gpu_hours": [
+      30,
+      60
+    ],
+    "contingency_factor": 1.2,
+    "magi_arc_sparse_runtime_multiplier": [
+      1.5,
+      3
+    ],
+    "minimax_assumed_minutes_per_video_a800": [
+      20,
+      60
+    ],
+    "video_configurations": 11,
+    "videos_per_configuration": 740,
+    "video_offline_greedy_cost": "unknown, excluded; 100-200 GPU-hour initial development/measurement allocation per model is a timebox, not a completion estimate",
+    "text_high_sparsity_caveat": "budget intervals are scenarios, not upper bounds; token-length inflation can exceed them",
+    "ds_first_stage_configurations": [
+      "arc-dense",
+      "arc-teal-greedy-0.5",
+      "arc-wina-greedy-0.5"
+    ],
+    "minimax_extra_bf16_if_legacy_protocol_unverifiable_gpu_hours": [
+      296.0,
+      888.0
+    ]
+  },
+  "estimates": {
+    "ds_full_gpu_hours": [
+      14148.0,
+      36540.0
+    ],
+    "ds_first_3_configs_math_gpqa_gpu_hours": [
+      852.0,
+      2352.0
+    ],
+    "magi_formal_generation_with_overhead_gpu_hours": [
+      17071.24413871191,
+      34142.48827742382
+    ],
+    "magi_remaining_legacy_generation_with_overhead_gpu_hours": 448.8017500840723,
+    "minimax_formal_generation_with_overhead_gpu_hours": [
+      3256.0,
+      9768.0
+    ],
+    "math_all_length_cap_gpu_hours_at_2_to_4_aggregate_tokens_per_second": [
+      568.8888888888889,
+      1137.7777777777778
+    ]
+  }
+}
