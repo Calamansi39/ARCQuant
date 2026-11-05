@@ -2211,5 +2211,111 @@
       ]
     }
   ],
-  "rejected": []
+  "rejected": [],
+  "sparse_progress": {
+    "updated_at": "2026-11-05T09:03:13+00:00",
+    "rows": [
+      {
+        "benchmark": "MATH-500",
+        "method": "teal",
+        "sparsity": 0.5,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "teal",
+        "sparsity": 0.6,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "wina",
+        "sparsity": 0.6,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "teal",
+        "sparsity": 0.7,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "wina",
+        "sparsity": 0.7,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "teal",
+        "sparsity": 0.8,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "wina",
+        "sparsity": 0.8,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "teal",
+        "sparsity": 0.9,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "wina",
+        "sparsity": 0.9,
+        "status": "等待 GPU",
+        "completed": 0,
+        "expected": 500,
+        "score": null,
+        "source": "runs/continuous_sparse_sweep_20261105_161852/status.json"
+      },
+      {
+        "benchmark": "MATH-500",
+        "method": "wina",
+        "sparsity": 0.5,
+        "completed": 121,
+        "expected": 500,
+        "score": null,
+        "status": "未完成",
+        "source": "runs/baseline_queue_20261104_130054/full/wina/500/arcquant-wina-0.5-0a9a52f0d7ed/summary.json",
+        "summary_sha256": "222927956d7f97959d1ee813d714f96acab68c53ed8bbf0c53e4e4cd55fd28de"
+      }
+    ]
+  }
 }
