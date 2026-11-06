@@ -182,7 +182,7 @@ def run(a):
                 if name=='pilot' and status['phase']!='pilot_paused':
                     save('failed_pilot_validation');return 1
                 if name=='pilot':
-                    for method in ('wina','teal'):
+                    for method in methods.split(','):
                         result=json.loads((out/name/method/'layer-0.json').read_text())
                         if result['iterations'] < 1 or result['candidate_forwards'] < len(result['weights']):
                             save('failed_pilot_validation');return 1
