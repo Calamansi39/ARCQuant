@@ -16,7 +16,31 @@ free_mib() {
     | tr -d ' ' | head -1
 }
 
+primary_ready() {
+  python3 - <<'PY'
+import json
+from pathlib import Path
+roots = [
+    (Path('/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_method_split_20261105_2040/wina-search'), 'wina'),
+    (Path('/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_greedy_race_20261106/teal-search'), 'teal'),
+]
+for root, method in roots:
+    path = root / method / 'strategy.json'
+    if path.is_file():
+        try:
+            if json.loads(path.read_text()).get('complete'):
+                raise SystemExit(0)
+        except (OSError, ValueError):
+            pass
+raise SystemExit(1)
+PY
+}
+
 while :; do
+  if primary_ready; then
+    echo "$(date -Is) primary greedy is complete; tiny evaluation has priority"
+    exit 0
+  fi
   f5=$(free_mib 5 || echo 0)
   f6=$(free_mib 6 || echo 0)
   if [ "${f5:-0}" -ge 138000 ] && [ "${f6:-0}" -ge 138000 ]; then
