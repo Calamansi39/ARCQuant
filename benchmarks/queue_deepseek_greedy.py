@@ -95,6 +95,8 @@ def parser():
     p.add_argument('--pilot-only',action='store_true')
     p.add_argument('--resume-search',type=Path,help='continue a compatible formal-size search after obtaining the GPU lease')
     p.add_argument('--min-free-mib',type=int,default=138000)
+    p.add_argument('--methods',default='wina,teal',help='comma-separated native methods for a fresh search')
+    p.add_argument('--targets',default='0.5,0.6,0.7,0.8,0.9',help='comma-separated sparsity targets for a fresh search')
     for name in ('base-eval-root','source-model','converted-model','calibration-data'):
         p.add_argument('--'+name,type=Path,required=True)
     return p
@@ -107,6 +109,16 @@ def run(a):
         p.error('exactly two distinct GPU indices required')
     out=a.out_dir.resolve();out.mkdir(parents=True,exist_ok=True)
     if (out/'queue_status.json').exists():p.error('use a fresh queue output directory')
+    methods=','.join(v.strip() for v in a.methods.split(',') if v.strip())
+    targets=','.join(v.strip() for v in a.targets.split(',') if v.strip())
+    if not methods or any(v not in ('wina','teal') for v in methods.split(',')):
+        p.error('--methods must contain only wina and/or teal')
+    try:
+        parsed_targets=[float(v) for v in targets.split(',')]
+    except ValueError:
+        p.error('--targets must be comma-separated numbers')
+    if not parsed_targets or any(not 0 < v < 1 for v in parsed_targets):
+        p.error('--targets must be between 0 and 1')
     source = snapshot_source(out)
     state=dict(pid=os.getpid(),hostname=os.uname().nodename,jobs=[],state='waiting_for_gpu',gpu_ids=ids)
     def save(phase=None):
@@ -118,10 +130,10 @@ def run(a):
     for name in ('base_eval_root','source_model','converted_model','calibration_data'):
         base+=['--'+name.replace('_','-'),str(getattr(a,name).resolve())]
     stages=[('pilot',['--samples','2','--search-samples','2','--length','128','--layers','1',
-                     '--max-steps','1','--methods','wina,teal','--targets','0.5'])]
+                     '--max-steps','1','--methods',methods,'--targets',str(parsed_targets[0])])]
     if not a.pilot_only:
         stages.append(('full',['--samples','128','--search-samples','20','--length','512',
-                               '--methods','wina,teal','--targets','0.5,0.6,0.7,0.8,0.9']))
+                               '--methods',methods,'--targets',targets]))
     if a.resume_search:
         if a.pilot_only:p.error('--resume-search and --pilot-only cannot be combined')
         manifest=json.loads((a.resume_search/'search_manifest.json').read_text())
