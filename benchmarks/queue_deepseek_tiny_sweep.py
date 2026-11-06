@@ -66,7 +66,7 @@ def ready(root, method):
     if any(abs(float(p.get('target', -1)) - rate) > 1e-8 for p in s.get('profiles', []) for rate in []):
         return None
     return dict(root=str(root.resolve()), method=method,
-                strategy=strategy.resolve(), calibration=str((root/'calibration').resolve()),
+                strategy=str(strategy.resolve()), calibration=str((root/'calibration').resolve()),
                 strategy_sha256=sha(strategy), calibration_manifest_sha256=sha(calibration),
                 search_manifest_sha256=sha(manifest), targets=s.get('profiles', []),
                 ready_at=now())

@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import re
 
@@ -64,6 +65,9 @@ def load_strategy(path, *, method, sparsity, source_signature, world_size, quant
 def atomic_json(path, data):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_name(path.name + ".tmp")
+    # Workers on the same host may publish different heartbeat/manifest files
+    # at the same time. A shared fixed temporary name lets one writer replace
+    # another writer's temp file and causes FileNotFoundError on replace.
+    temp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     temp.write_text(json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
     temp.replace(path)
