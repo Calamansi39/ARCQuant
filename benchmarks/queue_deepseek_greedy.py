@@ -1,7 +1,7 @@
 """Run greedy preparation as the next job on an idle GPU pair, without kills."""
 from __future__ import annotations
 import argparse
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import datetime, timezone
 import json
 import os
@@ -59,6 +59,32 @@ def priority_pair(ids, min_free_mib, save):
         yield ','.join(ids)
     finally:
         for handle in reversed(handles):handle.close()
+
+
+@contextmanager
+def search_lease(path, save):
+    """Serialize writers that resume the same search directory.
+
+    A resumed search updates layer files, calibration shards, and the
+    strategy atomically only at the file level.  Two torchrun jobs can still
+    interleave different layers and leave a mixed artifact, so the directory
+    itself needs a process-level lease.  Waiting for this lease happens before
+    claiming GPUs so a duplicate queue does not reserve cards while blocked.
+    """
+    if path is None:
+        yield
+        return
+    root = Path(path).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    lock = (root / '.arcquant-search.lock').open('a')
+    try:
+        save('waiting_for_search_lease')
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        save('search_lease_acquired')
+        yield
+    finally:
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        lock.close()
 
 
 def parser():
@@ -122,30 +148,32 @@ def run(a):
                 os.killpg(child.pid,signal.SIGKILL);child.wait()
         state['signal']=sig;save('interrupted');raise SystemExit(128+sig)
     signal.signal(signal.SIGTERM,stop);signal.signal(signal.SIGINT,stop)
-    with priority_pair(ids,a.min_free_mib,save) as visible:
-        for name,options in stages:
-            destination=a.resume_search.resolve() if name=='resume' else out/name
-            command=base+['--out-dir',str(destination),*options]
-            job=dict(name=name,state='running',command=command)
-            state['jobs'].append(job);save(name)
-            env={**os.environ,'CUDA_VISIBLE_DEVICES':visible,'HF_HUB_OFFLINE':'1',
-                 'HF_DATASETS_OFFLINE':'1','OMP_NUM_THREADS':'4',
-                 'PYTORCH_CUDA_ALLOC_CONF':'expandable_segments:True'}
-            with (out/f'{name}.log').open('w') as log:
-                child=subprocess.Popen(command,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-                job['pid']=child.pid;save()
-                rc=child.wait();child=None
-            job.update(exit_code=rc,state='completed' if rc==0 else 'failed');save()
-            if rc:
-                save('failed');return rc
-            status=json.loads((destination/'status.json').read_text())
-            if name=='pilot' and status['phase']!='pilot_paused':
-                save('failed_pilot_validation');return 1
-            if name=='pilot':
-                for method in ('wina','teal'):
-                    result=json.loads((out/name/method/'layer-0.json').read_text())
-                    if result['iterations'] < 1 or result['candidate_forwards'] < len(result['weights']):
-                        save('failed_pilot_validation');return 1
+    lease = search_lease(a.resume_search, save) if a.resume_search else nullcontext()
+    with lease:
+        with priority_pair(ids,a.min_free_mib,save) as visible:
+            for name,options in stages:
+                destination=a.resume_search.resolve() if name=='resume' else out/name
+                command=base+['--out-dir',str(destination),*options]
+                job=dict(name=name,state='running',command=command)
+                state['jobs'].append(job);save(name)
+                env={**os.environ,'CUDA_VISIBLE_DEVICES':visible,'HF_HUB_OFFLINE':'1',
+                     'HF_DATASETS_OFFLINE':'1','OMP_NUM_THREADS':'4',
+                     'PYTORCH_CUDA_ALLOC_CONF':'expandable_segments:True'}
+                with (out/f'{name}.log').open('w') as log:
+                    child=subprocess.Popen(command,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+                    job['pid']=child.pid;save()
+                    rc=child.wait();child=None
+                job.update(exit_code=rc,state='completed' if rc==0 else 'failed');save()
+                if rc:
+                    save('failed');return rc
+                status=json.loads((destination/'status.json').read_text())
+                if name=='pilot' and status['phase']!='pilot_paused':
+                    save('failed_pilot_validation');return 1
+                if name=='pilot':
+                    for method in ('wina','teal'):
+                        result=json.loads((out/name/method/'layer-0.json').read_text())
+                        if result['iterations'] < 1 or result['candidate_forwards'] < len(result['weights']):
+                            save('failed_pilot_validation');return 1
     save('completed');return 0
 
 
