@@ -1,0 +1,11 @@
+﻿模型,稀疏方法,稀疏度,量化方式,GPQA,MATH,LongBench,LiveCodeBench
+DeepSeek-V4-Flash-0731,TEAL（greedy）,50%,HiF4 W4A4 + ARC补偿,46.9%（15/32）；截断14,94.0%（94/100）；截断6,无,无
+DeepSeek-V4-Flash-0731,WINA（greedy）,50%,HiF4 W4A4 + ARC补偿,37.5%（12/32）；截断17,93.0%（93/100）；截断7,无,无
+DeepSeek-V4-Flash-0731,TEAL（greedy）,60%,HiF4 W4A4 + ARC补偿,评测中（2/32）,评测中（88/100）,无,无
+DeepSeek-V4-Flash-0731,WINA（greedy）,60%,HiF4 W4A4 + ARC补偿,3.1%（1/32）；截断31,57.0%（57/100）；截断43,无,无
+DeepSeek-V4-Flash-0731,TEAL（greedy）,70%,HiF4 W4A4 + ARC补偿,评测中（0/32）,评测中（0/100）,无,无
+DeepSeek-V4-Flash-0731,WINA（greedy）,70%,HiF4 W4A4 + ARC补偿,评测中（20/32）,评测中（20/100）,无,无
+DeepSeek-V4-Flash-0731,TEAL（greedy）,80%,HiF4 W4A4 + ARC补偿,评测中（排队）,评测中（排队）,无,无
+DeepSeek-V4-Flash-0731,WINA（greedy）,80%,HiF4 W4A4 + ARC补偿,评测中（排队）,评测中（21/100）,无,无
+DeepSeek-V4-Flash-0731,TEAL（greedy）,90%,HiF4 W4A4 + ARC补偿,评测中（排队）,评测中（排队）,无,无
+DeepSeek-V4-Flash-0731,WINA（greedy）,90%,HiF4 W4A4 + ARC补偿,评测中（排队）,评测中（排队）,无,无
