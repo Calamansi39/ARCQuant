@@ -45,6 +45,11 @@ def main():
     parser.add_argument("--task", required=True)
     parser.add_argument("--gpu", nargs=2, required=True)
     parser.add_argument("--host", required=True)
+    parser.add_argument("--method", required=True)
+    parser.add_argument("--sparsity", type=float, required=True)
+    parser.add_argument("--benchmark", required=True)
+    parser.add_argument("--limit", type=int, required=True)
+    parser.add_argument("--release-record", default=None)
     parser.add_argument("--poll-seconds", type=float, default=15)
     args = parser.parse_args()
     out = ROOT / "runs/deepseek_tiny_sweep_20261106"
@@ -64,18 +69,19 @@ def main():
     if "run_deepseek_greedy_eval.py" not in evaluator_cmd or args.task not in evaluator_cmd:
         raise SystemExit("evaluator identity mismatch")
 
+    record_path = out / (args.release_record or f"release-{args.task}.json")
     record = dict(schema="tiny-pair-release-v1", task=args.task, host=args.host,
                   gpu_ids=args.gpu, scheduler_pid=args.scheduler_pid,
                   evaluator_pid=args.evaluator_pid, phase="freezing_scheduler",
                   started_at=time.time(), scheduler_command=scheduler["command"],
                   evaluator_command=evaluator["command"])
-    atomic_json(out / "release-teal-0.6-gpqa.json", record)
+    atomic_json(record_path, record)
     os.kill(args.scheduler_pid, signal.SIGTERM)
     time.sleep(2)
     if proc(args.scheduler_pid):
         os.kill(args.scheduler_pid, signal.SIGKILL)
     record["phase"] = "waiting_for_current_evaluator"
-    atomic_json(out / "release-teal-0.6-gpqa.json", record)
+    atomic_json(record_path, record)
 
     while proc(args.evaluator_pid):
         time.sleep(args.poll_seconds)
@@ -84,7 +90,8 @@ def main():
     complete = False
     if summaries:
         try:
-            task = dict(id=args.task, method="teal", sparsity=.6, benchmark="gpqa", limit=32)
+            task = dict(id=args.task, method=args.method, sparsity=args.sparsity,
+                        benchmark=args.benchmark, limit=args.limit)
             complete = summary_complete(out / args.task, task, max_new_tokens=8192)
         except (OSError, ValueError, KeyError, TypeError):
             complete = False
@@ -95,7 +102,7 @@ def main():
     atomic_json(state_path, state)
     record.update(phase="released" if complete else "evaluator_exited_unverified",
                   evaluator_exited_at=time.time(), summary_complete=complete)
-    atomic_json(out / "release-teal-0.6-gpqa.json", record)
+    atomic_json(record_path, record)
     print(json.dumps(record, ensure_ascii=False), flush=True)
 
 
