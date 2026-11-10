@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import csv
+from contextlib import contextmanager
 from datetime import datetime
 import json
+import os
 from pathlib import Path
 import sys
+import tempfile
 from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -25,6 +28,21 @@ LIMITS = {"gpqa": 32, "math500": 100}
 
 def read(path: Path):
     return json.loads(path.read_text())
+
+
+@contextmanager
+def atomic_target(path: Path):
+    """Readers see either the previous complete report or the new one."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=path.name + ".", dir=path.parent)
+    os.close(fd)
+    temporary = Path(name)
+    try:
+        yield temporary
+        temporary.chmod(path.stat().st_mode & 0o777 if path.exists() else 0o644)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def result_cell(task_id: str, method: str, rate: float, benchmark: str) -> str:
@@ -88,11 +106,11 @@ def make_rows():
 def write_text_tables(rows):
     DOCS.mkdir(parents=True, exist_ok=True)
     for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
-        with (DOCS / f"deepseek_tiny_sparsity_results.{suffix}").open(
-                "w", encoding="utf-8-sig", newline="") as stream:
-            writer = csv.writer(stream, delimiter=delimiter, lineterminator="\n")
-            writer.writerow(HEADERS)
-            writer.writerows(rows)
+        with atomic_target(DOCS / f"deepseek_tiny_sparsity_results.{suffix}") as target:
+            with target.open("w", encoding="utf-8-sig", newline="") as stream:
+                writer = csv.writer(stream, delimiter=delimiter, lineterminator="\n")
+                writer.writerow(HEADERS)
+                writer.writerows(rows)
 
     timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")
     lines = ["# DeepSeek 五种稀疏度 Tiny Bench 结果", "", f"截至：{timestamp}", "",
@@ -104,7 +122,8 @@ def write_text_tables(rows):
                   "完整成绩经题目覆盖、协议、ARC 身份和两个 rank 的 greedy 策略证据核验。截断题保留在分母内并按评测规则计分。",
                   "LongBench 与 LiveCodeBench 不属于本轮 Tiny 横评，记为“无”。“评测中”后为已完成题数/计划题数；中途分数不作为准确率展示。",
                   ""])
-    (DOCS / "deepseek_tiny_sparsity_results.md").write_text("\n".join(lines))
+    with atomic_target(DOCS / "deepseek_tiny_sparsity_results.md") as target:
+        target.write_text("\n".join(lines), encoding="utf-8")
 
 
 def cell_xml(ref: str, value: str, style: int) -> str:
@@ -125,7 +144,7 @@ def write_xlsx(rows):
                 if col_index == 2:
                     style = 4 if value.startswith("TEAL") else 5
                 elif col_index in (5, 6):
-                    style = 6 if value == "待核查" else (3 if value.startswith("评测中") else 2)
+                    style = 6 if value in ("待核查", "待修复") else (3 if value.startswith("评测中") else 2)
                 elif value == "无":
                     style = 6
             col = ""
@@ -171,7 +190,7 @@ def write_xlsx(rows):
  </cellXfs>
  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>'''
-    with ZipFile(path, "w", ZIP_DEFLATED) as archive:
+    with atomic_target(path) as target, ZipFile(target, "w", ZIP_DEFLATED) as archive:
         archive.writestr("[Content_Types].xml", '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>

@@ -1,6 +1,6 @@
 # DeepSeek 五种稀疏度 Tiny Bench 结果
 
-截至：2026-11-10 11:29 CST
+截至：2026-11-11 00:39 CST
 
 | 模型 | 稀疏方法 | 稀疏度 | 量化方式 | GPQA | MATH | LongBench | LiveCodeBench |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -9,8 +9,8 @@
 | DeepSeek-V4-Flash-0731 | TEAL（greedy） | 60% | HiF4 W4A4 + ARC补偿 | 9.4%（3/32）；截断28 | 71.0%（71/100）；截断28 | 无 | 无 |
 | DeepSeek-V4-Flash-0731 | WINA（greedy） | 60% | HiF4 W4A4 + ARC补偿 | 3.1%（1/32）；截断31 | 57.0%（57/100）；截断43 | 无 | 无 |
 | DeepSeek-V4-Flash-0731 | TEAL（greedy） | 70% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32）；截断31 | 0.0%（0/100）；截断100 | 无 | 无 |
-| DeepSeek-V4-Flash-0731 | WINA（greedy） | 70% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32）；截断32 | 评测中（40/100） | 无 | 无 |
-| DeepSeek-V4-Flash-0731 | TEAL（greedy） | 80% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32）；截断27 | 评测中（89/100） | 无 | 无 |
+| DeepSeek-V4-Flash-0731 | WINA（greedy） | 70% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32）；截断32 | 评测中（60/100） | 无 | 无 |
+| DeepSeek-V4-Flash-0731 | TEAL（greedy） | 80% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32）；截断27 | 0.0%（0/100）；截断83 | 无 | 无 |
 | DeepSeek-V4-Flash-0731 | WINA（greedy） | 80% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32）；截断31 | 0.0%（0/100）；截断97 | 无 | 无 |
 | DeepSeek-V4-Flash-0731 | TEAL（greedy） | 90% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32） | 0.0%（0/100） | 无 | 无 |
 | DeepSeek-V4-Flash-0731 | WINA（greedy） | 90% | HiF4 W4A4 + ARC补偿 | 0.0%（0/32） | 0.0%（0/100） | 无 | 无 |
