@@ -166,7 +166,7 @@ def write_xlsx(rows):
              '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" '
              'activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
              f'<cols>{cols}</cols><sheetData>{"".join(row_xml)}</sheetData>'
-             '<autoFilter ref="A1:H11"/><pageMargins left="0.25" right="0.25" '
+             f'<autoFilter ref="A1:H{len(grid)}"/><pageMargins left="0.25" right="0.25" '
              'top="0.5" bottom="0.5" header="0.2" footer="0.2"/></worksheet>')
     styles = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">

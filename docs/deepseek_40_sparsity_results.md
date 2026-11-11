@@ -1,6 +1,6 @@
 # DeepSeek 40% 稀疏度 Tiny Bench 结果
 
-截至：2026-11-11 16:49 CST
+截至：2026-11-11 17:00 CST
 
 | 模型 | 稀疏方法 | 稀疏度 | 量化方式 | GPQA | MATH | LongBench | LiveCodeBench |
 | --- | --- | --- | --- | --- | --- | --- | --- |
