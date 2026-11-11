@@ -45,7 +45,7 @@ runs/deepseek_40_tiny_sweep_20261111/
 
 搜索仍使用 128 个 WikiText-2 train 片段、512 token、20 个 search samples、ARC 校准和 TP2。两条搜索在 h20-1 GPU 0–3 上运行；40% 评测队列在 GPU 4–7 上等待策略完成，使用 `--rates 0.4`，策略通过校验后自动启动 WINA/TEAL 各自 GPQA 32 题和 MATH 100 题。40% 的独立表格由 `python tools/build_deepseek_40_results.py` 生成，输出 `docs/deepseek_40_sparsity_results.{xlsx,md,csv,tsv}`。
 
-队列和搜索都使用 `/tmp/arcquant-gpu-locks-$UID/gpu*.lock` 的本地协作锁，防止 ARCQuant 自己的调度器重复选卡。该机制不具备系统级抢占权限，不能阻止其他账号或管理员启动任务；因此日志和 reservation JSON 同时记录实际 GPU、命令和退出状态。
+队列和搜索都使用 `/tmp/arcquant-gpu-locks-$UID/gpu*.lock` 的本地协作锁，防止 ARCQuant 自己的调度器重复选卡。40% 运行期间 h20-1 的 GPU 0–7 另外设置为 NVIDIA `EXCLUSIVE_PROCESS`：驱动会拒绝其他计算上下文进入这些卡；搜索占用 0–3，评测队列预留 4–7。管理员仍可改变计算模式或结束进程，不能把它当成跨用户的绝对抢占权限。`tools/restore_gpu_compute_mode_after_sweep.py` 会在 40% 四项 claim 终止后恢复 `DEFAULT`。日志和 reservation JSON 同时记录实际 GPU、命令和退出状态。
 
 ## 评测范围
 
