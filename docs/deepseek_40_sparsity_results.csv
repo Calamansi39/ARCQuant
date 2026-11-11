@@ -1,0 +1,3 @@
+﻿模型,稀疏方法,稀疏度,量化方式,GPQA,MATH,LongBench,LiveCodeBench
+DeepSeek-V4-Flash-0731,TEAL（greedy）,40%,HiF4 W4A4 + ARC补偿,评测中（排队）,评测中（排队）,无,无
+DeepSeek-V4-Flash-0731,WINA（greedy）,40%,HiF4 W4A4 + ARC补偿,评测中（排队）,评测中（排队）,无,无

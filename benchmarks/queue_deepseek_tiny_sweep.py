@@ -62,7 +62,7 @@ def read(path):
     return json.loads(Path(path).read_text())
 
 
-def ready(root, method):
+def ready(root, method, rates=DEFAULT_RATES):
     root = Path(root)
     strategy = root / method / 'strategy.json'
     calibration = root / 'calibration' / 'manifest.json'
@@ -83,7 +83,7 @@ def ready(root, method):
     if m.get('methods') != [method] or m.get('quantization') != 'arc':
         return None
     targets = [float(p.get('target', -1)) for p in s.get('profiles', [])]
-    if any(not any(abs(target-rate) < 1e-8 for target in targets) for rate in DEFAULT_RATES):
+    if any(not any(abs(target-rate) < 1e-8 for target in targets) for rate in rates):
         return None
     return dict(root=str(root.resolve()), method=method,
                 strategy=str(strategy.resolve()), calibration=str((root/'calibration').resolve()),
@@ -91,9 +91,9 @@ def ready(root, method):
                 search_manifest_sha256=sha(manifest), targets=targets, ready_at=now())
 
 
-def choose(candidates, method):
+def choose(candidates, method, rates=DEFAULT_RATES):
     for candidate in candidates:
-        result = ready(candidate, method)
+        result = ready(candidate, method, rates)
         if result:
             return result
     return None
@@ -267,12 +267,14 @@ def parse():
     p.add_argument('--max-new-tokens', type=int, default=8192)
     p.add_argument('--poll-seconds', type=float, default=15)
     p.add_argument('--retry', type=int, default=1, help='additional attempts after the initial attempt')
+    p.add_argument('--rates', default=','.join(str(v) for v in DEFAULT_RATES),
+                   help='sparsity rates to schedule; each must exist in the native strategy')
     return p.parse_args()
 
 
 def schedule(args, tasks, candidates, gpu_candidates):
     while True:
-        selected = {method: choose(roots, method) for method, roots in candidates.items()}
+        selected = {method: choose(roots, method, args.rates) for method, roots in candidates.items()}
         pending, exhausted = [], []
         for task in tasks:
             strategy = selected[task['method']]
@@ -332,6 +334,12 @@ def main():
     limits = {'math500': args.math_limit, 'gpqa': args.gpqa_limit}
     if min(limits.values()) < 1 or args.poll_seconds <= 0 or args.retry < 0:
         raise SystemExit('invalid limits, polling interval or retry count')
+    try:
+        args.rates = tuple(sorted(set(float(v) for v in args.rates.split(','))))
+    except ValueError as exc:
+        raise SystemExit(f'invalid --rates: {exc}')
+    if not args.rates or any(not 0 < rate < 1 for rate in args.rates):
+        raise SystemExit('--rates must contain values in (0,1)')
     candidates = {method: [] for method in methods}
     for method, root in args.strategy_root:
         if method not in candidates:
@@ -339,10 +347,10 @@ def main():
         candidates[method].append(Path(root))
     args.out_dir = args.out_dir.resolve()
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    tasks = make_tasks(args.out_dir, methods, benchmarks, limits, DEFAULT_RATES)
+    tasks = make_tasks(args.out_dir, methods, benchmarks, limits, args.rates)
     atomic_json(args.out_dir/f'sweep_manifest-{args.host_label}.json', dict(
         schema='deepseek-tiny-sweep-v2', created_at=now(), host=args.host_label,
-        benchmarks=benchmarks, limits=limits, rates=DEFAULT_RATES, tasks=tasks,
+        benchmarks=benchmarks, limits=limits, rates=args.rates, tasks=tasks,
         protocol='ARC HiF4 W4A4 + native greedy strategy; generated-answer scoring'))
     gpu_candidates = [v.strip() for v in args.gpu_candidates.split(',')]
     if len(gpu_candidates) != 2 or len(set(gpu_candidates)) != 2 or not all(v.isdecimal() for v in gpu_candidates):

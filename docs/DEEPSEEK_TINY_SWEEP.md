@@ -34,6 +34,19 @@ python tools/watch_deepseek_tiny_results.py --notes ../codexx1.md
 
 报告器状态：`runs/deepseek_tiny_sweep_20261106/results-watch.json`。调度心跳超过 5 分钟或日志超过 30 分钟不更新时记录告警；报告器本身不占 GPU、不重启任务、不更改评分、不自动推送 Git。原 GPU 队列继续负责运行和有限次数的失败重试。当前 GitHub 表格是提交时的快照，后续完成结果先更新共享盘，再显式提交同步。
 
+## 40% 补充评测（2026-11-11）
+
+由于 60%–90% 的输出稳定性明显下降，新增单独的 40% tiny 横评。40% 使用独立 native greedy 搜索，不能把 50% 策略简单截短。搜索和评测根目录分别为：
+
+```text
+runs/deepseek_40_greedy_20261111/{wina-search,teal-search}
+runs/deepseek_40_tiny_sweep_20261111/
+```
+
+搜索仍使用 128 个 WikiText-2 train 片段、512 token、20 个 search samples、ARC 校准和 TP2。两条搜索在 h20-1 GPU 0–3 上运行；40% 评测队列在 GPU 4–7 上等待策略完成，使用 `--rates 0.4`，策略通过校验后自动启动 WINA/TEAL 各自 GPQA 32 题和 MATH 100 题。40% 的独立表格由 `python tools/build_deepseek_40_results.py` 生成，输出 `docs/deepseek_40_sparsity_results.{xlsx,md,csv,tsv}`。
+
+队列和搜索都使用 `/tmp/arcquant-gpu-locks-$UID/gpu*.lock` 的本地协作锁，防止 ARCQuant 自己的调度器重复选卡。该机制不具备系统级抢占权限，不能阻止其他账号或管理员启动任务；因此日志和 reservation JSON 同时记录实际 GPU、命令和退出状态。
+
 ## 评测范围
 
 本轮固定运行：

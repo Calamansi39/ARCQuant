@@ -19,6 +19,8 @@ from benchmarks.queue_deepseek_tiny_sweep import summary_complete
 
 SWEEP = ROOT / "runs/deepseek_tiny_sweep_20261106"
 DOCS = ROOT / "docs"
+OUTPUT_STEM = "deepseek_tiny_sparsity_results"
+TABLE_TITLE = "DeepSeek 五种稀疏度 Tiny Bench 结果"
 HEADERS = ["模型", "稀疏方法", "稀疏度", "量化方式", "GPQA", "MATH", "LongBench", "LiveCodeBench"]
 METHODS = ("TEAL", "WINA")
 RATES = (0.5, 0.6, 0.7, 0.8, 0.9)
@@ -106,14 +108,14 @@ def make_rows():
 def write_text_tables(rows):
     DOCS.mkdir(parents=True, exist_ok=True)
     for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
-        with atomic_target(DOCS / f"deepseek_tiny_sparsity_results.{suffix}") as target:
+        with atomic_target(DOCS / f"{OUTPUT_STEM}.{suffix}") as target:
             with target.open("w", encoding="utf-8-sig", newline="") as stream:
                 writer = csv.writer(stream, delimiter=delimiter, lineterminator="\n")
                 writer.writerow(HEADERS)
                 writer.writerows(rows)
 
     timestamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")
-    lines = ["# DeepSeek 五种稀疏度 Tiny Bench 结果", "", f"截至：{timestamp}", "",
+    lines = [f"# {TABLE_TITLE}", "", f"截至：{timestamp}", "",
              "| " + " | ".join(HEADERS) + " |",
              "| " + " | ".join(["---"] * len(HEADERS)) + " |"]
     lines.extend("| " + " | ".join(row) + " |" for row in rows)
@@ -122,7 +124,7 @@ def write_text_tables(rows):
                   "完整成绩经题目覆盖、协议、ARC 身份和两个 rank 的 greedy 策略证据核验。截断题保留在分母内并按评测规则计分。",
                   "LongBench 与 LiveCodeBench 不属于本轮 Tiny 横评，记为“无”。“评测中”后为已完成题数/计划题数；中途分数不作为准确率展示。",
                   ""])
-    with atomic_target(DOCS / "deepseek_tiny_sparsity_results.md") as target:
+    with atomic_target(DOCS / f"{OUTPUT_STEM}.md") as target:
         target.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -133,7 +135,7 @@ def cell_xml(ref: str, value: str, style: int) -> str:
 
 def write_xlsx(rows):
     """Write a small styled XLSX with stdlib so color works in Excel/WPS."""
-    path = DOCS / "deepseek_tiny_sparsity_results.xlsx"
+    path = DOCS / f"{OUTPUT_STEM}.xlsx"
     grid = [HEADERS, *rows]
     row_xml = []
     for row_index, row in enumerate(grid, 1):
@@ -220,7 +222,7 @@ def main():
     rows = make_rows()
     write_text_tables(rows)
     write_xlsx(rows)
-    print(f"Wrote 10 sparse settings to {DOCS}")
+    print(f"Wrote {len(rows)} sparse settings to {DOCS}")
 
 
 if __name__ == "__main__":
