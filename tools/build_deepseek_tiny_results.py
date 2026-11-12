@@ -8,6 +8,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 from xml.sax.saxutils import escape
@@ -105,6 +106,110 @@ def make_rows():
     return rows
 
 
+def _score_cell(cell: str):
+    """Return (percent, correct, total, truncated) for a verified cell."""
+    match = re.match(r"([0-9.]+)%（(\d+)/(\d+)）(?:；截断(\d+))?$", cell)
+    if not match:
+        return None
+    percent, correct, total, truncated = match.groups()
+    return float(percent), int(correct), int(total), int(truncated or 0)
+
+
+def write_analysis(lines, rows):
+    """Add a short, data-derived interpretation to the Markdown report.
+
+    The CSV/TSV and XLSX remain data-only tables.  This section belongs in the
+    human-readable Markdown report so a later watcher refresh cannot leave the
+    explanation out of sync with the table.
+    """
+    # The 40% report imports this module, but has a separate experiment scope.
+    if RATES != (0.5, 0.6, 0.7, 0.8, 0.9):
+        return
+    verified = sum(_score_cell(cell) is not None for row in rows for cell in row[4:6])
+    total_cells = len(rows) * 2
+    lines.extend(["", "## 结果分析", "",
+                  f"当前 50%–90% 网格有 **{verified}/{total_cells} 个 benchmark 单元完成核验**，"
+                  "其中每个稀疏度和方法应有 GPQA、MATH 两个单元。未完成单元只保留题目进度，"
+                  "不把中途结果当作准确率。"])
+
+    by_setting = {}
+    for row in rows:
+        method = row[1].split("（", 1)[0]
+        rate = row[2]
+        by_setting[(method, rate)] = {
+            "GPQA": _score_cell(row[4]), "MATH": _score_cell(row[5]),
+        }
+
+    pending = [f"{row[1]} {row[2]} {label}：{cell}"
+               for row in rows for (_, label), cell in zip(BENCHMARKS, row[4:6])
+               if _score_cell(cell) is None]
+    if pending:
+        lines.extend(["", "待补单元：" + "；".join(pending) + "。"])
+    lines.append("")
+
+    if all(by_setting[(method, rate)][bench] is not None
+           for method in METHODS for rate in ("50%", "60%") for _, bench in BENCHMARKS):
+        best_at_50 = all(
+            by_setting[(method, "50%")][bench][1] >= value[1]
+            for method in METHODS for _, bench in BENCHMARKS
+            for rate in ("60%", "70%", "80%", "90%")
+            if (value := by_setting[(method, rate)][bench]) is not None)
+        if best_at_50:
+            lines.append("- **50% 是这五档中当前优先保留的候选。** 两种方法在两个任务上的"
+                         "50% 成绩都不低于其余已完成档位；这不代表 50% 是所有可能稀疏度的最优点，"
+                         "也不代表相对无稀疏基线已经无损。")
+        drops = []
+        for method in METHODS:
+            before = by_setting[(method, "50%")]["MATH"]
+            after = by_setting[(method, "60%")]["MATH"]
+            drops.append(f"{method} 从 {before[0]:.1f}% 到 {after[0]:.1f}%"
+                         f"（下降 {(before[1]-after[1])/before[2]*100:.1f} 个百分点）")
+        lines.append("- **50% → 60% 的变化：** MATH 中，" + "；".join(drops) + "。")
+        differences = []
+        for rate in ("50%", "60%"):
+            delta = [by_setting[("TEAL", rate)][bench][1] - by_setting[("WINA", rate)][bench][1]
+                     for _, bench in BENCHMARKS]
+            differences.append(f"{rate} 时 GPQA {delta[0]:+d} 题、MATH {delta[1]:+d} 题")
+        lines.append("- **TEAL 与 WINA 的差异：** 答对题数差（TEAL − WINA）为 "
+                     + "；".join(differences) + "。GPQA 只有 32 题，一题就是 3.125 个百分点；"
+                     "50% MATH 的一题差距也很小，不能仅据此宣称方法显著优越。")
+
+    high = [value for (method, rate), scores in by_setting.items()
+            if rate in ("70%", "80%", "90%") for value in scores.values() if value is not None]
+    zeros = sum(value[1] == 0 for value in high)
+    lines.append(f"- **70%–90%：** 已完成 {len(high)}/12 个单元，其中 {zeros} 个为 0 分。"
+                 "大量长度触顶与低分同时出现；仅凭这些结果不能断定增大 token 上限就能恢复能力，"
+                 "也不能把退化唯一归因于稀疏算法本身。")
+    if all(by_setting[(method, "90%")][bench] is not None
+           for method in METHODS for _, bench in BENCHMARKS):
+        summaries = [read(next((SWEEP / f"{method.lower()}-0.9-{benchmark}").glob("arcquant-*/summary.json")))
+                     for method in METHODS for benchmark, _ in BENCHMARKS]
+        incomplete = sum(s.get("grading_detail_counts", {}).get("incomplete_thinking", 0) for s in summaries)
+        n = sum(s["completed_candidates"] for s in summaries)
+        trunc = sum(s["truncated"] for s in summaries)
+        lines.append(f"- **90% 的失效形式：** 两种方法共 {n} 次生成，长度截断 {trunc} 次，"
+                     f"判为思考未闭合（`incomplete_thinking`）{incomplete} 次。"
+                     "提前结束不等于成功作答，也不能据此证明推理加速有效。")
+    lines.extend([
+        "", "### 后续优先事项", "",
+        "1. 补齐剩余单元，保留原始输出、当前预算和评分规则；40% 补充实验仍使用单独表格。",
+        "2. 补同题、同提示词、同生成预算的 ARC HiF4 W4A4 无稀疏（0%）对照，"
+        "再比较候选档的精度损失。BF16 或不同协议的旧成绩不能替代这一对照。",
+        "3. 结合独立开发题确认生成预算和候选稀疏度，再固定配置完成 GPQA-Diamond 198 题、"
+        "MATH-500 500 题。当前 Tiny 是测试题前缀，选点使用了这些题，正式报告须说明重叠，"
+        "不能把它们称作独立验证。",
+        "4. 在无其他作业干扰的同等硬件条件下另测速度、显存和卡时；当前共享 GPU 的运行时间"
+        "不能证明稀疏推理加速，当前 DeepSeek 路径仍主要是激活置零后的 dense GEMM 精度验证。",
+        "", "本表是当前 DeepSeek 适配版 TEAL/WINA greedy 的生成式 pass@1（单次回答准确率），"
+        "不是选项似然的 acc_norm，也不代表完整原生 WINA transform 已实现。"
+        "评分把长度触顶题保留在分母并判错；GPQA 另有 7168 token 思考预算及强制结束思考机制，"
+        "需与 MATH 的生成过程区分。",
+        "", "数据来源：`runs/deepseek_tiny_sweep_20261106/<方法>-<稀疏度>-<任务>/arcquant-*/`"
+        " 下的 `summary.json`、`outputs.jsonl`、`protocol.json` 和 greedy 双 rank 证据。",
+        "", "重新生成：`python tools/build_deepseek_tiny_results.py`（需要本轮 runs 数据）。", "",
+    ])
+
+
 def write_text_tables(rows):
     DOCS.mkdir(parents=True, exist_ok=True)
     for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
@@ -124,6 +229,7 @@ def write_text_tables(rows):
                   "完整成绩经题目覆盖、协议、ARC 身份和两个 rank 的 greedy 策略证据核验。截断题保留在分母内并按评测规则计分。",
                   "LongBench 与 LiveCodeBench 不属于本轮 Tiny 横评，记为“无”。“评测中”后为已完成题数/计划题数；中途分数不作为准确率展示。",
                   ""])
+    write_analysis(lines, rows)
     with atomic_target(DOCS / f"{OUTPUT_STEM}.md") as target:
         target.write_text("\n".join(lines), encoding="utf-8")
 
