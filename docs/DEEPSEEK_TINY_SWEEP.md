@@ -10,6 +10,8 @@
 
 ### 怎样结合截断来理解结果
 
+逐题截断率、非截断准确率、GPQA 的 thinking 强制关闭以及 8192/16384 token 预算建议，见单独的[截断分析报告](DEEPSEEK_TRUNCATION_ANALYSIS.md)。报告把“仍在连贯推理但没有交答案”和“已经出现重复、乱码或推理循环”分开讨论；正式表仍按原协议计分。
+
 - **直接停止原因**：`finish_reason=length` 表示达到 8192 个输出 token；它本身不证明模型没有写过正确答案，也不表示输入被截短或发生 OOM。
 - **50%**：MATH 的 TEAL/WINA 分别仅 6/100、7/100 截断；抽查包括仍在解题、反复核对而未提交终答的情况。GPQA 分别有 14/32、17/32 截断，科学问答仍对生成预算/终答协议敏感。
 - **60%**：MATH 截断升为 28/100、43/100，GPQA 升为 28/32、31/32；同时准确率明显下降，当前不宜仅为提高稀疏度而优先投入全量。
@@ -36,14 +38,14 @@ python tools/watch_deepseek_tiny_results.py --notes ../codexx1.md
 
 ## 40% 补充评测（2026-11-11）
 
-由于 60%–90% 的输出稳定性明显下降，新增单独的 40% tiny 横评。40% 使用独立 native greedy 搜索，不能把 50% 策略简单截短。搜索和评测根目录分别为：
+由于 60%–90% 的输出稳定性明显下降，新增 40% tiny 横评。旧的 50%–90% 搜索已经保存了从 0% 开始的逐步候选轨迹，因此理论上可以复用 40% 之前的轨迹，并只补做精确 40% 目标点所需的最后候选比较；不能把最终 50% 策略文件直接按比例截短后冒充 40% greedy。本轮为获得独立的完整策略、校准和哈希证据，实际使用了 `--targets 0.4` 重新生成 40% 策略。搜索和评测根目录分别为：
 
 ```text
 runs/deepseek_40_greedy_20261111/{wina-search,teal-search}
 runs/deepseek_40_tiny_sweep_20261111/
 ```
 
-搜索仍使用 128 个 WikiText-2 train 片段、512 token、20 个 search samples、ARC 校准和 TP2。两条搜索在 h20-1 GPU 0–3 上运行；40% 评测队列在 GPU 4–7 上等待策略完成，使用 `--rates 0.4`，策略通过校验后自动启动 WINA/TEAL 各自 GPQA 32 题和 MATH 100 题。40% 的独立表格由 `python tools/build_deepseek_40_results.py` 生成，输出 `docs/deepseek_40_sparsity_results.{xlsx,md,csv,tsv}`。
+搜索仍使用 128 个 WikiText-2 train 片段、512 token、20 个 search samples、ARC 校准和 TP2。两条搜索在 h20-1 GPU 0–3 上运行；40% 评测队列在 GPU 4–7 上等待策略完成，使用 `--rates 0.4`，策略通过校验后自动启动 WINA/TEAL 各自 GPQA 32 题和 MATH 100 题。40% 的独立表格由 `python tools/build_deepseek_40_results.py` 生成，输出 `docs/deepseek_40_sparsity_results.{xlsx,md,csv,tsv}`。今后若只需新增一个低于既有目标的稀疏度，优先从保存的逐步曲线复用前缀并补最后候选，避免重复整条 greedy 搜索。
 
 队列和搜索都使用 `/tmp/arcquant-gpu-locks-$UID/gpu*.lock` 的本地协作锁，防止 ARCQuant 自己的调度器重复选卡。40% 运行期间 h20-1 的 GPU 0–7 另外设置为 NVIDIA `EXCLUSIVE_PROCESS`：驱动会拒绝其他计算上下文进入这些卡；搜索占用 0–3，评测队列预留 4–7。管理员仍可改变计算模式或结束进程，不能把它当成跨用户的绝对抢占权限。`tools/restore_gpu_compute_mode_after_sweep.py` 会在 40% 四项 claim 终止后恢复 `DEFAULT`。日志和 reservation JSON 同时记录实际 GPU、命令和退出状态。
 
