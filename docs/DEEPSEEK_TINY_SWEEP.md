@@ -4,7 +4,9 @@
 
 ## 本轮收尾与初步选点（2026-11-11）
 
-本轮按已有协议跑完，不在中途改变题目、生成预算、评分或稀疏策略。最新成绩看同一份[彩色 Excel](deepseek_tiny_sparsity_results.xlsx)或[文本表](deepseek_tiny_sparsity_results.md)。00:33 快照为 **19/20 项完成**，仅 WINA 70% MATH 尚在运行，保存 60/100 题；使用 h20-2 GPU 5、6，进程仍在推进。共享 GPU 上还有其他作业，耗时不能由当前累计平均吞吐可靠外推。
+本轮按已有协议跑完，不在中途改变题目、生成预算、评分或稀疏策略。最新成绩看同一份[彩色 Excel](deepseek_tiny_sparsity_results.xlsx)或[文本表](deepseek_tiny_sparsity_results.md)。当前快照为 **19/20 项完成**，仅 WINA 70% MATH 尚在运行，已保存 80/100 题；使用 h20-2 GPU 5、6，进程仍在推进。共享 GPU 上还有其他作业，耗时不能由当前累计平均吞吐可靠外推。
+
+用户要求的简洁截断统计见[彩色 Excel](deepseek_tiny_truncation_results.xlsx)、[CSV](deepseek_tiny_truncation_results.csv)和[文本表](deepseek_tiny_truncation_results.md)。该表的非截断准确率只统计自然 EOS 题，截断率按计划题数计算；未完成任务不会被写成正式成绩。
 
 **初步选 50% 进入下一阶段。** 在本轮 ARC HiF4 W4A4 + greedy 实现和固定输出预算下，50% 档的 TEAL/WINA 分别得到 MATH 94%/93%、GPQA 46.9%/37.5%；60% 档降到 MATH 71%/57%、GPQA 9.4%/3.1%。70%–90% 的已完成项均为零分。这里选择的是五档中当前最有依据的候选，不代表已证明最优速度与精度折中：本轮没有同协议 ARC 0% 稀疏对照，尚不能计算相对精度保留率；共享 GPU 的时间也不适合直接比较方法加速比。
 

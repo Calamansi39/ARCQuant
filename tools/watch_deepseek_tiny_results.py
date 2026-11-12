@@ -16,6 +16,7 @@ import socket
 import time
 
 import build_deepseek_tiny_results as report
+import build_deepseek_tiny_truncation_results as truncation_report
 
 BEGIN = "<!-- deepseek-tiny-live:begin -->"
 END = "<!-- deepseek-tiny-live:end -->"
@@ -62,7 +63,13 @@ def update_notes(path, rows, warnings, interval):
              "| " + " | ".join(report.HEADERS) + " |",
              "| " + " | ".join(["---"] * len(report.HEADERS)) + " |"]
     lines.extend("| " + " | ".join(row) + " |" for row in rows)
+    truncation_rows = truncation_report.make_rows()
+    lines.extend(["", "### 非截断准确率与截断率简表", "",
+                  "| " + " | ".join(truncation_report.HEADERS) + " |",
+                  "| " + " | ".join(["---"] * len(truncation_report.HEADERS)) + " |"])
+    lines.extend("| " + " | ".join(row) + " |" for row in truncation_rows)
     lines.extend(["", f"后台报告器每 {interval:g} 秒检查一次；题数、成绩或告警变化时刷新原有彩色 Excel、MD、CSV、TSV 和此区块。",
+                  "非截断准确率只统计自然 EOS 题，截断率按计划题数计算；`未完成` 不作为正式成绩。",
                   "全部通过核验后报告器退出；GPU 调度与失败重试由原队列负责。报告器不自动提交或推送 Git。",
                   "报告器心跳和错误记录：`ARCQuant/runs/deepseek_tiny_sweep_20261106/results-watch.json`。"])
     if warnings:
@@ -115,6 +122,7 @@ def main():
                 if signature != previous:
                     report.write_text_tables(rows)
                     report.write_xlsx(rows)
+                    truncation_report.write_all()
                     if args.notes:
                         update_notes(args.notes, rows, warnings, args.interval)
                     previous = signature
