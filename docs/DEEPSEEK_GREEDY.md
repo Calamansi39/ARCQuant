@@ -1,6 +1,7 @@
 # DeepSeek：greedy 离线预算搜索与推理
 
 两台机器各做一种方法、从现有断点安全续跑，见 [双机搜索与交接](DEEPSEEK_MULTI_HOST.md)。
+只有一张空闲 H20 时，见 [单卡搜索与双卡评测衔接](DEEPSEEK_SINGLE_GPU_SEARCH.md)。
 
 实现日期：2026-11-05。支持 DeepSeek-V4-Flash-0731 的官方 TP 权重。
 运行状态以 `runs/.../queue_status.json`、`status.json` 和策略文件的 `complete` 为准；
