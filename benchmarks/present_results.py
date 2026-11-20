@@ -260,46 +260,10 @@ def export(snapshot, out):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--base-eval',type=Path,help='Root containing external results/ and vbench_tiny_manifest.json')
-    p.add_argument('--output-dir',type=Path,default=ROOT/'docs')
-    p.add_argument('--snapshot-only',action='store_true')
-    p.add_argument('--math-summary', type=Path, action='append', default=[],
-                   help='Refresh a sparse MATH-500 summary; repeatable, no inference')
-    p.add_argument('--sweep-status', type=Path, action='append', default=[],
-                   help='Refresh a sparse sweep status snapshot; repeatable')
-    p.add_argument('--greedy-search', type=Path, action='append', default=[],
-                   help='Read search_manifest/status and strategy files; preparation only, no scores')
-    args=p.parse_args()
-    dest=args.output_dir/'results_audit.json'
-    if args.snapshot_only:
-        snapshot=read(dest)
-    else:
-        if not args.base_eval: p.error('--base-eval is required for a fresh audit')
-        snapshot=audit(args.base_eval.resolve())
-        if dest.exists():
-            previous=read(dest)
-            for key in ('sparse_progress', 'preparation_progress'):
-                if key in previous:
-                    snapshot[key]=previous[key]
-        args.output_dir.mkdir(parents=True,exist_ok=True)
-    if args.math_summary or args.sweep_status:
-        from benchmarks.result_tables import refresh_progress
-        refresh_progress(snapshot, args.math_summary, args.sweep_status)
-    if args.greedy_search:
-        from benchmarks.result_tables import refresh_preparation
-        refresh_preparation(snapshot, args.greedy_search)
-    dest.write_text(json.dumps(snapshot,ensure_ascii=False,indent=2)+'\n')
-    export(snapshot,args.output_dir)
-    from benchmarks.result_tables import build_matrix
-    matrix = build_matrix(snapshot)
-    print(json.dumps({'audited_complete_results':len(snapshot['rows']),
-                      'display_configurations':len(matrix),
-                      'display_complete_results':sum(isinstance(value, (int, float))
-                                                     for row in matrix for value in row[4:]),
-                      'archived_video_reference':sum(requested_result(v) for v in snapshot['video_reference']),
-                      'rejected':snapshot['rejected'],'workbook':str(args.output_dir/'completed_benchmarks.xlsx')},ensure_ascii=False,indent=2))
+    # Retain the read-only legacy audit helpers; publish through one maintained entry.
+    from benchmarks.verified_results import main as verified_main
+    return verified_main()
 
 
-if __name__=='__main__':
-    main()
+if __name__ == '__main__':
+    raise SystemExit(main())

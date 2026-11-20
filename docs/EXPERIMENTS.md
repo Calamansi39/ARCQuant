@@ -32,6 +32,6 @@ python arc.py run --model llama-3.1-8b --method wina --sparsity 0.5 --quant-type
 
 Llama 的 `math500` 和 `gpqa-diamond` 使用 `lm-evaluation-harness` 任务；DeepSeek 的同名任务通过 `base-eval` 的生成式协议评测，不能直接并表。`terminal-bench` 目前只登记数据，尚无代理/容器评测入口。`model/eval_longbench.py` 是旧 LongBench，不是 LongBench v2。模型或 benchmark 状态可由 `python arc.py list` 查看，不能把“已登记”理解为“已跑通”。
 
-本轮各模型的题目规模、tiny 规模和已完成结果见 [当前评测状态](CURRENT_EVAL_STATUS.md)。
+本轮各模型的题目规模、tiny 规模和已完成结果见 [统一结果与 dense 缺项](../reports/verified/README.md)。
 
 外部基线的启动及多环境依赖见 [资产与基线](ASSETS_AND_BASELINES.md)。方法代码来源、离线/在线结构、WINA 可选变换尚未接入的原因见 [实现核查](METHOD_PROVENANCE.md)。需要卡时估计时看 [GPU 预算](GPU_BUDGET.md)。

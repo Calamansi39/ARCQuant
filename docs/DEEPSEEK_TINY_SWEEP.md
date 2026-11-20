@@ -1,14 +1,14 @@
-# DeepSeek 五档 tiny 横评
+# DeepSeek 稀疏度 Tiny 横评
 
 `benchmarks/queue_deepseek_tiny_sweep.py` 是一个跨主机调度器。它对 TEAL、WINA 分别等待完整 native greedy 策略；某一种方法先完成，就先启动该方法的五档任务，然后调用现有 `run_deepseek_greedy_eval.py`，不会另写一套模型推理逻辑。
 
-## 本轮收尾与初步选点（2026-11-11）
+## 完成情况与结果入口（2026-11-20）
 
-本轮按已有协议跑完，不在中途改变题目、生成预算、评分或稀疏策略。最新成绩看同一份[彩色 Excel](deepseek_tiny_sparsity_results.xlsx)或[文本表](deepseek_tiny_sparsity_results.md)。当前快照为 **19/20 项完成**，仅 WINA 70% MATH 尚在运行，已保存 80/100 题；使用 h20-2 GPU 5、6，进程仍在推进。共享 GPU 上还有其他作业，耗时不能由当前累计平均吞吐可靠外推。
+40%–90% 的 TEAL/WINA × GPQA 32 题/MATH 100 题共 24 个稀疏单元均已完成。同协议 ARC 0% 的两个 Tiny 对照也已完成。本次从全量逐题结果中提取 BF16、普通 HiF4 的同题 Tiny 对照，未新增 GPU 推理。
 
-用户要求的简洁截断统计见[彩色 Excel](deepseek_tiny_truncation_results.xlsx)、[CSV](deepseek_tiny_truncation_results.csv)和[文本表](deepseek_tiny_truncation_results.md)。该表的非截断准确率只统计自然 EOS 题，截断率按计划题数计算；未完成任务不会被写成正式成绩。
+全部成绩和各自未截断率只发布在 [统一结果目录](../reports/verified/README.md)，日常打开其中的 [彩色 Excel](../reports/verified/实验结果.xlsx) 即可。30% 仍属搜索/小探针阶段，未填写完成成绩。当前优先进一步验证 40%，50% 可作为更高稀疏度备选；Tiny 题数有限，这不是最终全量结论。
 
-**初步选 50% 进入下一阶段。** 在本轮 ARC HiF4 W4A4 + greedy 实现和固定输出预算下，50% 档的 TEAL/WINA 分别得到 MATH 94%/93%、GPQA 46.9%/37.5%；60% 档降到 MATH 71%/57%、GPQA 9.4%/3.1%。70%–90% 的已完成项均为零分。这里选择的是五档中当前最有依据的候选，不代表已证明最优速度与精度折中：本轮没有同协议 ARC 0% 稀疏对照，尚不能计算相对精度保留率；共享 GPU 的时间也不适合直接比较方法加速比。
+ARC 0% 复用 `runs/deepseek_40_greedy_20261111/wina-search/calibration` 的 128×512 校准，不需要 greedy 分配；原始结果在 `runs/deepseek_arc0_tiny_20261118/`。
 
 ### 怎样结合截断来理解结果
 
@@ -24,21 +24,20 @@
 
 GPQA 的思考阶段还有 7168 token 的强制关闭边界及约 1024 token 的终答预留；MATH 没有这个强制关闭策略。不同 benchmark 的截断需按各自协议解释。这些观察描述了输出症状，还未严格区分高稀疏、校准分配、ARC 组合和生成协议各自的影响。
 
-收尾后优先核对完整覆盖和逐题停止原因，再确认候选档位；下一阶段才补同协议 ARC 0% 对照，并对选定档进行进一步验证。当前 tiny 题是测试集前缀，选点后的全量成绩也应披露这部分题目曾参与选择。
+收尾后优先核对完整覆盖和逐题停止原因，再确认候选档位；同协议 ARC 0% 对照已经完成，下一阶段对选定档进行进一步验证。当前 tiny 题是测试集前缀，选点后的全量成绩也应披露这部分题目曾参与选择。
 
-### 自动刷新结果
-
-在一台能读共享盘的机器上，用 `tmux` 或独立后台会话运行：
+### 更新统一表
 
 ```bash
-python tools/watch_deepseek_tiny_results.py --notes ../codexx1.md
+python -m pip install -r requirements-report.txt
+python tools/build_verified_results.py --base-eval /path/to/base_eval --verify-video-bytes
+# 仅重建 GitHub 保存的快照，不读取原始大文件：
+python tools/build_verified_results.py --snapshot-only
 ```
 
-该 CPU 报告器每 60 秒检查一次，复用原有完整性校验；题数、成绩或告警变化时，原位更新四种格式的结果表以及工作记录中带标记的实时区块。它只替换自己的区块，保留历史讲解。文件采用临时文件写完再替换，避免读到半个 Excel。共享文件锁阻止重复报告器，20 项均通过核验后自动退出。用 `--once` 可以只更新一次。
+旧的分轮次生成器、自动报告器和多份 CSV/TSV 已退役，避免旧进度覆盖总表。GPU 调度器和原始结果目录继续保留。
 
-报告器状态：`runs/deepseek_tiny_sweep_20261106/results-watch.json`。调度心跳超过 5 分钟或日志超过 30 分钟不更新时记录告警；报告器本身不占 GPU、不重启任务、不更改评分、不自动推送 Git。原 GPU 队列继续负责运行和有限次数的失败重试。当前 GitHub 表格是提交时的快照，后续完成结果先更新共享盘，再显式提交同步。
-
-## 40% 补充评测（2026-11-11）
+## 40% 补充评测（2026-11-11，已完成）
 
 由于 60%–90% 的输出稳定性明显下降，新增 40% tiny 横评。旧的 50%–90% 搜索已经保存了从 0% 开始的逐步候选轨迹，因此理论上可以复用 40% 之前的轨迹，并只补做精确 40% 目标点所需的最后候选比较；不能把最终 50% 策略文件直接按比例截短后冒充 40% greedy。本轮为获得独立的完整策略、校准和哈希证据，实际使用了 `--targets 0.4` 重新生成 40% 策略。搜索和评测根目录分别为：
 
@@ -47,7 +46,7 @@ runs/deepseek_40_greedy_20261111/{wina-search,teal-search}
 runs/deepseek_40_tiny_sweep_20261111/
 ```
 
-搜索仍使用 128 个 WikiText-2 train 片段、512 token、20 个 search samples、ARC 校准和 TP2。两条搜索在 h20-1 GPU 0–3 上运行；40% 评测队列在 GPU 4–7 上等待策略完成，使用 `--rates 0.4`，策略通过校验后自动启动 WINA/TEAL 各自 GPQA 32 题和 MATH 100 题。40% 的独立表格由 `python tools/build_deepseek_40_results.py` 生成，输出 `docs/deepseek_40_sparsity_results.{xlsx,md,csv,tsv}`。今后若只需新增一个低于既有目标的稀疏度，优先从保存的逐步曲线复用前缀并补最后候选，避免重复整条 greedy 搜索。
+搜索使用 128 个 WikiText-2 train 片段、512 token、20 个 search samples、ARC 校准和 TP2，TEAL/WINA 各自完成 GPQA 32 题及 MATH 100 题。原始输出保存在上面的 runs 目录，展示表已归并到统一目录。今后新增低于既有目标的稀疏度，优先评估复用逐步曲线前缀并补最后候选，不能直接缩放最终策略。
 
 队列和搜索都使用 `/tmp/arcquant-gpu-locks-$UID/gpu*.lock` 的本地协作锁，防止 ARCQuant 自己的调度器重复选卡。40% 运行期间 h20-1 的 GPU 0–7 另外设置为 NVIDIA `EXCLUSIVE_PROCESS`：驱动会拒绝其他计算上下文进入这些卡；搜索占用 0–3，评测队列预留 4–7。管理员仍可改变计算模式或结束进程，不能把它当成跨用户的绝对抢占权限。`tools/restore_gpu_compute_mode_after_sweep.py` 会在 40% 四项 claim 终止后恢复 `DEFAULT`。日志和 reservation JSON 同时记录实际 GPU、命令和退出状态。
 
@@ -57,11 +56,11 @@ runs/deepseek_40_tiny_sweep_20261111/
 
 - HiF4 W4A4 + ARC；
 - TEAL、WINA；
-- 50%、60%、70%、80%、90%；
+- 40%、50%、60%、70%、80%、90%；
 - MATH 前 100 题、GPQA Diamond 前 32 题；
 - 生成式答案判分，`max_new_tokens=8192`。
 
-这 20 个任务用于五档筛查，结果标为 `tiny/screening`，不能填写成 MATH-500 或 GPQA Diamond 完整成绩。题目来自现有最终测试池前缀，若要作为独立选点集，应在后续换成与最终测试去重的开发题并披露当前选择偏差。
+这 24 个任务用于稀疏度筛查，结果标为 `tiny/screening`，不能填写成 MATH-500 或 GPQA Diamond 完整成绩。同协议 ARC HiF4 W4A4 + `method=none` 的 0% Tiny 对照已完成并纳入统一表。LongBench 和 LiveCodeBench 也未纳入本轮稀疏 Tiny 横评。
 
 ## 多主机运行
 

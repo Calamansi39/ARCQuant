@@ -1,12 +1,14 @@
 # DeepSeek：HiF4、ARC 与 TEAL/WINA 实验入口
 
+> 2026-11-20：此页保留实现与协议说明。历史条件似然诊断不属于本轮汇报成绩；当前生成式 Tiny/全量状态以 [统一结果](../reports/verified/README.md) 为准。
+
 > **2026-11-05 晚间更新：** DeepSeek 的 [greedy 离线搜索与生成式入口](DEEPSEEK_GREEDY.md)
 > 已实现，正式 43 层搜索尚未完成，尚无完整 greedy+ARC benchmark 成绩；WINA 未启用 transform。
 > 本页旧命令仍使用 uniform，GPQA 标签似然仅作诊断，不填入生成式主表。
 > [ARC 队列说明](DEEPSEEK_ARC_QUEUE.md)记录旧 uniform 队列及其失败状态。
 
 当前机器已经跑完一组 198 题 GPQA Diamond 全量对照，结果表和边界说明见
-[DeepSeek 完整结果](DEEPSEEK_FORMAL_RESULTS.md)。
+[统一已核查结果](../reports/verified/README.md)。
 
 `arc.py experiment` 是 DeepSeek V4 Flash 的校准与 GPQA 标签似然诊断入口。它把同一份
 官方 TP2 权重、同一份校准数据和同一份 benchmark 题目固定下来，分别运行：

@@ -245,6 +245,8 @@ def display(value, index):
 
 
 def export(snapshot, out):
+    if Path(out).resolve() == (ROOT / 'docs').resolve():
+        raise ValueError('Legacy docs tables retired; use tools/build_verified_results.py')
     from openpyxl import Workbook, load_workbook
     from openpyxl.comments import Comment
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side

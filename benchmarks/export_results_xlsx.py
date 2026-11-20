@@ -19,10 +19,6 @@ from xml.sax.saxutils import escape
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_INPUT = ROOT / "docs/completed_benchmarks.tsv"
-# Keep this generic legacy converter from overwriting the audited multi-sheet report.
-# Generate the main report with present_results.py --snapshot-only instead.
-DEFAULT_OUTPUT = ROOT / "docs/completed_benchmarks_legacy.xlsx"
 
 
 def col_name(number: int) -> str:
@@ -229,8 +225,8 @@ def write_workbook(input_path: Path, output_path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
-    parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--input", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     write_workbook(args.input, args.output)
     return 0

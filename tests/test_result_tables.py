@@ -11,7 +11,7 @@ from benchmarks.result_tables import HEADERS, ROOT, build_matrix, display, expor
 
 class ResultTableTests(unittest.TestCase):
     def setUp(self):
-        self.snapshot = json.loads((ROOT / 'docs/results_audit.json').read_text())
+        self.snapshot = json.loads((ROOT / 'tests/fixtures/legacy_result_audit.json').read_text())
 
     def test_one_row_per_configuration_with_generation_scores_only(self):
         rows = build_matrix(self.snapshot)

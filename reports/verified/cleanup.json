@@ -1,0 +1,249 @@
+{
+  "at": "2026-11-20T06:32:05.496912+00:00",
+  "deleted": [
+    {
+      "path": "ARCQuant/docs/BASELINE_PROGRESS.md",
+      "bytes": 4203,
+      "sha256": "fe43960eee240cac55a69f47cbe27132531f1ec5671996a2eec9f072720199dc"
+    },
+    {
+      "path": "ARCQuant/docs/COMPLETED_BENCHMARKS.md",
+      "bytes": 526,
+      "sha256": "b70527057a1babe9d5366a39568f94f1dea406ca6baf0bac7664706056f0d28e"
+    },
+    {
+      "path": "ARCQuant/docs/CURRENT_EVAL_STATUS.md",
+      "bytes": 8356,
+      "sha256": "f636342991ff007af184895ea6342b68724fde3b707bd1ba401e3b370a14344f"
+    },
+    {
+      "path": "ARCQuant/docs/DEEPSEEK_FORMAL_RESULTS.md",
+      "bytes": 3086,
+      "sha256": "d66a62bb1f50e2b3bc226f8dde5555fc144a0f296c92714810bee9b32e05510e"
+    },
+    {
+      "path": "ARCQuant/docs/MAGI_EVAL_STATUS_PLAN.csv",
+      "bytes": 1015,
+      "sha256": "cd690fe0abc68403e23c4d182cd5cc489012e05bea3cc9ddf94d4fbe2f851a3f"
+    },
+    {
+      "path": "ARCQuant/docs/MAGI_EVAL_STATUS_PLAN.md",
+      "bytes": 6029,
+      "sha256": "cdef5ebbfe09ca9e8859e50d7d809201a0dddfc0896b49f188d66764bf16424c"
+    },
+    {
+      "path": "ARCQuant/docs/REPORTABLE_RESULTS_NOW.md",
+      "bytes": 6685,
+      "sha256": "566b139f9fa8e370b2b95ae613a5419e7f0266f9b0bbf07a91445076d7e8d6ea"
+    },
+    {
+      "path": "ARCQuant/docs/RESULTS_PRESENTATION.md",
+      "bytes": 1679,
+      "sha256": "84e416c802603e74dac13299c8e889818f84188955c5163604ddb1aa34e7db61"
+    },
+    {
+      "path": "ARCQuant/docs/completed_benchmarks.csv",
+      "bytes": 1376,
+      "sha256": "4867aa385f197e686f138a54f9ebd92ea01882328f269bef84e4e7fe99d0ff64"
+    },
+    {
+      "path": "ARCQuant/docs/completed_benchmarks.tsv",
+      "bytes": 1376,
+      "sha256": "0148397cc5c7303db51bf18fdda0dd7aaf15f2e33d6308c44e952c10a3565af6"
+    },
+    {
+      "path": "ARCQuant/docs/completed_benchmarks.xlsx",
+      "bytes": 11437,
+      "sha256": "9513daccaf63f71e1307164454944609c1194623d4d98add4f8de8b52dd877ff"
+    },
+    {
+      "path": "ARCQuant/docs/completed_benchmarks_colored.html",
+      "bytes": 4419,
+      "sha256": "1ef86fa0fae8202f2b224655e31094d4e2358d86ea8d9e8215d7bbfaa9b2f065"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_40_sparsity_results.csv",
+      "bytes": 340,
+      "sha256": "73bedf7bf81cb4c2091b3356c8cf2734b6934d20e6fd2dccf850b6ab87e6cd9f"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_40_sparsity_results.md",
+      "bytes": 1024,
+      "sha256": "6e10d288708b4f78e70b7385f97e174c0a2ce39ffbb2f78b983f811cc67f1189"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_40_sparsity_results.tsv",
+      "bytes": 340,
+      "sha256": "cbdb2849586a0c737664c93e5aefcb5c40984afcedb5e2f000c415cea6d605b4"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_40_sparsity_results.xlsx",
+      "bytes": 2899,
+      "sha256": "cafa68edb235b72622c4e6047ea2ef66e648e621d7f0985a90df864300277e76"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_sparsity_results.csv",
+      "bytes": 1153,
+      "sha256": "d5ae34e7d1ccd950582dc177c3d88f96d31a7d95531934a39be133da9c877cc3"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_sparsity_results.md",
+      "bytes": 2617,
+      "sha256": "d9127345c30c54968ebd7ac018eb864bc56a4ee95d0e928e31869d42c060d4d0"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_sparsity_results.tsv",
+      "bytes": 1153,
+      "sha256": "7e6527f6b8dfe0abfefe381904f6fb0809367614e6de3007a80013adedf4aa6f"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_sparsity_results.xlsx",
+      "bytes": 3439,
+      "sha256": "d82a235de41a3f0a6d597b3aa270d9ca60180de90ba0e7614154f459c3f619b7"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_truncation_results.csv",
+      "bytes": 1398,
+      "sha256": "3f9206985be61b1093fc9055198a1824466478f1918c00db21dcce94cfcf761a"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_truncation_results.md",
+      "bytes": 2210,
+      "sha256": "1dcc622f065a0017439698f4a1348a6fccc2bacc42bc1161c3311ed970ef8b62"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_truncation_results.tsv",
+      "bytes": 1398,
+      "sha256": "01e3b160ff6749d632b9324601ff402e215df43a9778a99b620d3bfb019859f7"
+    },
+    {
+      "path": "ARCQuant/docs/deepseek_tiny_truncation_results.xlsx",
+      "bytes": 3333,
+      "sha256": "2d380427f022a61c8f365ea9abe258f2bdf536b043ec9026869f5d4397548edd"
+    },
+    {
+      "path": "ARCQuant/docs/video_tiny_reference.csv",
+      "bytes": 1256,
+      "sha256": "1bc2cc3c961e3f77ca5ea071b3effe8990a0bdb1824e88e4eb32d054a7c23390"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/BASELINE_PROGRESS.md",
+      "bytes": 3858,
+      "sha256": "c9a1dfd59477903eedd8719a989574275a132c5cfe7f06dfdd2225ab78bfd3b9"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/COMPLETED_BENCHMARKS.md",
+      "bytes": 526,
+      "sha256": "b70527057a1babe9d5366a39568f94f1dea406ca6baf0bac7664706056f0d28e"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/CURRENT_EVAL_STATUS.md",
+      "bytes": 7108,
+      "sha256": "a65808f7aab84bd264c2aa692306410e84022429b93f7443c6ac1cd4e4e9a522"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/DEEPSEEK_FORMAL_RESULTS.md",
+      "bytes": 3086,
+      "sha256": "d66a62bb1f50e2b3bc226f8dde5555fc144a0f296c92714810bee9b32e05510e"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/RESULTS_PRESENTATION.md",
+      "bytes": 1559,
+      "sha256": "4448e68f401353b29a9eaeeda78405a114fe27835b6a30f804863b284417c849"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/completed_benchmarks.csv",
+      "bytes": 1256,
+      "sha256": "abcd8b3128cb861b4dc9e13a1e1dcc83861fcf8dbc5db385e6643f23d08296a6"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/completed_benchmarks.tsv",
+      "bytes": 1256,
+      "sha256": "36f529d581b261e0d3162a0649f06411e3758d3a5d448c6856e000f063f1f3c1"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/completed_benchmarks.xlsx",
+      "bytes": 10255,
+      "sha256": "41be6a2d53ff7dbc059a9c540d83553f5d0f3e42ac101ab95a2052769c3ca681"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/completed_benchmarks_colored.html",
+      "bytes": 4299,
+      "sha256": "3d1adeadb8e83ea35c9c02958adcb125de4bc57d166db0dad01b9833659f42cf"
+    },
+    {
+      "path": "magi_work/10-0-2-54/ARCQuant/docs/video_tiny_reference.csv",
+      "bytes": 1256,
+      "sha256": "1bc2cc3c961e3f77ca5ea071b3effe8990a0bdb1824e88e4eb32d054a7c23390"
+    },
+    {
+      "path": "magi_runs/10-0-2-54/validation-20261105/tiny-results-snapshot.md",
+      "bytes": 1204,
+      "sha256": "f73e83ed73de3ea425cdfacc5684d15044861495cfa789199f3046ff24d5f9af"
+    }
+  ],
+  "scope": "Retired derived presentation files only; raw experiments retained",
+  "worklog_cleanup": {
+    "path": "codexx1.md",
+    "previous_sha256": "da878e1f4085612ac0cf6209d8ba9c1a27bbad41e6f9535b52ea3a03972539d3",
+    "removed_result_tables": [
+      {
+        "header": "| 模型/配置 | 评测范围 | 结果 | 可信度和用途 |",
+        "sha256": "e36fa0af57dc05ac7f6ed71d287b9c172afbe1aae06a9cae22d4ba9f4346a9d4"
+      },
+      {
+        "header": "| 模型 | 稀疏方法 | 稀疏度 | 量化方式 | GPQA | GPQA 未截断率 | MATH | MATH 未截断率 | LongBench | LiveCodeBench |",
+        "sha256": "9f18ce99644c3361655ddd036e79cc3b5b2f3b80a73b8f08a81fc2b4f2ce0a2d"
+      },
+      {
+        "header": "| 配置 | GPQA 截断 | MATH 截断 | 逐题证据 |",
+        "sha256": "6dfe3218ad4f658e2155be0071a5cb391c7ee7a651d82dba941cc8ce2c4e6861"
+      },
+      {
+        "header": "| 稀疏度 | GPQA 截断（TEAL/WINA） | MATH 截断（TEAL/WINA） | 主要表现 |",
+        "sha256": "9aa940eee3f26c9dabbe274da4992265571ca4d83d22ac7fc95b078dd7b03990"
+      },
+      {
+        "header": "| 稀疏度 | 达到 8192 token 的题数 | 准确率 |",
+        "sha256": "b24df4ed8313b95662341b25137898a39211dd1930ae57b69aaf8e1b7e4fe87c"
+      },
+      {
+        "header": "| 模型 | 稀疏方法 | 稀疏度 | 量化方式 | GPQA | MATH | LongBench | LiveCodeBench |",
+        "sha256": "01e4155e69ac7bd5b7d95a163eb9becffe274a07a9b5417c9c8e6281e4c29c42"
+      },
+      {
+        "header": "| 设置 | 结果 | 解释 |",
+        "sha256": "228ff7aef2cd154ef244ba31ab3893a79f50787f0c45a38f58ae66206823d1fc"
+      },
+      {
+        "header": "| 模型 | 稀疏方法 | 稀疏度 | 量化方式 | GPQA | MATH | LongBench | LiveCodeBench |",
+        "sha256": "84e416c802603e74dac13299c8e889818f84188955c5163604ddb1aa34e7db61"
+      },
+      {
+        "header": "| Benchmark / 设置 | 题数 | BF16（目标激活稀疏度 0%） | HiF4 W4A4（目标激活稀疏度 0%） |",
+        "sha256": "690e56664194ff4a8ede77256e1d1234f6de7a54378cce8f362dda6c70269055"
+      },
+      {
+        "header": "| 方法配置 | 目标激活稀疏度 | Benchmark / 口径 | 完成题数 | 准确率 |",
+        "sha256": "23af7ce040eb894d73c7761ededecba3a1d6e28209b9d0062ed1cc19ad74ba41"
+      },
+      {
+        "header": "| 稀疏度 | TEAL GPQA / MATH | WINA GPQA / MATH | 观察 |",
+        "sha256": "483528f346540856031a8928461e28323a538ae49c4ce537bf1bf1810c5ae814"
+      },
+      {
+        "header": "| 设置 | 截断情况 | 没有截断时的准确率 | 判断 |",
+        "sha256": "233487ad03aa75aaea162b5ea8965befb19b0f4689aa1a18018d81d6020c9a20"
+      },
+      {
+        "header": "| 方法 | 40% GPQA | 40% MATH | 50% GPQA | 50% MATH | 60% GPQA | 60% MATH | 70%–90% |",
+        "sha256": "09663de2f178bbfc0929ea4953bc35457d260c320363593fe53429e28a36efde"
+      },
+      {
+        "header": "| 配置 | Total | Quality | Semantic | 覆盖 |",
+        "sha256": "3a905a6907e98ec5a8072e59dbf81120009578f615441b9c151df128cf418001"
+      }
+    ],
+    "retained": "Historical explanation, resource plans, method design, and raw experiment artifacts"
+  }
+}
