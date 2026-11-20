@@ -7,7 +7,7 @@
 - 原版权重、TP2 转换版及 GPQA、MATH、LongBench、LiveCodeBench 数据已接入。
 - BF16、普通 HiF4 的四项完整生成式基线已完成。LiveCodeBench 的范围是 release-v6 的 test6 分片 175 题；128K 续写单列，不能冒充独立生成结果。
 - ARC HiF4 W4A4 的 0% Tiny 对照，以及 TEAL/WINA 40%–90% 的 GPQA 32 题、MATH 100 题均已完成。BF16/普通 HiF4 的相同 Tiny 题目已从全量结果提取。
-- ARC dense 全量、选定稀疏度的全量结果仍待补齐；30% 当前是搜索/小探针阶段。Tiny 选点结果不能填入全量成绩。
+- ARC dense 的 GPQA/MATH 全量已优先启动并复用 Tiny 答案（见 [续跑说明](DEEPSEEK_DENSE_PRIORITY.md)）；LongBench/LiveCodeBench ARC dense 与选定稀疏度的全量结果仍待补齐；30% 当前是搜索/小探针阶段。Tiny 选点结果不能填入全量成绩。
 - 方法运行入口见 [DeepSeek 实验](DEEPSEEK_EXPERIMENT.md)、[greedy](DEEPSEEK_GREEDY.md)、[Tiny 调度](DEEPSEEK_TINY_SWEEP.md)。单卡搜索见 [单卡双 rank 说明](DEEPSEEK_SINGLE_GPU_SEARCH.md)，生成评测仍使用 TP2。
 
 ## MAGI-2 preview

@@ -265,6 +265,59 @@ def collect(base, verify_bytes=False):
                 legacy_audit=legacy)
 
 
+def refresh_dense(snapshot, run_dir):
+    """Publish completed ARC full scores; retain partial counts as progress only."""
+    from benchmarks.queue_sparse_baselines import arc_health
+    from benchmarks.reuse_dense_prefix import compatible, digest as protocol_digest
+    plan = read(run_dir / 'plan.json')
+    require(plan['schema'] == 'deepseek-arc-dense-full-v1', 'Unknown dense plan')
+    snapshot['full'] = [r for r in snapshot['full'] if r['variant'] != 'HiF4 W4A4 + ARC']
+    progress = []
+    for job in plan['jobs']:
+        paths = list(Path(job['output']).glob('arcquant-*/summary.json'))
+        require(len(paths) == 1, 'Missing/ambiguous dense summary')
+        directory, summary = paths[0].parent, read(paths[0])
+        progress.append(dict(benchmark=job['benchmark'], expected=job['expected'],
+                             completed=summary['completed_candidates'], complete=summary['complete']))
+        if not summary['complete']:
+            continue
+        s, protocol, rows, raw = validate_answers(directory, job['expected'])
+        require(s['is_full_dataset'] and not s['is_smoke_test'], 'Dense result is not full')
+        runtime = protocol['arcquant']
+        require(runtime['method'] == 'none' and runtime['sparsity'] == 0 and arc_health(directory)[0],
+                'Missing dense ARC execution evidence')
+        files = [paths[0], raw, directory / 'protocol.json', directory / 'arcquant_sparse_runtime.json',
+                 *sorted(directory.glob('arcquant_runtime_rank*.json'))]
+        reused_path = directory / 'reused_prefix.json'
+        if reused_path.exists():
+            reused = read(reused_path)
+            source = Path(reused['source'])
+            sp = read(source / 'protocol.json')
+            compatible(sp, protocol)
+            require(reused['source_protocol_sha256'] == protocol_digest(sp)
+                    and reused['target_protocol_sha256'] == protocol_digest(protocol), 'Changed reuse identity')
+            indexed = {r['id']: r for r in rows}
+            original = {r['id']: r for r in jsonl(source / 'outputs.jsonl')}
+            for binding in reused['records']:
+                new, old = indexed[binding['id']], original[binding['id']]
+                require(old['record_sha256'] == binding['source_record_sha256']
+                        and new['record_sha256'] == binding['imported_record_sha256'], 'Changed imported answer')
+                ignore = {'record_sha256', 'protocol_sha256'}
+                require({k:v for k,v in new.items() if k not in ignore} ==
+                        {k:v for k,v in old.items() if k not in ignore}, 'Reused answer content changed')
+            files += [reused_path, source / 'protocol.json', source / 'outputs.jsonl']
+        snapshot['full'].append(dict(model='DS', group='baseline', variant='HiF4 W4A4 + ARC',
+            benchmark={'gpqa': 'GPQA Diamond', 'math500': 'MATH-500'}[job['benchmark']],
+            evaluated_count=s['questions'], correct=s['correct_candidates'], score=s['pass_at_1']*100,
+            protocol=protocol['schema'], source='repo/' + str(directory.relative_to(ROOT)),
+            evidence=evidence(files, ROOT)))
+    snapshot['dense_progress'] = progress
+    snapshot['dense_progress_at'] = datetime.now(timezone.utc).isoformat()
+    snapshot['dense_gaps'][0][3] = '；'.join(
+        f"{r['benchmark']} {r['completed']}/{r['expected']}" for r in progress) + '；LongBench/LiveCodeBench 待适配核验'
+    snapshot['dense_gaps'][0][4] = '优先续跑 GPQA/MATH 全量；复用同协议 Tiny 已保存答案'
+
+
 def matrices(snapshot):
     headers = ['模型', '稀疏方法', '稀疏度', '量化方式', 'GPQA', 'GPQA 未截断率', 'MATH', 'MATH 未截断率', 'LongBench', 'LiveCodeBench']
     configs = sorted({(r['method'], r['sparsity'], r['quantization']) for r in snapshot['tiny']},
@@ -281,12 +334,15 @@ def matrices(snapshot):
         rows.append(row)
     full_headers = ['模型', '稀疏方法', '稀疏度', '量化方式', 'GPQA', 'MATH', 'LongBench', 'LiveCodeBench 64K', 'LiveCodeBench 128K续写']
     full_rows = []
-    for q, label in [('BF16', 'BF16'), ('HiFP4', 'HiF4 W4A4')]:
+    full_variants = [('BF16', 'BF16'), ('HiFP4', 'HiF4 W4A4')]
+    if snapshot.get('dense_progress'):
+        full_variants.append(('HiF4 W4A4 + ARC', 'HiF4 W4A4 + ARC'))
+    for q, label in full_variants:
         row = ['DS', '无', 0., label]
         for bench in ('GPQA Diamond', 'MATH-500', 'LongBench v2', 'LiveCodeBench v6 64K', 'LiveCodeBench v6 128K 续写'):
             matches = [r for r in snapshot['full'] if r['variant'] == q and r['benchmark'] == bench]
-            require(len(matches) == 1, 'Ambiguous full result')
-            row.append(matches[0]['score'] / 100)
+            require(len(matches) <= 1 and (len(matches) or q == 'HiF4 W4A4 + ARC'), 'Ambiguous full result')
+            row.append(matches[0]['score'] / 100 if matches else '评测中')
         full_rows.append(row)
     video_headers = ['模型', '稀疏方法', '稀疏度', '量化方式', 'Total', 'Quality', 'Semantic', '视频数', '评分维度']
     video_rows = [[r['model'], '无', 0., r['quantization'], r['total'], r['quality'], r['semantic'], r['n'], r['dimensions']] for r in snapshot['videos']]
@@ -329,7 +385,8 @@ def render(snapshot, output):
                 elif cell.column in metrics:
                     cell.number_format = '0.0%' if title == 'DS_Tiny' else '0.00%' if title == 'DS_全量dense' else '0.0000%'
                     val = cell.value
-                    cell.fill = PatternFill('solid', fgColor='E2F0D9' if val >= .8 else 'FFF2CC' if val >= .4 else 'FCE4D6')
+                    cell.fill = PatternFill('solid', fgColor='FFF2CC' if not isinstance(val, (int, float))
+                        else 'E2F0D9' if val >= .8 else 'FFF2CC' if val >= .4 else 'FCE4D6')
                 elif cell.value == '评测中':
                     cell.fill = PatternFill('solid', fgColor='FFF2CC')
         for i, heading in enumerate(headers, 1):
@@ -344,13 +401,15 @@ def render(snapshot, output):
             ws['I1'].comment = Comment('本轮未纳入 LongBench/LiveCodeBench；评测中是缺失结果占位，不表示正在运行。', 'ARCQuant')
         if title == 'DS_全量dense':
             md += ['## DS 已完成全量 dense', '', 'GPQA 198、MATH 500、LongBench 503；LiveCodeBench 是 release-v6 的 test6 分片 175 题。64K 为独立生成，128K 为到限题续写，两者分别列出。普通 HiF4 不含 ARC。', '']
+            if snapshot.get('dense_progress'):
+                md += [f'ARC dense 续跑进度更新：{snapshot["dense_progress_at"]}。已复用同协议 Tiny 的 132 道答案；未完成项不填中途准确率。[调度与续跑说明](../../docs/DEEPSEEK_DENSE_PRIORITY.md)。', '']
         if title == 'MAGI_Tiny':
             md += ['## MAGI 已完成 Tiny dense', '', '108 个唯一 prompt、740 个视频、16 维。两组都是稠密模型；HiF4 采用 ARCQuant 来源的量化格式，但**没有 ARC 重排/残差补偿**。先前将 79.1241% 标作 ARC 成绩不准确，现已更正。', '']
         md += ['| ' + ' | '.join(headers) + ' |', '| ' + ' | '.join(['---'] * len(headers)) + ' |']
         for row in rows:
             formatted = [f'{v:.0%}' if i == 2 else f'{(Decimal(str(v)) * 100).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)}%' if i + 1 in metrics and title == 'DS_Tiny'
                          else f'{v:.4%}' if i + 1 in metrics and title == 'MAGI_Tiny'
-                         else f'{v:.2%}' if i + 1 in metrics else str(v) for i, v in enumerate(row)]
+                         else f'{v:.2%}' if i + 1 in metrics and isinstance(v, (int, float)) else str(v) for i, v in enumerate(row)]
             md.append('| ' + ' | '.join(formatted) + ' |')
         md.append('')
     temp = output / '实验结果.tmp.xlsx'
@@ -381,6 +440,7 @@ def main(argv=None):
     p.add_argument('--output-dir', type=Path, default=DEFAULT_OUT)
     p.add_argument('--snapshot-only', action='store_true')
     p.add_argument('--verify-video-bytes', action='store_true')
+    p.add_argument('--refresh-dense-run', type=Path, help='Merge completed ARC dense scores and partial counts from this run')
     args = p.parse_args(argv)
     try:
         import openpyxl  # Fail before spending time auditing large video files.
@@ -394,6 +454,8 @@ def main(argv=None):
         if not args.base_eval:
             p.error('--base-eval is required for a fresh audit')
         snapshot = collect(args.base_eval.resolve(), args.verify_video_bytes)
+    if args.refresh_dense_run:
+        refresh_dense(snapshot, args.refresh_dense_run.resolve())
     args.output_dir.mkdir(parents=True, exist_ok=True)
     render(snapshot, args.output_dir)
     (args.output_dir / 'audit.json').write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + '\n')

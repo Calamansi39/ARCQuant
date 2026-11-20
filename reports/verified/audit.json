@@ -11892,8 +11892,8 @@
       "DS",
       "HiF4 W4A4 + ARC，0%",
       "GPQA 198 / MATH 500 / LongBench 503 / LiveCodeBench v6 test6 175",
-      "未完成；仅 GPQA 32 / MATH 100 的 Tiny 对照完成",
-      "正式稀疏全量比较前补齐；先选定稀疏度"
+      "gpqa 32/198；math500 100/500；LongBench/LiveCodeBench 待适配核验",
+      "优先续跑 GPQA/MATH 全量；复用同协议 Tiny 已保存答案"
     ],
     [
       "MAGI-2",
@@ -13620,5 +13620,20 @@
       }
     ],
     "rejected": []
-  }
+  },
+  "dense_progress": [
+    {
+      "benchmark": "gpqa",
+      "expected": 198,
+      "completed": 32,
+      "complete": false
+    },
+    {
+      "benchmark": "math500",
+      "expected": 500,
+      "completed": 100,
+      "complete": false
+    }
+  ],
+  "dense_progress_at": "2026-11-20T08:10:07.934235+00:00"
 }
