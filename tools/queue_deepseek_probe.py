@@ -20,6 +20,23 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from benchmarks.deepseek_greedy_strategy import atomic_json
 from benchmarks.gpu_wait import wait_for_idle_gpus
+from benchmarks.queue_deepseek_tiny_sweep import make_tasks, sha, summary_complete
+
+
+def pending_evaluations(evaluation, search, sparsity, gpqa_limit, math_limit):
+    """Skip only saved answers whose protocol, coverage and strategy still match."""
+    tasks = make_tasks(evaluation, ['teal', 'wina'], ['gpqa', 'math500'],
+                       dict(gpqa=gpqa_limit, math500=math_limit), [sparsity])
+    calibration_sha = sha(search / 'calibration/manifest.json')
+    identities = {method: dict(strategy_sha256=sha(search / method / 'strategy.json'),
+                               calibration_manifest_sha256=calibration_sha)
+                  for method in ('teal', 'wina')}
+    pending = []
+    for task in tasks:
+        task['strategy_identity'] = identities[task['method']]
+        if not summary_complete(task['output'], task, task['strategy_identity']):
+            pending.append(task)
+    return pending
 
 
 def main():
@@ -127,25 +144,31 @@ def main():
                 run(command, 'search.log', ids)
                 if not search_complete():
                     raise RuntimeError('Search exited without complete native strategies/calibration')
-        save('waiting_for_tp2_evaluation', gpu_ids=[], child_pid=None)
+        tasks = pending_evaluations(evaluation, search, a.sparsity, a.gpqa_limit, a.math_limit)
+        pending_ids = [task['id'] for task in tasks]
+        if not tasks:
+            save('completed', child_pid=None, gpu_ids=[], pending_task_ids=[])
+            return 0
+        save('waiting_for_tp2_evaluation', gpu_ids=[], child_pid=None,
+             pending_task_ids=pending_ids)
         with wait_for_idle_gpus(count=2, min_free_mib=138000, poll_seconds=15,
                                settle_seconds=3, candidates=a.eval_gpu_candidates.split(',')) as ids:
-            for method in ('teal', 'wina'):
-                for benchmark, limit in [('gpqa', a.gpqa_limit), ('math500', a.math_limit)]:
-                    output = evaluation / f'{method}-{a.sparsity:g}-{benchmark}'
-                    save('evaluating', method=method, benchmark=benchmark, limit=limit)
-                    command = torchrun('benchmarks/run_deepseek_greedy_eval.py') + [
-                        '--strategy', str(search / method / 'strategy.json'), '--sparse-method', method,
-                        '--sparsity', str(a.sparsity), '--quantization', 'arc',
-                        '--base-eval-root', str(a.base_eval_root), '--source-model', str(a.source_model),
-                        '--converted-model', str(a.converted_model), '--calibration', str(search / 'calibration'),
-                        '--benchmark', benchmark, '--model', 'deepseek', '--quant', 'hifp4', '--mode', 'w4a4',
-                        '--limit', str(limit), '--max-new-tokens', '8192', '--out-dir', str(output)]
-                    run(command, f'eval-{method}-{benchmark}.log', ids)
-                    summary = json.loads((output / 'summary.json').read_text())
-                    if (not summary.get('complete') or summary.get('questions') != limit
-                            or summary.get('completed_candidates') != limit):
-                        raise RuntimeError(f'Incomplete evaluation: {output}')
+            for task in tasks:
+                method, benchmark, limit = task['method'], task['benchmark'], task['limit']
+                output = Path(task['output'])
+                save('evaluating', method=method, benchmark=benchmark, limit=limit)
+                command = torchrun('benchmarks/run_deepseek_greedy_eval.py') + [
+                    '--strategy', str(search / method / 'strategy.json'), '--sparse-method', method,
+                    '--sparsity', str(a.sparsity), '--quantization', 'arc',
+                    '--base-eval-root', str(a.base_eval_root), '--source-model', str(a.source_model),
+                    '--converted-model', str(a.converted_model), '--calibration', str(search / 'calibration'),
+                    '--benchmark', benchmark, '--model', 'deepseek', '--quant', 'hifp4', '--mode', 'w4a4',
+                    '--limit', str(limit), '--max-new-tokens', '8192', '--out-dir', str(output)]
+                run(command, f'eval-{method}-{benchmark}.log', ids)
+                if not summary_complete(output, task, task['strategy_identity']):
+                    raise RuntimeError(f'Incomplete or incompatible evaluation: {output}')
+                pending_ids.remove(task['id'])
+                save(child_pid=None, pending_task_ids=pending_ids)
             save('completed', child_pid=None, gpu_ids=[])
         return 0
     except BaseException as exc:
@@ -156,7 +179,8 @@ def main():
             except subprocess.TimeoutExpired:
                 os.killpg(child.pid, signal.SIGKILL)
                 child.wait()
-        save('interrupted' if isinstance(exc, KeyboardInterrupt) else 'failed', error=repr(exc))
+        save('interrupted' if isinstance(exc, KeyboardInterrupt) else 'failed',
+             error=repr(exc), child_pid=None, gpu_ids=[])
         raise
     finally:
         done.set()

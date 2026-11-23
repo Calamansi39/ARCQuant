@@ -533,6 +533,122 @@
         "top_k": 20
       },
       "delta_bf16_pp": -1.1428571428571388
+    },
+    {
+      "model": "DS",
+      "group": "baseline",
+      "variant": "HiF4 W4A4 + ARC",
+      "benchmark": "GPQA Diamond",
+      "evaluated_count": 198,
+      "correct": 169,
+      "score": 85.35353535353535,
+      "protocol": "generative_8k_v1",
+      "source": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30",
+      "evidence": [
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30/summary.json",
+          "sha256": "8278df09000191062bdef4ccace158591474b5e3809f6e67b69765993cf0f9a1",
+          "bytes": 972
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30/outputs.jsonl",
+          "sha256": "4bd946685a569108afbe2657a609d70e60def5d7c712fd715ff1294b09f4917f",
+          "bytes": 2466815
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30/protocol.json",
+          "sha256": "9d920a4b4e96ce4c0a91aea9a6e5a38a53906f92aba8781022e1361c4b4930a7",
+          "bytes": 387073
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30/arcquant_sparse_runtime.json",
+          "sha256": "28f4da53e843472785d37f4d793d87544c04fc75994851e5c5b298d92b278236",
+          "bytes": 1424
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30/arcquant_runtime_rank0.json",
+          "sha256": "2ee8545eb101d7e08e7683e1571332987afa4d5f66fa8ff9f6bef4d90dae3428",
+          "bytes": 1132
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30/arcquant_runtime_rank1.json",
+          "sha256": "a65d493f8d677a30530423e89fb91625734cdd4548982c7c7dee177b0cb8bf47",
+          "bytes": 1132
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-gpqa/arcquant-arc-none-0-75682018cc30/reused_prefix.json",
+          "sha256": "7a1cffb252d3c0654f68253e2910f782e497c581104b70c67bd8020af2eb7f05",
+          "bytes": 7909
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_tiny_20261118/none-0-gpqa/arcquant-arc-none-0-75682018cc30/protocol.json",
+          "sha256": "7776d2bc60d6f9513874e7b1e36641fef9a35f75345b4877c0eef97cecc41122",
+          "bytes": 73786
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_tiny_20261118/none-0-gpqa/arcquant-arc-none-0-75682018cc30/outputs.jsonl",
+          "sha256": "cc428a66010bef6238d78b086347e57bb66e1405486542afd3e7694aa316e94c",
+          "bytes": 430045
+        }
+      ]
+    },
+    {
+      "model": "DS",
+      "group": "baseline",
+      "variant": "HiF4 W4A4 + ARC",
+      "benchmark": "MATH-500",
+      "evaluated_count": 500,
+      "correct": 490,
+      "score": 98.0,
+      "protocol": "generative_8k_v1",
+      "source": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30",
+      "evidence": [
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30/summary.json",
+          "sha256": "435989b40a8dad41a351f0c46ca3b990bd029094d3369ee9f147efbce799e4f4",
+          "bytes": 769
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30/outputs.jsonl",
+          "sha256": "eb5a1ca9a599c24d3db7fbcb5cc54fa32b630dfe941a65872b1eaddb5b26daa1",
+          "bytes": 1834777
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30/protocol.json",
+          "sha256": "ce2029155492eaa79584bbab34a02870908f0a3e4404df028242d6d25722bf68",
+          "bytes": 475490
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30/arcquant_sparse_runtime.json",
+          "sha256": "28f4da53e843472785d37f4d793d87544c04fc75994851e5c5b298d92b278236",
+          "bytes": 1424
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30/arcquant_runtime_rank0.json",
+          "sha256": "182ce2a0344aad1eb902bcf3bf17f10eb03197294ec4267e34732072e07392fb",
+          "bytes": 1131
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30/arcquant_runtime_rank1.json",
+          "sha256": "8b01cc148d11b3d0aa3efe7015e942651b7e6b9c9aa60b54d8cdaeacf6a547a4",
+          "bytes": 1131
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_full_20261120/none-0-math500/arcquant-arc-none-0-75682018cc30/reused_prefix.json",
+          "sha256": "e7765eee8e57b459c27067513130e3339920a91a4c068e4f3b3de60e37fb1308",
+          "bytes": 24057
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_tiny_20261118/none-0-math500/arcquant-arc-none-0-75682018cc30/protocol.json",
+          "sha256": "cd45fcb24bdd3e5d96f4c789f8f8b450c0afc05abc28bec672ac05ab11edbad7",
+          "bytes": 105901
+        },
+        {
+          "path": "repo/runs/deepseek_arc0_tiny_20261118/none-0-math500/arcquant-arc-none-0-75682018cc30/outputs.jsonl",
+          "sha256": "80ff8cecac0359fdb6130ebfa7298db7d29cadc70d58f8cfc80f762c7a15fe6d",
+          "bytes": 328652
+        }
+      ]
     }
   ],
   "tiny": [
@@ -11892,8 +12008,8 @@
       "DS",
       "HiF4 W4A4 + ARC，0%",
       "GPQA 198 / MATH 500 / LongBench 503 / LiveCodeBench v6 test6 175",
-      "gpqa 32/198；math500 100/500；LongBench/LiveCodeBench 待适配核验",
-      "优先续跑 GPQA/MATH 全量；复用同协议 Tiny 已保存答案"
+      "gpqa 198/198；math500 500/500；LongBench/LiveCodeBench 待适配核验",
+      "GPQA/MATH 全量已完成；下一步核验 LongBench/LiveCodeBench 的 ARC 接入"
     ],
     [
       "MAGI-2",
@@ -13625,15 +13741,15 @@
     {
       "benchmark": "gpqa",
       "expected": 198,
-      "completed": 32,
-      "complete": false
+      "completed": 198,
+      "complete": true
     },
     {
       "benchmark": "math500",
       "expected": 500,
-      "completed": 100,
-      "complete": false
+      "completed": 500,
+      "complete": true
     }
   ],
-  "dense_progress_at": "2026-11-20T08:10:07.934235+00:00"
+  "dense_progress_at": "2026-11-23T02:10:20.589394+00:00"
 }

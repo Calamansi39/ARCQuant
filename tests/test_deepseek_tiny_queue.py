@@ -18,7 +18,7 @@ class TinyQueueTests(unittest.TestCase):
         self.task = q.make_tasks(self.root, ['teal'], ['gpqa'], {'gpqa': 2}, [.5])[0]
         self.folder = self.root/'claims'/self.task['id']
         self.args = SimpleNamespace(out_dir=self.root, host_label='test-pair01',
-                                    max_new_tokens=8192, poll_seconds=.01, retry=1)
+                                    max_new_tokens=8192, poll_seconds=.01, retry=1, rates=(.5,))
         self.strategy = {'strategy_sha256': 's', 'calibration_manifest_sha256': 'c'}
 
     def fixture(self):

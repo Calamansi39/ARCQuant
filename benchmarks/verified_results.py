@@ -315,7 +315,10 @@ def refresh_dense(snapshot, run_dir):
     snapshot['dense_progress_at'] = datetime.now(timezone.utc).isoformat()
     snapshot['dense_gaps'][0][3] = '；'.join(
         f"{r['benchmark']} {r['completed']}/{r['expected']}" for r in progress) + '；LongBench/LiveCodeBench 待适配核验'
-    snapshot['dense_gaps'][0][4] = '优先续跑 GPQA/MATH 全量；复用同协议 Tiny 已保存答案'
+    snapshot['dense_gaps'][0][4] = (
+        'GPQA/MATH 全量已完成；下一步核验 LongBench/LiveCodeBench 的 ARC 接入'
+        if len(progress) == 2 and all(r['complete'] for r in progress)
+        else '优先续跑 GPQA/MATH 全量；复用同协议 Tiny 已保存答案')
 
 
 def matrices(snapshot):
@@ -425,7 +428,7 @@ def render(snapshot, output):
            '- `audit.json` 保存精确计数、题目 ID、来源路径、文件 SHA256 和纳入/排除原因。',
            '- MAGI 生成身份、740 个视频的记录与文件、16 个评分结果、评分输入绑定、官方加权总分均已核验。是否重算视频字节哈希记录在 `video_bytes_verified`。',
            '- 原始逐题输出、视频、模型、日志与搜索策略保留在原运行目录；删除的是过时展示表。',
-           '- MiniMax 历史评分缺少本机生成证据，BF16 静态覆盖不足，不进入可信主表。30% 搜索中的配置也不提前填写分数。',
+           '- MiniMax 历史评分缺少本机生成证据，BF16 静态覆盖不足，不进入可信主表。30% 的 8/16 题小探针与主表的 32/100 题范围不同，不混报。',
            '- GPQA 使用生成式得分；旧标签条件似然成绩不混入。当前没有 acc_norm 指标可替换这些生成式得分。', '',
            '在仓库根目录刷新（不使用 GPU）：', '', '```bash',
            'python -m pip install -r requirements-report.txt',
