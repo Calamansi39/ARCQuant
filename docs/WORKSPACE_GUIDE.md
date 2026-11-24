@@ -4,14 +4,14 @@
 
 | 目的 | 仓库内入口 |
 | --- | --- |
-| 查看实验成绩 | [彩色 Excel](../reports/verified/实验结果.xlsx) |
+| 查看实验成绩 | [CSV / TSV / 彩色 Excel](../reports/verified/README.md) |
 | 了解评测范围、哪些结果可汇报 | [结果说明](../reports/verified/README.md) |
 | 安装和使用方法 | [中文快速开始](QUICKSTART.md) |
 | 查看 DS 当前调度和续跑记录 | [DS 评测说明](DEEPSEEK_DENSE_PRIORITY.md) |
 | 理解 TEAL/WINA 搜索和推理 | [greedy 方法说明](DEEPSEEK_GREEDY.md) |
 | 迁移 MAGI / MiniMax | [H20 交接](MAGI_H20_HANDOFF.md) / [A800 交接](MINIMAX_A800_HANDOFF.md) |
 
-结果只发布到 `reports/verified/`。Excel 内三页分别是 `DS_Tiny`、`DS_全量dense`、`MAGI_Tiny`。原始逐题结果、搜索策略与日志在运行目录中；完整性与来源信息见结果目录中的 `audit.json`。
+结果只发布到 `reports/verified/`。Excel 内三页分别是 `DS_Tiny`、`DS_全量dense`、`MAGI_Tiny`；每页另有同名 `.csv` 和 `.tsv`，列名、百分比、缺失数据标记与总表一致，随结果刷新同步生成。CSV 使用 UTF-8 BOM，TSV 使用 UTF-8。原始逐题结果、搜索策略与日志在运行目录中；完整性与来源信息见结果目录中的 `audit.json`。
 
 ## 当前服务器的目录
 

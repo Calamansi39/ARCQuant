@@ -1,7 +1,8 @@
-"""Publish one audited workbook from existing results; never launch GPU work."""
+"""Publish audited Excel, CSV and TSV views from the same existing results."""
 from __future__ import annotations
 
 import argparse
+import csv
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
@@ -353,6 +354,16 @@ def matrices(snapshot):
             ('MAGI_Tiny', video_headers, video_rows, (5, 6, 7))]
 
 
+def display_row(title, row, metrics):
+    """Keep percentages and missing-result labels identical in all text views."""
+    return [f'{v:.0%}' if i == 2 and isinstance(v, (int, float))
+            else f'{(Decimal(str(v)) * 100).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)}%'
+            if i + 1 in metrics and title == 'DS_Tiny' and isinstance(v, (int, float))
+            else f'{v:.4%}' if i + 1 in metrics and title == 'MAGI_Tiny' and isinstance(v, (int, float))
+            else f'{v:.2%}' if i + 1 in metrics and isinstance(v, (int, float))
+            else str(v) for i, v in enumerate(row)]
+
+
 def render(snapshot, output):
     from openpyxl import Workbook, load_workbook
     from openpyxl.styles import Alignment, Font, PatternFill
@@ -363,11 +374,24 @@ def render(snapshot, output):
     wb = Workbook()
     wb.remove(wb.active)
     md = ['# 统一实验结果', '', f'核查时间：{snapshot["audited_at"]}', '',
-          '**日常查看只需打开 [彩色 Excel](实验结果.xlsx)。本目录是唯一结果发布入口。**', '',
+          '**本目录是唯一结果发布入口。[彩色 Excel](实验结果.xlsx)、CSV 和 TSV 使用同一份核验数据，同步更新。**', '',
+          '| 评测范围 | CSV | TSV |', '| --- | --- | --- |',
+          '| DS 稀疏度 Tiny 横评 | [DS_Tiny.csv](DS_Tiny.csv) | [DS_Tiny.tsv](DS_Tiny.tsv) |',
+          '| DS 全量 dense 对照 | [DS_全量dense.csv](DS_全量dense.csv) | [DS_全量dense.tsv](DS_全量dense.tsv) |',
+          '| MAGI Tiny | [MAGI_Tiny.csv](MAGI_Tiny.csv) | [MAGI_Tiny.tsv](MAGI_Tiny.tsv) |', '',
           '## DS Tiny', '', 'GPQA 固定 32 题、MATH 固定 100 题，生成上限 8192 token。0% 的 BF16 和普通 HiF4 从已完成全量逐题记录中提取；题目、提示词、seed 和当前评分规则已逐项核对，没有重新推理。', '',
           '这些是固定测试集前缀上的初筛结果，不能替代全量结论；“评测中”表示该范围尚无结果，不表示有进程正在运行。', '',
           '未截断率是自然 EOS 比例，不等于有效回答比例；90% 稀疏的提前 EOS 虽然不截断，准确率仍为零。', '']
     for title, headers, rows, metrics in matrices(snapshot):
+        formatted_rows = [display_row(title, row, metrics) for row in rows]
+        for suffix, delimiter, encoding in (('csv', ',', 'utf-8-sig'), ('tsv', '\t', 'utf-8')):
+            destination = output / f'{title}.{suffix}'
+            temp_text = destination.with_suffix(destination.suffix + '.tmp')
+            with temp_text.open('w', encoding=encoding, newline='') as stream:
+                writer = csv.writer(stream, delimiter=delimiter, lineterminator='\n')
+                writer.writerow(headers)
+                writer.writerows(formatted_rows)
+            temp_text.replace(destination)
         ws = wb.create_sheet(title)
         ws.append(headers)
         for row in rows:
@@ -409,10 +433,7 @@ def render(snapshot, output):
         if title == 'MAGI_Tiny':
             md += ['## MAGI 已完成 Tiny dense', '', '108 个唯一 prompt、740 个视频、16 维。两组都是稠密模型；HiF4 采用 ARCQuant 来源的量化格式，但**没有 ARC 重排/残差补偿**。先前将 79.1241% 标作 ARC 成绩不准确，现已更正。', '']
         md += ['| ' + ' | '.join(headers) + ' |', '| ' + ' | '.join(['---'] * len(headers)) + ' |']
-        for row in rows:
-            formatted = [f'{v:.0%}' if i == 2 else f'{(Decimal(str(v)) * 100).quantize(Decimal("0.1"), rounding=ROUND_HALF_UP)}%' if i + 1 in metrics and title == 'DS_Tiny'
-                         else f'{v:.4%}' if i + 1 in metrics and title == 'MAGI_Tiny'
-                         else f'{v:.2%}' if i + 1 in metrics and isinstance(v, (int, float)) else str(v) for i, v in enumerate(row)]
+        for formatted in formatted_rows:
             md.append('| ' + ' | '.join(formatted) + ' |')
         md.append('')
     temp = output / '实验结果.tmp.xlsx'

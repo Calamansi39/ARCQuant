@@ -4,7 +4,7 @@
 
 | 你想看什么 | 入口 |
 | --- | --- |
-| **实验结果、汇报用数据** | **[彩色 Excel](reports/verified/实验结果.xlsx?raw=true)** · [结果范围与缺项](reports/verified/README.md) |
+| **实验结果、汇报用数据** | **[CSV / TSV / 彩色 Excel](reports/verified/README.md)** |
 | **代码怎么用、方法怎么配置** | **[中文快速开始](docs/QUICKSTART.md)** |
 | **服务器目录和文件在哪里** | **[工作区导航](docs/WORKSPACE_GUIDE.md)** |
 | **DS 当前评测与续跑安排** | [调度记录](docs/DEEPSEEK_DENSE_PRIORITY.md) |

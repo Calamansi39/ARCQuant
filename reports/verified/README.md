@@ -2,7 +2,13 @@
 
 核查时间：2026-11-20T06:30:45.439718+00:00
 
-**日常查看只需打开 [彩色 Excel](实验结果.xlsx)。本目录是唯一结果发布入口。**
+**本目录是唯一结果发布入口。[彩色 Excel](实验结果.xlsx)、CSV 和 TSV 使用同一份核验数据，同步更新。**
+
+| 评测范围 | CSV | TSV |
+| --- | --- | --- |
+| DS 稀疏度 Tiny 横评 | [DS_Tiny.csv](DS_Tiny.csv) | [DS_Tiny.tsv](DS_Tiny.tsv) |
+| DS 全量 dense 对照 | [DS_全量dense.csv](DS_全量dense.csv) | [DS_全量dense.tsv](DS_全量dense.tsv) |
+| MAGI Tiny | [MAGI_Tiny.csv](MAGI_Tiny.csv) | [MAGI_Tiny.tsv](MAGI_Tiny.tsv) |
 
 ## DS Tiny
 
