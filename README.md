@@ -1,12 +1,19 @@
 # ARCQuant: Boosting NVFP4 Quantization with Augmented Residual Channels for LLMs
 
+## 从这里开始
+
+| 你想看什么 | 入口 |
+| --- | --- |
+| **实验结果、汇报用数据** | **[彩色 Excel](reports/verified/实验结果.xlsx?raw=true)** · [结果范围与缺项](reports/verified/README.md) |
+| **代码怎么用、方法怎么配置** | **[中文快速开始](docs/QUICKSTART.md)** |
+| **服务器目录和文件在哪里** | **[工作区导航](docs/WORKSPACE_GUIDE.md)** |
+| **DS 当前评测与续跑安排** | [调度记录](docs/DEEPSEEK_DENSE_PRIORITY.md) |
+
 **DeepSeek ARC uniform 对照队列：** [启动、校准与历史部署状态](docs/DEEPSEEK_ARC_QUEUE.md)；当前 greedy 目标使用下面的独立入口。
 
 **DeepSeek TEAL/WINA greedy 预算：** [原生搜索规则、离线准备、推理加载与迁移命令](docs/DEEPSEEK_GREEDY.md)。
 统一入口 `python arc.py deepseek-greedy --help`；先验证两种方法，再搜索 50%–90% 五档。
 完整 43 层策略以产物的 `complete` 标记为准；WINA transform 尚未启用。
-
-**实验结果（统一入口）：** [查看核验结果与 dense 缺项](reports/verified/README.md) · [下载彩色 Excel](reports/verified/实验结果.xlsx?raw=true)
 
 **DS dense 优先续跑：** [GPQA/MATH 全量、旧答案复用与 MAGI 检查点交接](docs/DEEPSEEK_DENSE_PRIORITY.md)。
 

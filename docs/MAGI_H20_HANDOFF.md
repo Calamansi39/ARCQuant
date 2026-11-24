@@ -238,4 +238,4 @@ python arc.py fetch --runtime magi-2-preview \
 
 ## 可直接给另一台机器助手的指令
 
-> 请读取 `/mnt/kpfs_qyang/LBC/MAGI_H20_HANDOFF.md`。你当前负责另一台 H20 上的 MAGI-2 工作。先核实共享挂载、硬件和环境，再识别共享盘中已有的 HiF4 Tiny 任务，避免重复生成或破坏缓存。在适当的独立代码目录内补齐 MAGI 的 WINA/TEAL 适配并完成真实验证；已有基线能接续时优先补齐它。沿用 HiF4 W4A4、1080p、10 秒、50+5 步和固定 Tiny manifest，不把 2:4 套进 TEAL/WINA。不要停止 DS 或他人的 GPU 进程，等待合格空卡运行。把可复现实现提交到你的分支，把实际结果和下一步写回 LBC 工作记录。
+> 请读取 `/mnt/kpfs_qyang/LBC/ARCQuant/docs/MAGI_H20_HANDOFF.md`。你当前负责另一台 H20 上的 MAGI-2 工作。先核实共享挂载、硬件和环境，再识别共享盘中已有的 HiF4 Tiny 任务，避免重复生成或破坏缓存。在适当的独立代码目录内补齐 MAGI 的 WINA/TEAL 适配并完成真实验证；已有基线能接续时优先补齐它。沿用 HiF4 W4A4、1080p、10 秒、50+5 步和固定 Tiny manifest，不把 2:4 套进 TEAL/WINA。不要停止 DS 或他人的 GPU 进程，等待合格空卡运行。把可复现实现提交到你的分支，把实际结果和下一步写回 LBC 工作记录。
