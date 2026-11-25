@@ -272,7 +272,8 @@ def refresh_dense(snapshot, run_dir):
     from benchmarks.reuse_dense_prefix import compatible, digest as protocol_digest
     plan = read(run_dir / 'plan.json')
     require(plan['schema'] == 'deepseek-arc-dense-full-v1', 'Unknown dense plan')
-    snapshot['full'] = [r for r in snapshot['full'] if r['variant'] != 'HiF4 W4A4 + ARC']
+    snapshot['full'] = [r for r in snapshot['full'] if not (r['variant'] == 'HiF4 W4A4 + ARC'
+                        and r['benchmark'] in ('GPQA Diamond', 'MATH-500'))]
     progress = []
     for job in plan['jobs']:
         paths = list(Path(job['output']).glob('arcquant-*/summary.json'))
@@ -466,6 +467,7 @@ def main(argv=None):
     p.add_argument('--snapshot-only', action='store_true')
     p.add_argument('--verify-video-bytes', action='store_true')
     p.add_argument('--refresh-dense-run', type=Path, help='Merge completed ARC dense scores and partial counts from this run')
+    p.add_argument('--refresh-extended-run', type=Path, help='Merge audited ARC LongBench/LCB results')
     args = p.parse_args(argv)
     try:
         import openpyxl  # Fail before spending time auditing large video files.
@@ -481,6 +483,11 @@ def main(argv=None):
         snapshot = collect(args.base_eval.resolve(), args.verify_video_bytes)
     if args.refresh_dense_run:
         refresh_dense(snapshot, args.refresh_dense_run.resolve())
+    if args.refresh_extended_run:
+        if not args.base_eval:
+            p.error('--refresh-extended-run requires --base-eval')
+        from benchmarks.deepseek_arc_extended_audit import refresh
+        refresh(snapshot, args.refresh_extended_run.resolve(), args.base_eval.resolve())
     args.output_dir.mkdir(parents=True, exist_ok=True)
     render(snapshot, args.output_dir)
     (args.output_dir / 'audit.json').write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + '\n')

@@ -63,7 +63,7 @@ ARC dense 续跑进度更新：2026-11-23T02:10:20.589394+00:00。已复用同�
 
 | 模型 | 对照 | 范围 | 状态 | 后续 |
 | --- | --- | --- | --- | --- |
-| DS | HiF4 W4A4 + ARC，0% | GPQA 198 / MATH 500 / LongBench 503 / LiveCodeBench v6 test6 175 | gpqa 198/198；math500 500/500；LongBench/LiveCodeBench 待适配核验 | GPQA/MATH 全量已完成；下一步核验 LongBench/LiveCodeBench 的 ARC 接入 |
+| DS | HiF4 W4A4 + ARC，0% | GPQA 198 / MATH 500 / LongBench 503 / LiveCodeBench v6 test6 175 | GPQA 198/198；MATH 500/500；longbench pending；lcb64 pending；lcb128 pending | H20-2 GPU 2、3：当前 MAGI 搜索完成后接续 DS；以 handoff.json 为准 |
 | MAGI-2 | HiF4 W4A4 + ARC，0% | VBench Tiny 740 视频 | 尚无 ARC 对照；79.1241% 是普通 HiF4，无 ARC | 先完成 ARC 适配；与方法使用同一量化基座 |
 | MiniMax-H3 | BF16 / HiF4 W4A4，0% | VBench Tiny | 本机只有历史评分文件，缺生成视频/配置；BF16 静态覆盖仅 46/50 | 从 A800 同步原始证据、补齐 BF16 覆盖，再确认是否需要重跑 |
 | MiniMax-H3 | HiF4 W4A4 + ARC，0% | VBench Tiny 740 视频 | 尚无可核验的 ARC 对照 | 完成适配后补齐 |

@@ -17,6 +17,8 @@
 
 **DS dense 优先续跑：** [GPQA/MATH 全量、旧答案复用与 MAGI 检查点交接](docs/DEEPSEEK_DENSE_PRIORITY.md)。
 
+**DS ARC 扩展评测接续：** [LongBench 503 题、LCB 175 题及 128K 续写的队列与保卡说明](docs/DEEPSEEK_ARC_EXTENDED_QUEUE.md)。
+
 **后续卡时与组会计划：** [首批申请、完整网格预算及实测依据](docs/GPU_BUDGET.md)（2026-11-05 更新）。
 
 **预算受限时的实验收缩方案：** [先选稀疏度，再做正式评测](docs/EXPERIMENT_RESCOPING.md)。
