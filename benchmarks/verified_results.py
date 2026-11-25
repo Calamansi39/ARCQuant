@@ -428,6 +428,7 @@ def render(snapshot, output):
             ws['I1'].comment = Comment('本轮未纳入 LongBench/LiveCodeBench；评测中是缺失结果占位，不表示正在运行。', 'ARCQuant')
         if title == 'DS_全量dense':
             md += ['## DS 已完成全量 dense', '', 'GPQA 198、MATH 500、LongBench 503；LiveCodeBench 是 release-v6 的 test6 分片 175 题。64K 为独立生成，128K 为到限题续写，两者分别列出。普通 HiF4 不含 ARC。', '']
+            md += ['**此表是成绩表，不是实时运行队列。ARC 行的 LongBench / LiveCodeBench 缺失格继续沿用“评测中”占位；它们的实际启动状态请看 [DS 调度记录](../../docs/DEEPSEEK_DENSE_PRIORITY.md)。**', '']
             if snapshot.get('dense_progress'):
                 md += [f'ARC dense 续跑进度更新：{snapshot["dense_progress_at"]}。已复用同协议 Tiny 的 132 道答案；未完成项不填中途准确率。[调度与续跑说明](../../docs/DEEPSEEK_DENSE_PRIORITY.md)。', '']
         if title == 'MAGI_Tiny':

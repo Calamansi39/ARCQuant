@@ -40,6 +40,8 @@ GPQA 固定 32 题、MATH 固定 100 题，生成上限 8192 token。0% 的 BF16
 
 GPQA 198、MATH 500、LongBench 503；LiveCodeBench 是 release-v6 的 test6 分片 175 题。64K 为独立生成，128K 为到限题续写，两者分别列出。普通 HiF4 不含 ARC。
 
+**此表是成绩表，不是实时运行队列。ARC 行的 LongBench / LiveCodeBench 缺失格继续沿用“评测中”占位；它们的实际启动状态请看 [DS 调度记录](../../docs/DEEPSEEK_DENSE_PRIORITY.md)。**
+
 ARC dense 续跑进度更新：2026-11-23T02:10:20.589394+00:00。已复用同协议 Tiny 的 132 道答案；未完成项不填中途准确率。[调度与续跑说明](../../docs/DEEPSEEK_DENSE_PRIORITY.md)。
 
 | 模型 | 稀疏方法 | 稀疏度 | 量化方式 | GPQA | MATH | LongBench | LiveCodeBench 64K | LiveCodeBench 128K续写 |
