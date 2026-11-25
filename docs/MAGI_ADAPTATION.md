@@ -1,5 +1,22 @@
 # MAGI-2：HiF4 + WINA / TEAL 适配与验证
 
+## 当前实际运行路径核查（2026-11-25）
+
+**当前 MAGI 的量化路径没有 ARC 通道重排和量化残差补偿。** 它使用 ARCQuant 来源的 HiF4 W4A4 数值量化函数；使用这些函数不能证明 ARC 算法已经接入。
+
+正在运行的是外部 `base_eval/sparse_eval/magi/` 的 greedy 实现：`calibrate.py` 用 `magi2_quant.apply_magi2_quant` 构建量化基准块，并通过 `runtime.install` 安装稀疏投影。默认量化仍调用同一 HiF4 函数，前向计算没有附加的 ARC 残差通道。当前 WINA 使用的 SVD 基底/旋转服务于 WINA，不能作为 ARC 补偿的证据。
+
+- MAGI 已有 BF16 / 普通 HiF4 dense Tiny 成绩；它们的量化标签继续明确不含 ARC。
+- 当前 TEAL/WINA 搜索及随后按同一配置生成的视频，属于各自 BF16 / 普通 HiF4 量化基座。不能归入最终要求的 HiF4 + ARC + 稀疏方法结果。
+- MAGI 距离该最终目标还缺：preview/refiner 的普通、分组和路由专家投影 ARC 校准与补偿，ARC dense 单视频/运行证据验证，以及同一 ARC 基座下的策略校验或重新搜索、评测。
+- 加入 ARC 会改变 greedy 比较的候选误差及基准轨迹。现有 no-ARC 搜索路径只能用于其原身份，不能直接改标签作为 ARC 策略；正式使用需在 ARC 下验证，必要时重新采集轨迹和搜索。
+
+当前 H20-2 的 GPU 2、3 仍继续原 WINA 搜索，之后按 [DS 接续计划](DEEPSEEK_ARC_EXTENDED_QUEUE.md) 执行。该计划最后恢复的原 MAGI 队列仍是 no-ARC 路径，不能理解为已经自动完成 MAGI 的 ARC 适配。本次问答仅核查并澄清，没有中断现有任务或改变其算法身份。
+
+## 历史实现记录：下文是早期独立 uniform 诊断副本
+
+下文的“尚无 greedy”等表述对应 11 月 5 日的早期副本；当前已有另一条正在运行的 greedy 路线，如上节所述。两者都不能替代尚待完成的 ARC 接入。
+
 本实现位于独立开发副本，不修改另一台机器正在使用的 ARCQuant、旧 MAGI
 评测器、共享 Python 环境或模型权重。固定 `base_eval=c452d6d...`、官方
 MAGI 源码 `f68a0f9...`；旧 HiF4 Tiny 仍由旧评测器 `7a399226...` 继续生成。
