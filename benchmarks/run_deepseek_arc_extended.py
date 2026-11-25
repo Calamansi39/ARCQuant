@@ -1,4 +1,4 @@
-"""Dense HiF4 W4A4 + ARC with the pinned LongBench / batched LCB protocols.
+"""Dense/greedy HiF4 W4A4 + ARC with pinned LongBench / batched LCB protocols.
 
 The external evaluator and calibration are required assets. Continuation uses
 only this ARC run's 64K answers and freezes both external and ARC source files.
@@ -64,16 +64,34 @@ def sources():
     from benchmarks.run_deepseek_sparse_math import SOURCES
     return dict.fromkeys((*SOURCES, 'model/__init__.py', 'model/quantize.py',
         'model/kv_cache.py', 'model/optional_agemm.py', 'model/bridge.py', 'model/deepseek_arc_long.py',
+        'model/deepseek_budget_inference.py','benchmarks/deepseek_greedy_strategy.py',
         'benchmarks/run_deepseek_arc_extended.py'))
 
 
-def metadata(calibration, source, converted):
+def metadata(calibration, source, converted, method='none', sparsity=0., strategy=None):
     from benchmarks.run_deepseek_sparse_math import calibration_metadata
     value = dict(schema='arcquant-dense-extended-v1', arc=True, method='none', sparsity=0.,
         quantization='HiF4 W4A4 + ARC', arc_chunk_rows=4096,
         kernel='HiF4-value-reconstruction+dense-GEMM',
         calibration=calibration_metadata(calibration, source, converted, 2),
         implementation_sha256={name: sha(ROOT/name) for name in sources()})
+    if method!='none':
+        from benchmarks.deepseek_greedy_strategy import load_strategy
+        from deepseek_v4_support import source_signature,reference_config
+        data,rates,strategy_hash=load_strategy(strategy,method=method,sparsity=sparsity,
+            source_signature=source_signature(source),world_size=2,quantization='arc',
+            n_layers=reference_config(source)['n_layers'])
+        manifest=json.loads((calibration/'manifest.json').read_text())
+        for key in ('source_signature','world_size','quantization','samples','length','data_sha256',
+                    'implementation_sha256','calibration_rank_sha256'):
+            if manifest.get(key)!=data.get(key): raise ValueError('Greedy calibration mismatch: '+key)
+        if data['calibration_rank_sha256']!=[value['calibration']['rank_sha256'][str(r)] for r in range(2)]:
+            raise ValueError('Changed greedy calibration tensors')
+        value.update(schema='arcquant-greedy-extended-v1',method=method,sparsity=sparsity,
+            allocation='greedy',per_projection_sparsity=rates,
+            strategy=dict(strategy_sha256=strategy_hash,calibration_manifest_sha256=sha(calibration/'manifest.json'),
+                budget_metric=data['budget_metric'],grouping=data['grouping'],transform=False,method=method,
+                calibration_samples=data['samples'],search_samples=data['search_samples']))
     value['runtime_sha256'] = hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
     return value
 
@@ -90,8 +108,11 @@ class Injection:
 
     def runtime_type(self, base):
         from model.deepseek_arc_long import LongArcMixin
-        from model.deepseek_generation_runtime import DeepSeekGenerationWinaMixin
-        return type('DenseLongArcRuntime', (LongArcMixin, DeepSeekGenerationWinaMixin, base), {})
+        from model.deepseek_generation_runtime import DeepSeekGenerationWinaMixin,DeepSeekGenerationTealMixin
+        from model.deepseek_budget_inference import DeepSeekBudgetInferenceMixin
+        method=self.identity['method']
+        mixin=DeepSeekGenerationTealMixin if method=='teal' else DeepSeekGenerationWinaMixin
+        return type('LongArcRuntime',(LongArcMixin,*((DeepSeekBudgetInferenceMixin,) if method!='none' else ()),mixin,base),{})
 
     def install(self, original):
         def wrapped(ds, runtime):
@@ -105,8 +126,13 @@ class Injection:
                 model = constructor(*args, **kwargs)
                 rank = os.environ.get('RANK', '0')
                 values = torch.load(self.calibration/f'rank{rank}.pt', map_location='cpu', weights_only=True)
-                runtime.configure_sparse(ds, model, 0.)
-                runtime.configure_arc(ds, model, values, 'none')
+                method=self.identity['method']
+                runtime.configure_sparse(ds, model, self.identity['sparsity'],**({'calibration':values} if method=='teal' else {}))
+                if method!='none':
+                    runtime.greedy_row_parallel_keys={name+'.weight' for name,module in model.named_modules()
+                        if name.startswith('layers.') and isinstance(module,ds.RowParallelLinear)}
+                    runtime.configure_budget(self.identity['per_projection_sparsity'],self.identity['strategy'])
+                runtime.configure_arc(ds, model, values, method)
                 self.runtimes.append(runtime)
                 if self.guard_root:
                     from scripts.magi_memory_guard import CacheGuard
@@ -151,7 +177,8 @@ class Injection:
 def extended(options, remaining):
     import deepseek_v4_quant as quant
     import eval_deepseek_v4_extended as reference
-    identity = metadata(options.calibration, options.source_model, options.converted_model)
+    identity = metadata(options.calibration, options.source_model, options.converted_model,
+                        options.sparse_method,options.sparsity,options.strategy)
     quant_args = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
     quant_args.add_argument('--quant', default='bf16')
     quant_args.add_argument('--mode', default='w4a4')
@@ -219,7 +246,8 @@ def continuation(options):
     else:
         config = workflow.bootstrap(run_dir)
         source_cfg = json.loads((Path(config['assets']['source_dir'])/'hifp4-w4a4.jsonl.config.json').read_text())
-    expected = metadata(options.calibration, source_cfg['source_model'], source_cfg['converted_model'])
+    expected = metadata(options.calibration, source_cfg['source_model'], source_cfg['converted_model'],
+                        options.sparse_method,options.sparsity,options.strategy)
     if source_cfg['runtime_signature'].get('arcquant') != expected:
         raise ValueError('Continuation requires identical ARC source, calibration and implementation')
     if options.stage == 'continue-prepare':
@@ -289,7 +317,14 @@ def main(argv=None):
     parser.add_argument('--source-root', type=Path)
     parser.add_argument('--run-dir', type=Path)
     parser.add_argument('--memory-guard-dir', type=Path)
+    parser.add_argument('--sparse-method',choices=('none','teal','wina'),default='none')
+    parser.add_argument('--sparsity',type=float,default=0.)
+    parser.add_argument('--strategy',type=Path)
     options, remaining = parser.parse_known_args(argv)
+    if not 0<=options.sparsity<1 or (options.sparse_method=='none' and options.sparsity!=0):
+        parser.error('Invalid sparse method/rate')
+    if options.sparse_method!='none' and options.strategy is None:
+        parser.error('Sparse extended evaluation requires a verified --strategy')
     options.base_eval_root = options.base_eval_root.resolve()
     os.environ['LCB_PROJECT_ROOT'] = str(options.base_eval_root)
     sys.path.insert(0, str(options.base_eval_root))

@@ -1,0 +1,84 @@
+{
+  "schema": "magi-sparse-prompts-v1",
+  "selection": "Reuse MiniMax ten non-Tiny prompt texts and seeds; tokenizer counts are model-specific and not copied.",
+  "source_sha256": "ebf5c5ae023ef4b6f28a995d47867757966bd86c032c7a238c41025c95e9333c",
+  "prompts": [
+    {
+      "prompt": "sky",
+      "seed": 4023314714267568785,
+      "dimensions": [
+        "background_consistency",
+        "scene"
+      ]
+    },
+    {
+      "prompt": "Fireworks.",
+      "seed": 5161137781131368879,
+      "dimensions": [
+        "aesthetic_quality",
+        "imaging_quality",
+        "overall_consistency"
+      ]
+    },
+    {
+      "prompt": "an airplane taking off",
+      "seed": 8647313875000148729,
+      "dimensions": [
+        "dynamic_degree",
+        "motion_smoothness",
+        "subject_consistency"
+      ]
+    },
+    {
+      "prompt": "A person is flying kite",
+      "seed": 4134823355643763144,
+      "dimensions": [
+        "human_action"
+      ]
+    },
+    {
+      "prompt": "A tranquil tableau of a chair",
+      "seed": 1004071934082160973,
+      "dimensions": [
+        "temporal_flickering"
+      ]
+    },
+    {
+      "prompt": "The bund Shanghai, surrealism style",
+      "seed": 7754545792123222782,
+      "dimensions": [
+        "appearance_style"
+      ]
+    },
+    {
+      "prompt": "a teddy bear and a frisbee",
+      "seed": 7974841895467960800,
+      "dimensions": [
+        "multiple_objects"
+      ]
+    },
+    {
+      "prompt": "A panda drinking coffee in a cafe in Paris, tilt down",
+      "seed": 7585113046809039476,
+      "dimensions": [
+        "temporal_style"
+      ]
+    },
+    {
+      "prompt": "a traffic light on the left of a fire hydrant, front view",
+      "seed": 3070384885801515353,
+      "dimensions": [
+        "spatial_relationship"
+      ]
+    },
+    {
+      "prompt": "Few big purple plums rotating on the turntable. water drops appear on the skin during rotation. isolated on the white background. close-up. macro.",
+      "seed": 4769132545271074720,
+      "dimensions": [
+        "aesthetic_quality",
+        "imaging_quality",
+        "overall_consistency"
+      ]
+    }
+  ]
+}

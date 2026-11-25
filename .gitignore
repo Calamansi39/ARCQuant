@@ -29,3 +29,5 @@ external/
 *.png
 *.sh
 !configs/runtime.example.sh
+
+reports/verified/.update.lock

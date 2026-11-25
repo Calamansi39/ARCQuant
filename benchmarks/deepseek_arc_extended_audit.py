@@ -9,12 +9,16 @@ from benchmarks.verified_results import read, jsonl, require, digest, evidence
 
 def runtime_evidence(folder, identity, ragged):
     files = []
-    require(identity['arc'] and identity['sparsity'] == 0 and identity['method'] == 'none', 'Not dense ARC')
+    require(identity['arc'] and identity['method'] in ('none','teal','wina'), 'Not supported ARC')
     for rank in range(2):
         path = folder/f'arcquant_runtime_rank{rank}.json'
         stats = read(path)
         require(stats['runtime_sha256'] == identity['runtime_sha256'] and stats['run_succeeded'], 'Failed/mixed ARC run')
-        require(stats['arc'] and stats['sparse_method'] == 'none' and stats['sparse_sparsity'] == 0, 'Wrong runtime mode')
+        require(stats['arc'] and stats['sparse_method'] == identity['method'] and stats['sparse_sparsity'] == identity['sparsity'], 'Wrong runtime mode')
+        if identity['method']!='none':
+            require(stats['allocation']=='greedy' and stats['greedy_strategy']==identity['strategy']
+                    and stats['per_projection_sparsity']==identity['per_projection_sparsity'], 'Wrong greedy execution')
+            require(sum(stats['sparse_masked_elements'].values())>0,'No sparse masking executed')
         require(stats['arc_finite_logits_checks'] > 0 and stats['arc_residual_calls'] > 0, 'No ARC execution')
         require(set(stats['arc_executed_families']) == {'attention','grouped_wo_a','routed_expert','shared_expert'}, 'Incomplete ARC families')
         require(stats['arc_attention_paths'].get('standard', 0) > 0, 'No ARC prefill')
@@ -103,7 +107,8 @@ def audit(directory, stage, base):
                 'LCB scored outputs changed')
         files.append(directory/'arcquant_score_binding.json')
         n, label = 175, 'LiveCodeBench v6 128K 续写' if continuation else 'LiveCodeBench v6 64K'
-    return dict(model='DS', group='baseline', variant='HiF4 W4A4 + ARC', benchmark=label,
+    return dict(model='DS', group='baseline' if identity['method']=='none' else 'sparse',
+        method=identity['method'],sparsity=identity['sparsity'],variant='HiF4 W4A4 + ARC', benchmark=label,
         evaluated_count=n, correct=correct, score=100*correct/n, source=str(directory), evidence=evidence(files, base))
 
 

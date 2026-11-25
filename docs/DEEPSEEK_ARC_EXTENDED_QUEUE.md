@@ -1,5 +1,7 @@
 # DS ARC + HiF4：LongBench / LiveCodeBench 接续队列
 
+> **2026-11-25 本轮更新：** DS 40% 全量已经提到最高优先级，旧 no-ARC MAGI 队列已在检查点暂停并退役。当前调度看 [评测优先级](EVALUATION_PRIORITY.md)，MAGI 新 ARC 代码和验证边界看 [MAGI ARC](MAGI_ARC.md)。下文为此前实现与运行记录，不再作为当前派发顺序。
+
 ## 这次安排是什么
 
 2026-11-25 已在 **H20-2 的 GPU 2、3** 部署常驻交接监督器。当前 MAGI 的 HiF4 WINA 搜索继续计算，完整完成 70 个模块后，按下表顺序使用同一对卡。DS 为 **无激活稀疏、0%、HiF4 W4A4 + ARC** 的全量对照。

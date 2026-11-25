@@ -7,7 +7,8 @@
 | **实验结果、汇报用数据** | **[CSV / TSV / 彩色 Excel](reports/verified/README.md)** |
 | **代码怎么用、方法怎么配置** | **[中文快速开始](docs/QUICKSTART.md)** |
 | **服务器目录和文件在哪里** | **[工作区导航](docs/WORKSPACE_GUIDE.md)** |
-| **DS 当前评测与续跑安排** | [调度记录](docs/DEEPSEEK_DENSE_PRIORITY.md) |
+| **当前评测优先级与两机任务** | [DS 40% 全量优先](docs/EVALUATION_PRIORITY.md) |
+| **MAGI 的 ARC 新适配** | [实现、校准、迁移与待验证项](docs/MAGI_ARC.md) |
 
 **DeepSeek ARC uniform 对照队列：** [启动、校准与历史部署状态](docs/DEEPSEEK_ARC_QUEUE.md)；当前 greedy 目标使用下面的独立入口。
 
@@ -15,7 +16,7 @@
 统一入口 `python arc.py deepseek-greedy --help`；先验证两种方法，再搜索 50%–90% 五档。
 完整 43 层策略以产物的 `complete` 标记为准；WINA transform 尚未启用。
 
-**DS dense 优先续跑：** [GPQA/MATH 全量、旧答案复用与 MAGI 检查点交接](docs/DEEPSEEK_DENSE_PRIORITY.md)。
+**历史 DS dense 续跑：** [GPQA/MATH 全量、旧答案复用与 MAGI 检查点交接](docs/DEEPSEEK_DENSE_PRIORITY.md)。
 
 **DS ARC 扩展评测接续：** [LongBench 503 题、LCB 175 题及 128K 续写的队列与保卡说明](docs/DEEPSEEK_ARC_EXTENDED_QUEUE.md)。
 
@@ -122,7 +123,7 @@ TEAL/WINA 元素稀疏率扫描是不同的实验。当前完成了 CPU 测试�
 投影验证；整模型质量、share index 和硬件加速仍待验证。使用方法与边界见
 [结构化稀疏指南](docs/STRUCTURED_SPARSITY.md)。
 
-**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 换机器先按 [模型评测迁移指南](docs/MIGRATION_EVALUATION.md) 准备文件和环境，再用 `arc.py doctor` 查看逐项状态。[统一结果目录](reports/verified/README.md) 保存已核查的 DS Tiny、DS 全量 dense 和 MAGI Tiny，一份彩色 Excel 对应三页；计数与来源见 [审计快照](reports/verified/audit.json)。[目标模型进度](docs/TARGET_MODELS.md) 区分模型、数据和方法适配；[稀疏率要求核查](docs/SPARSITY_REQUIREMENT_AUDIT.md) 说明目标定义。DeepSeek 的实现见 [适配说明](docs/DEEPSEEK_ADAPTER.md)，固定来源见 [实验清单](configs/experiments.json)。
+**当前实验目标是 DeepSeek V4 Flash、MiniMax H3 和 MAGI-2。** 换机器先按 [模型评测迁移指南](docs/MIGRATION_EVALUATION.md) 准备文件和环境，再用 `arc.py doctor` 查看逐项状态。[统一结果目录](reports/verified/README.md) 保存已核查的 DS Tiny、DS 全量（含 40% 稀疏）和 MAGI Tiny，一份彩色 Excel 对应三页；计数与来源见 [审计快照](reports/verified/audit.json)。[目标模型进度](docs/TARGET_MODELS.md) 区分模型、数据和方法适配；[稀疏率要求核查](docs/SPARSITY_REQUIREMENT_AUDIT.md) 说明目标定义。DeepSeek 的实现见 [适配说明](docs/DEEPSEEK_ADAPTER.md)，固定来源见 [实验清单](configs/experiments.json)。
 
 外行读法：`provision` 准备模型权重、题库、评分器和源码；`doctor` 逐项检查能否启动；`plan` 展示将执行的命令；`run` 才真正占用 GPU。大文件在 Git 忽略的 `assets/`，本机专用环境路径在 `external/local_env.sh`，新机器可按 [`configs/runtime.example.sh`](configs/runtime.example.sh) 填写。TEAL/WINA 是先离线确定稀疏规则、再在线稀疏投影输入；DeepSeek 已有 ARC/稀疏的 GPQA/MATH Tiny 结果和各 benchmark 的生成式方法入口；视频模型已有独立 VBench 基线，ARC 稀疏结果仍待验证。
 
@@ -198,7 +199,7 @@ logits 变化：加上 `--method teal` 或 `--method wina --sparsity 0.5`。
 下的实际保留率和输入能量损失。它用于校准和 debug，不能替代正式精度结果；
 完整的实测记录见 [DeepSeek smoke run](docs/DEEPSEEK_SMOKE.md)。
 
-`assets` 检查文件，`plan` 生成启动计划；两者不运行 GPU。DS 的 ARC 0% 与 TEAL/WINA 40%–90% 已完成 GPQA/MATH Tiny，原有 BF16/普通 HiF4 已完成四项全量基线；ARC 全量结果仍需补齐。MAGI 已有 BF16/普通 HiF4 的完整 Tiny，但未包含 ARC 补偿；MiniMax 的本机证据尚不完整。可复现入口见 [DeepSeek 实验](docs/DEEPSEEK_EXPERIMENT.md)，最新成绩见 [统一结果](reports/verified/README.md)，方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)。
+`assets` 检查文件，`plan` 生成启动计划；两者不运行 GPU。DS 的 ARC 0% 与 TEAL/WINA 40%–90% 已完成 GPQA/MATH Tiny，原有 BF16/普通 HiF4 已完成四项全量基线；ARC 全量结果仍需补齐。MAGI 已有 BF16/普通 HiF4 的完整 Tiny；ARC 新代码已接入，整模型 GPU 验证与 ARC 成绩待完成，见 [新适配](docs/MAGI_ARC.md)；MiniMax 的本机证据尚不完整。可复现入口见 [DeepSeek 实验](docs/DEEPSEEK_EXPERIMENT.md)，最新成绩见 [统一结果](reports/verified/README.md)，方法来源见 [实现核查](docs/METHOD_PROVENANCE.md)，迁移依赖见 [资产指南](docs/ASSETS_AND_BASELINES.md)。
 
 ## 4. Citation
 ```

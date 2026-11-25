@@ -42,6 +42,14 @@ class DensePrefixReuseTests(unittest.TestCase):
     def test_canonical_checksum_ignores_key_order(self):
         self.assertEqual(digest({'a': 1, 'b': '题'}), digest({'b': '题', 'a': 1}))
 
+    def test_sparse_reuse_requires_explicit_greedy_and_same_strategy(self):
+        for value in (self.source,self.target):
+            value['arcquant'].update(method='teal',sparsity=.4,allocation='greedy',strategy={'sha256':'a'})
+        compatible(self.source,self.target,greedy=True)
+        with self.assertRaises(ValueError): compatible(self.source,self.target)
+        self.target['arcquant']['strategy']['sha256']='b'
+        with self.assertRaises(ValueError): compatible(self.source,self.target,greedy=True)
+
 
 if __name__ == '__main__':
     unittest.main()

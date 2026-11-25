@@ -34,9 +34,23 @@ class ExtendedTests(unittest.TestCase):
         actual = runtime._project(x, w, 'test', bias)
         torch.testing.assert_close(actual, expected)
         self.assertEqual(actual.shape, (2, 11, 7))
-        runtime.sparse_sparsity = .4
-        with self.assertRaisesRegex(ValueError, 'dense'):
-            runtime._project(x, w, 'test')
+
+    def test_sparse_long_chunk_preserves_prefill_positions_and_masks_once(self):
+        helper=arc_tests.ArcTests()
+        for method in ('teal','wina'):
+            runtime=helper.runtime(method)
+            mixin=type(runtime).__bases__[1]
+            runtime.__class__=type('LongSparse',(LongArcMixin,mixin,arc_tests.Base),{})
+            runtime.arc_chunk_rows=3
+            key='layers.0.attn.wq_a.weight'
+            helper.spec(runtime,key)
+            x,w=torch.randn(2,11,128),torch.randn(7,128)
+            expected=DeepSeekGenerationArcMixin._project(runtime,x,w,key)
+            expected_masked=runtime.sparse_counts[key]
+            runtime.sparse_counts.clear();runtime.sparse_eligible.clear()
+            actual=runtime._project(x,w,key)
+            torch.testing.assert_close(actual,expected)
+            self.assertEqual(runtime.sparse_counts[key],expected_masked)
 
     def test_snapshot_has_all_declared_local_files(self):
         self.assertTrue(all((ROOT/name).is_file() for name in sources()))
@@ -96,7 +110,7 @@ class NativeAdapterTests(unittest.TestCase):
         from deepseek_v4_lcb_batch import install_batch_decode, install_ragged_attention
         from deepseek_v4_lcb_batch_quant import RequestQuantRuntime
         ds = load_reference_model(Path(os.environ['ARC_TEST_MODEL'])/'inference')
-        injection = Injection(Path('/unused'), {}, Path('/unused'))
+        injection = Injection(Path('/unused'), {'method':'none'}, Path('/unused'))
         runtime = injection.runtime_type(RequestQuantRuntime)('hifp4', True, 8)
         injection.install(install_reference_model_patches)(ds, runtime)
         install_batch_decode(ds)

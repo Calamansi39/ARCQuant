@@ -22,7 +22,7 @@ def digest(value):
                                      separators=(',', ':'), allow_nan=False).encode()).hexdigest()
 
 
-def compatible(source, target):
+def compatible(source, target, *, greedy=False):
     ignored = {'selected_ids', 'prompts'}
     if {k: v for k, v in source.items() if k not in ignored} != {
             k: v for k, v in target.items() if k not in ignored}:
@@ -30,20 +30,25 @@ def compatible(source, target):
                    if k not in ignored and source.get(k) != target.get(k)]
         raise ValueError(f'Cannot reuse changed model/method/protocol: {changed}')
     arc = source['arcquant']
-    if not (arc['arc'] and arc['quantization'] == 'arc' and arc['method'] == 'none'
-            and arc['sparsity'] == 0 and not source['diagnostic']['smoke_steps']):
-        raise ValueError('Only non-diagnostic ARC dense answers are eligible')
+    eligible = (arc['method'] in ('teal', 'wina') and arc.get('allocation') == 'greedy'
+                and 0 < arc['sparsity'] < 1) if greedy else (arc['method'] == 'none' and arc['sparsity'] == 0)
+    if not (arc['arc'] and arc['quantization'] == 'arc' and eligible
+            and not source['diagnostic']['smoke_steps']):
+        raise ValueError('Only matching non-diagnostic ARC answers are eligible')
     for key in source['selected_ids']:
         if key not in target['selected_ids'] or source['prompts'][key] != target['prompts'][key]:
             raise ValueError(f'Changed or missing prompt: {key}')
 
 
-def import_prefix(source, target):
+def import_prefix(source, target, *, greedy=False):
     from benchmarks.queue_sparse_baselines import arc_health
     from benchmarks.verified_results import validate_answers
     source, target = Path(source), Path(target)
     sp, tp = read(source / 'protocol.json'), read(target / 'protocol.json')
-    compatible(sp, tp)
+    compatible(sp, tp, greedy=greedy)
+    if greedy:
+        from benchmarks.result_tables import verify_greedy_evidence
+        verify_greedy_evidence(source, sp['arcquant'])
     healthy, detail = arc_health(source)
     if not healthy:
         raise ValueError(detail)
@@ -63,7 +68,7 @@ def import_prefix(source, target):
             transformed.append(row)
             mapping.append(dict(id=row['id'], source_record_sha256=original,
                                 imported_record_sha256=row['record_sha256']))
-        provenance = dict(schema='arc-dense-prefix-reuse-v1', source=str(source.resolve()),
+        provenance = dict(schema='arc-greedy-prefix-reuse-v1' if greedy else 'arc-dense-prefix-reuse-v1', source=str(source.resolve()),
                           source_protocol_sha256=digest(sp), target_protocol_sha256=digest(tp),
                           reused=len(rows), records=mapping,
                           changed_fields=['protocol_sha256', 'record_sha256'])

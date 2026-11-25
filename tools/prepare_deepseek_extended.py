@@ -53,7 +53,7 @@ def main():
     script = str(ROOT/'benchmarks/run_deepseek_arc_extended.py')
     common = [script, '--base-eval-root', str(a.base_eval_root), '--calibration', str(a.calibration)]
     model = ['--source-model', str(a.source_model), '--converted-model', str(a.converted_model)]
-    gpu = [sys.executable, '-m', 'torch.distributed.run', '--standalone', '--nproc_per_node=2']
+    gpu = [sys.executable, '-m', 'torch.distributed.run', '--standalone', '--nproc_per_node=2','--']
     continuation_dir = a.out_dir/'lcb128/runs/hifp4'
     for stage, name, extras in (
         ('longbench-v2','longbench',['--cache-gib','8','--max-input-tokens','131072',

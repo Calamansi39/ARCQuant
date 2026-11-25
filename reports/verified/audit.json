@@ -13765,5 +13765,102 @@
       "stage": "lcb128",
       "status": "pending"
     }
-  ]
+  ],
+  "priority_progress": [
+    {
+      "id": "teal-0.4-gpqa",
+      "method": "teal",
+      "sparsity": 0.4,
+      "expected": 198,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-0.4-gpqa/arcquant-arc-teal-0.4-3cf96d67f3d4",
+      "completed": 33
+    },
+    {
+      "id": "wina-0.4-gpqa",
+      "method": "wina",
+      "sparsity": 0.4,
+      "expected": 198,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-0.4-gpqa/arcquant-arc-wina-0.4-cccb9ee23e4a",
+      "completed": 32
+    },
+    {
+      "id": "teal-0.4-math500",
+      "method": "teal",
+      "sparsity": 0.4,
+      "expected": 500,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4",
+      "completed": 100
+    },
+    {
+      "id": "wina-0.4-math500",
+      "method": "wina",
+      "sparsity": 0.4,
+      "expected": 500,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-0.4-math500/arcquant-arc-wina-0.4-cccb9ee23e4a",
+      "completed": 100
+    },
+    {
+      "id": "teal-0.4-longbench",
+      "method": "teal",
+      "sparsity": 0.4,
+      "expected": 503,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-extended/longbench"
+    },
+    {
+      "id": "wina-0.4-longbench",
+      "method": "wina",
+      "sparsity": 0.4,
+      "expected": 503,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-extended/longbench"
+    },
+    {
+      "id": "teal-0.4-lcb64",
+      "method": "teal",
+      "sparsity": 0.4,
+      "expected": 175,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-extended/lcb64"
+    },
+    {
+      "id": "wina-0.4-lcb64",
+      "method": "wina",
+      "sparsity": 0.4,
+      "expected": 175,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-extended/lcb64"
+    },
+    {
+      "id": "dense-longbench",
+      "method": "none",
+      "sparsity": 0.0,
+      "expected": 503,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/dense-extended/longbench"
+    },
+    {
+      "id": "dense-lcb64",
+      "method": "none",
+      "sparsity": 0.0,
+      "expected": 175,
+      "state": "pending",
+      "complete": false,
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/dense-extended/lcb64"
+    }
+  ],
+  "priority_progress_at": "2026-11-25T19:59:56"
 }

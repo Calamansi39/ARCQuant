@@ -345,13 +345,22 @@ def matrices(snapshot):
     for q, label in full_variants:
         row = ['DS', '无', 0., label]
         for bench in ('GPQA Diamond', 'MATH-500', 'LongBench v2', 'LiveCodeBench v6 64K', 'LiveCodeBench v6 128K 续写'):
-            matches = [r for r in snapshot['full'] if r['variant'] == q and r['benchmark'] == bench]
+            matches = [r for r in snapshot['full'] if r['variant'] == q and r['benchmark'] == bench and r.get('method','none')=='none']
             require(len(matches) <= 1 and (len(matches) or q == 'HiF4 W4A4 + ARC'), 'Ambiguous full result')
             row.append(matches[0]['score'] / 100 if matches else '评测中')
         full_rows.append(row)
+    if snapshot.get('priority_progress'):
+        for method in ('teal','wina'):
+            row=['DS',method.upper(),.4,'HiF4 W4A4 + ARC']
+            for bench in ('GPQA Diamond','MATH-500','LongBench v2','LiveCodeBench v6 64K','LiveCodeBench v6 128K 续写'):
+                found=[r for r in snapshot['full'] if r.get('method')==method and r.get('sparsity')==.4
+                       and r['variant']=='HiF4 W4A4 + ARC' and r['benchmark']==bench]
+                require(len(found)<=1,'Ambiguous sparse full cell')
+                row.append(found[0]['score']/100 if found else '评测中')
+            full_rows.append(row)
     video_headers = ['模型', '稀疏方法', '稀疏度', '量化方式', 'Total', 'Quality', 'Semantic', '视频数', '评分维度']
     video_rows = [[r['model'], '无', 0., r['quantization'], r['total'], r['quality'], r['semantic'], r['n'], r['dimensions']] for r in snapshot['videos']]
-    return [('DS_Tiny', headers, rows, (5, 6, 7, 8)), ('DS_全量dense', full_headers, full_rows, (5, 6, 7, 8, 9)),
+    return [('DS_Tiny', headers, rows, (5, 6, 7, 8)), ('DS_全量', full_headers, full_rows, (5, 6, 7, 8, 9)),
             ('MAGI_Tiny', video_headers, video_rows, (5, 6, 7))]
 
 
@@ -378,7 +387,7 @@ def render(snapshot, output):
           '**本目录是唯一结果发布入口。[彩色 Excel](实验结果.xlsx)、CSV 和 TSV 使用同一份核验数据，同步更新。**', '',
           '| 评测范围 | CSV | TSV |', '| --- | --- | --- |',
           '| DS 稀疏度 Tiny 横评 | [DS_Tiny.csv](DS_Tiny.csv) | [DS_Tiny.tsv](DS_Tiny.tsv) |',
-          '| DS 全量 dense 对照 | [DS_全量dense.csv](DS_全量dense.csv) | [DS_全量dense.tsv](DS_全量dense.tsv) |',
+          '| DS 全量：dense 与 40% 稀疏 | [DS_全量.csv](DS_全量.csv) | [DS_全量.tsv](DS_全量.tsv) |',
           '| MAGI Tiny | [MAGI_Tiny.csv](MAGI_Tiny.csv) | [MAGI_Tiny.tsv](MAGI_Tiny.tsv) |', '',
           '## DS Tiny', '', 'GPQA 固定 32 题、MATH 固定 100 题，生成上限 8192 token。0% 的 BF16 和普通 HiF4 从已完成全量逐题记录中提取；题目、提示词、seed 和当前评分规则已逐项核对，没有重新推理。', '',
           '这些是固定测试集前缀上的初筛结果，不能替代全量结论；“评测中”表示该范围尚无结果，不表示有进程正在运行。', '',
@@ -411,7 +420,7 @@ def render(snapshot, output):
                 if cell.column == 3:
                     cell.number_format = '0%'
                 elif cell.column in metrics:
-                    cell.number_format = '0.0%' if title == 'DS_Tiny' else '0.00%' if title == 'DS_全量dense' else '0.0000%'
+                    cell.number_format = '0.0%' if title == 'DS_Tiny' else '0.00%' if title == 'DS_全量' else '0.0000%'
                     val = cell.value
                     cell.fill = PatternFill('solid', fgColor='FFF2CC' if not isinstance(val, (int, float))
                         else 'E2F0D9' if val >= .8 else 'FFF2CC' if val >= .4 else 'FCE4D6')
@@ -427,9 +436,9 @@ def render(snapshot, output):
             for index in (2, 3):
                 ws.cell(index, 4).comment = Comment('从已有全量结果提取相同题目，未新增 GPU 推理；协议核验见 audit.json。', 'ARCQuant')
             ws['I1'].comment = Comment('本轮未纳入 LongBench/LiveCodeBench；评测中是缺失结果占位，不表示正在运行。', 'ARCQuant')
-        if title == 'DS_全量dense':
-            md += ['## DS 已完成全量 dense', '', 'GPQA 198、MATH 500、LongBench 503；LiveCodeBench 是 release-v6 的 test6 分片 175 题。64K 为独立生成，128K 为到限题续写，两者分别列出。普通 HiF4 不含 ARC。', '']
-            md += ['**此表是成绩表，不是实时运行队列。ARC 行的 LongBench / LiveCodeBench 缺失格继续沿用“评测中”占位；它们的实际启动状态请看 [DS 调度记录](../../docs/DEEPSEEK_DENSE_PRIORITY.md)。**', '']
+        if title == 'DS_全量':
+            md += ['## DS 全量：dense 与 40% 稀疏', '', 'GPQA 198、MATH 500、LongBench 503；LiveCodeBench 是 release-v6 的 test6 分片 175 题。64K 为独立生成，128K 为到限题续写，两者分别列出。普通 HiF4 不含 ARC。', '']
+            md += ['**只填完整成绩。最新队列优先级请看 [评测安排](../../docs/EVALUATION_PRIORITY.md)。DS 40% 两种方法的 GPQA/MATH 严格复用同协议 Tiny 答案合计 264 条。**', '']
             if snapshot.get('dense_progress'):
                 md += [f'ARC dense 续跑进度更新：{snapshot["dense_progress_at"]}。已复用同协议 Tiny 的 132 道答案；未完成项不填中途准确率。[调度与续跑说明](../../docs/DEEPSEEK_DENSE_PRIORITY.md)。', '']
         if title == 'MAGI_Tiny':
@@ -441,9 +450,11 @@ def render(snapshot, output):
     temp = output / '实验结果.tmp.xlsx'
     wb.save(temp)
     check = load_workbook(temp, data_only=True)
-    require(check.sheetnames == ['DS_Tiny', 'DS_全量dense', 'MAGI_Tiny'], 'Workbook verification failed')
+    require(check.sheetnames == ['DS_Tiny', 'DS_全量', 'MAGI_Tiny'], 'Workbook verification failed')
     check.close()
     temp.replace(output / '实验结果.xlsx')
+    for suffix in ('csv','tsv'):
+        (output/f'DS_全量dense.{suffix}').unlink(missing_ok=True)
     md += ['## Dense 还缺什么', '', '| 模型 | 对照 | 范围 | 状态 | 后续 |', '| --- | --- | --- | --- | --- |']
     md += ['| ' + ' | '.join(row) + ' |' for row in snapshot['dense_gaps']]
     md += ['', 'DS 的 BF16/普通 HiF4 全量基线、三种 dense 的同题 Tiny、MAGI BF16/普通 HiF4 Tiny 已有结果，无需重复运行。视频官方全集不属于当前首轮 Tiny 选点的必做项。', '',
@@ -468,6 +479,7 @@ def main(argv=None):
     p.add_argument('--verify-video-bytes', action='store_true')
     p.add_argument('--refresh-dense-run', type=Path, help='Merge completed ARC dense scores and partial counts from this run')
     p.add_argument('--refresh-extended-run', type=Path, help='Merge audited ARC LongBench/LCB results')
+    p.add_argument('--refresh-priority-plan',type=Path,help='Merge full DS40 scores from the current queue')
     args = p.parse_args(argv)
     try:
         import openpyxl  # Fail before spending time auditing large video files.
@@ -488,6 +500,10 @@ def main(argv=None):
             p.error('--refresh-extended-run requires --base-eval')
         from benchmarks.deepseek_arc_extended_audit import refresh
         refresh(snapshot, args.refresh_extended_run.resolve(), args.base_eval.resolve())
+    if args.refresh_priority_plan:
+        if not args.base_eval:p.error('--refresh-priority-plan requires --base-eval')
+        from benchmarks.deepseek_priority_results import refresh
+        refresh(snapshot,args.refresh_priority_plan.resolve(),args.base_eval.resolve())
     args.output_dir.mkdir(parents=True, exist_ok=True)
     render(snapshot, args.output_dir)
     (args.output_dir / 'audit.json').write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + '\n')

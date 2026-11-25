@@ -1,0 +1,19 @@
+{
+  "origin": "project MAGI implementation originally in base_eval/sparse_eval/magi; copied before ARC extension; no live files modified",
+  "sha256": {
+    "__init__.py": "8f9c701bc479f44c09b839741f433aed460d827da526a8682b9a70229d2aaec7",
+    "assets.py": "2a1232ccc55ae954c180176d637c82eaabe9d04407972bf7049445db5924ef45",
+    "calibrate.py": "92d5729df6b726854bf90616be7f0dec5b3e4375b758d383ce51028823a051f2",
+    "generate.py": "72c2865a505111e5e2a17dfca854513f91a51b0e3bce9bf5ca537297380fc921",
+    "kernels.py": "d192d9a732f63e8003f086bfccee16946d08934a0d35242bb658c248089e75aa",
+    "metrics.py": "b0c958b1b2432d6d3c265141011d80442fc6dca93d4721f0a4f133ce731bd905",
+    "moe.py": "620e76b8c5cb06ca04317f1507a3b42274caf8752d48e733e79ec550c3a9fb78",
+    "protocol.py": "62e5657fa41041a0d07d8a675ba664656ab79bc11f0a63786f3b64c2b3113d05",
+    "reference.py": "a3fa13af2793e697b197aab1844d1eafcab0585a418732863ab94805d1d05e15",
+    "runtime.py": "10fa4cffe027b84376b454a77f3e908b0660f75a57c6405b5a3ac8bbaa981379",
+    "session.py": "63a0f903344f1d643a77c63635dca165d706d5b4185acabdba692d7b411fe1e0",
+    "sharding.py": "89f1937d440fdad81d17d191b15e94194f2622323176bca57e9f4e239f91b5ef",
+    "snapshots.py": "c12b4cae41a4a18c7c3728c09763fc5b55f21b29939f8d39319f6c37a0861a65",
+    "prompts.json": "b02d5859771390ec02bf05e8485a5fb6f873e64ef59e18f5fb43617225c7ce49"
+  }
+}

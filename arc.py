@@ -240,6 +240,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ARCQuant experiment CLI")
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("list", help="list methods, models and benchmarks")
+    sub.add_parser("magi-arc",add_help=False,help="MAGI HiF4 + ARC calibration, greedy search and generation; use magi-arc --help")
     from benchmarks.queue_deepseek_greedy import parser as greedy_parser
     sub.add_parser("deepseek-greedy", parents=[greedy_parser()], add_help=False,
                    help="queue native-style DeepSeek WINA/TEAL offline budget search")
@@ -386,6 +387,10 @@ def runtime_env() -> dict[str, str]:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv=list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0]=='magi-arc':
+        from benchmarks.run_magi_arc import main as magi_arc
+        return int(magi_arc(argv[1:]) or 0)
     args = _parser().parse_args(argv)
     try:
         if args.action == "deepseek-greedy":
