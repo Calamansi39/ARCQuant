@@ -25,9 +25,13 @@ H20-2 的 TEAL GPQA 仍由原交接队列负责，当前保留为 `external`，�
 本次其共享心跳仍更新，但 SSH 连接未成功，不能据此确认远端题目正在推进。
 下表中 11 月 25 日的 GPU 分配是历史启动记录，不是当前本机分配。
 
+14:14 启动验收：本机两个 MATH worker 和 WINA GPQA 的两个 rank 均已记录
+`successful DS forward` 并进入 prefill；TEAL LongBench 已完成剩余 500 题的
+长输入预处理，正在载入模型权重。四项均无异常退出。启动验收不代表全量结果已完成。
+
 | 优先级 | 工作 | 范围与目的 | 状态 |
 | --- | --- | --- | --- |
-| 1 | DS 40%，TEAL/WINA，全量 GPQA、MATH500 | 各方法 198+500 题；确认 Tiny 选点能推广到全量 | 两台 H20 并行执行 |
+| 1 | DS 40%，TEAL/WINA，全量 GPQA、MATH500 | 各方法 198+500 题；确认 Tiny 选点能推广到全量 | 本机三项已进入推理；远端 TEAL GPQA 心跳仍更新，计算进度待核实 |
 | 2 | DS 40%，TEAL/WINA，全量 LongBench、LCB | 各方法 503+175 题；覆盖长上下文和代码 | TEAL LongBench 已启动，其余共享队列自动领取 |
 | 3 | DS ARC dense 缺失对照 | LongBench 503、LCB 175；GPQA/MATH 已完成，不重跑 | 排在尚未领取的 40% 任务之后 |
 | 4 | MAGI ARC 的 GPU 数值验证 | 官方模块、真实权重矩阵、卸载恢复 | 已列队；前面的 DS 任务全部完成后可执行 |
