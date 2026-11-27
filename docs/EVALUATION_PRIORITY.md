@@ -1,6 +1,31 @@
 # 当前评测优先级
 
-更新：2026-11-26。**DS 40% 稀疏 + HiF4 W4A4 + ARC 全量优先于 MAGI。** 旧“等 MAGI 70 层结束，再跑 DS dense，再恢复 no-ARC MAGI”的队列已撤换。
+更新：2026-11-27。**DS 40% 稀疏 + HiF4 W4A4 + ARC 全量优先于 MAGI。** 旧“等 MAGI 70 层结束，再跑 DS dense，再恢复 no-ARC MAGI”的队列已撤换。
+
+## 11 月 27 日 16:35：释放本机 GPU 2、3，其余 6 卡继续
+
+按用户要求停止 GPU 2、3 的后台 worker 及其 WINA LongBench 子进程，已确认两个 GPU
+显存占用均为 0 MiB，相关四个进程全部退出。这组此前已完成 TEAL MATH-500，
+随后启动 WINA LongBench；其已保存的 2 题保留，当前未完成的单题下次重算。
+WINA LongBench 已重新放回共享队列，由其他存活 worker 接续；GPU 2、3 的 worker
+保持停止，不会自行恢复占卡。操作证据在
+`runs/deepseek_arc40_full_20261125/dispatch/pause_history/20261127_163410/`。
+
+| 本机 GPU | 当前安排 | 已保存题数 |
+| --- | --- | ---: |
+| 0、1 | WINA 40% MATH-500，运行中 | 477/500 |
+| 2、3 | 已释放 | — |
+| 4、5 | TEAL 40% LongBench v2，运行中 | 276/503 |
+| 6、7 | WINA 40% GPQA-Diamond，运行中 | 106/198 |
+
+TEAL GPQA 的远端共享输出已更新至 196/198；本次未检查远端 GPU。
+TEAL MATH-500 已完成覆盖、评分、两 rank ARC 和 greedy 证据校验，正式准确率
+**94.60%（473/500）**，已写入 `reports/verified/DS_全量.tsv` 和彩色 Excel。
+相比同基座 ARC dense 的 98.00%，降低 3.40 个百分点；500 题中有 23 题截断、4 题其他错误。
+
+两种方法的 LiveCodeBench 64K 各 175 题，以及缺失的 ARC dense LongBench/LCB
+仍在队列中，尚未开始。8 个稀疏方法×benchmark 单元目前完整完成 1 个；其余未完成项
+只汇报已保存题数，不把部分准确率写入正式完整表。以下 11 月 26 日的八卡分配为历史记录。
 
 ## 11 月 26 日：本机 8 卡恢复
 

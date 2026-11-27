@@ -649,6 +649,50 @@
           "bytes": 328652
         }
       ]
+    },
+    {
+      "model": "DS",
+      "group": "sparse",
+      "method": "teal",
+      "sparsity": 0.4,
+      "variant": "HiF4 W4A4 + ARC",
+      "benchmark": "MATH-500",
+      "evaluated_count": 500,
+      "correct": 473,
+      "score": 94.6,
+      "source": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4",
+      "evidence": [
+        {
+          "path": "repo/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4/summary.json",
+          "sha256": "ab880691da69e17d4c64573686bfef9017c3467bb68c53bb136a715648fb962a",
+          "bytes": 740
+        },
+        {
+          "path": "repo/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4/protocol.json",
+          "sha256": "86857e07602bc7808159c0dbfed1a584f6bf67b618b628e8afe4421f8065f1e2",
+          "bytes": 476309
+        },
+        {
+          "path": "repo/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4/outputs.jsonl",
+          "sha256": "a3899fdd386d339eadf2571283084addcb9019667d5d2dbc2d4a3ee4d9edddb2",
+          "bytes": 2265153
+        },
+        {
+          "path": "repo/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4/greedy_strategy.json",
+          "sha256": "b0da5693b6d9a9e497ce3af1d2bc63b06bd7db249e63999f62a6985827d56a6a",
+          "bytes": 83334
+        },
+        {
+          "path": "repo/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4/arcquant_runtime_rank0.json",
+          "sha256": "716db359da46e3d083b34467d9467507660349807811f0857d2e7305e64b163b",
+          "bytes": 2823909
+        },
+        {
+          "path": "repo/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4/arcquant_runtime_rank1.json",
+          "sha256": "431a7fde3181b46fee938e6b63d14e19c38ad09e832bdf79e7e3c037da82449a",
+          "bytes": 2869802
+        }
+      ]
     }
   ],
   "tiny": [
@@ -13775,7 +13819,7 @@
       "state": "pending",
       "complete": false,
       "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-0.4-gpqa/arcquant-arc-teal-0.4-3cf96d67f3d4",
-      "completed": 33
+      "completed": 196
     },
     {
       "id": "wina-0.4-gpqa",
@@ -13785,17 +13829,17 @@
       "state": "pending",
       "complete": false,
       "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-0.4-gpqa/arcquant-arc-wina-0.4-cccb9ee23e4a",
-      "completed": 32
+      "completed": 106
     },
     {
       "id": "teal-0.4-math500",
       "method": "teal",
       "sparsity": 0.4,
       "expected": 500,
-      "state": "pending",
-      "complete": false,
+      "state": "completed",
+      "complete": true,
       "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-0.4-math500/arcquant-arc-teal-0.4-3cf96d67f3d4",
-      "completed": 100
+      "completed": 500
     },
     {
       "id": "wina-0.4-math500",
@@ -13805,7 +13849,7 @@
       "state": "pending",
       "complete": false,
       "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-0.4-math500/arcquant-arc-wina-0.4-cccb9ee23e4a",
-      "completed": 100
+      "completed": 477
     },
     {
       "id": "teal-0.4-longbench",
@@ -13814,7 +13858,8 @@
       "expected": 503,
       "state": "pending",
       "complete": false,
-      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-extended/longbench"
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/teal-extended/longbench",
+      "completed": 276
     },
     {
       "id": "wina-0.4-longbench",
@@ -13823,7 +13868,8 @@
       "expected": 503,
       "state": "pending",
       "complete": false,
-      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-extended/longbench"
+      "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/wina-extended/longbench",
+      "completed": 2
     },
     {
       "id": "teal-0.4-lcb64",
@@ -13862,5 +13908,5 @@
       "output": "/mnt/kpfs_qyang/LBC/ARCQuant/runs/deepseek_arc40_full_20261125/dense-extended/lcb64"
     }
   ],
-  "priority_progress_at": "2026-11-25T19:59:56"
+  "priority_progress_at": "2026-11-27T16:35:50"
 }
